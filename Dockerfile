@@ -12,4 +12,4 @@ WORKDIR /app
 COPY --from=builder /app/itslog .
 # We want to mount -v ${PWD}/data:/data for SQLite writing.
 COPY --from=builder /app/container-config.yaml config.yaml
-CMD ["./itslog"]
+CMD ["./itslog", "serve"]

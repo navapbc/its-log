@@ -1,8 +1,9 @@
-package main
+package serve
 
 import (
 	"net/http"
 
+	"cms.hhs.gov/its-log/internal/config"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 )
@@ -19,12 +20,22 @@ import (
 
 func AuthMiddleWare() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		api_key := c.GetHeader("x-api-key")
+		var apiConfig config.ApiConfig
+		err := viper.Unmarshal(&apiConfig)
+		// TODO: Handle config failure
+		if err != nil {
+			panic(err)
+		}
 
-		if len(api_key) > 32 && api_key == viper.GetString("api_key") {
-			return
-		} else {
-			c.AbortWithStatus(http.StatusUnauthorized)
+		api_key := c.GetHeader("x-api-key")
+		for _, key := range apiConfig.Keys {
+			if key.Kind == config.LOGGING_KEY_KIND &&
+				len(api_key) > 32 &&
+				api_key == key.Key {
+				return
+			} else {
+				c.AbortWithStatus(http.StatusUnauthorized)
+			}
 		}
 	}
 }

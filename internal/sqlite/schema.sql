@@ -8,5 +8,5 @@ CREATE TABLE IF NOT EXISTS itslog (
     -- see https://stackoverflow.com/a/53119060
     value       TEXT NOT NULL,
     -- the type the user claimed for the value
-    type        INTEGER NOT NULL
+    type        TEXT NOT NULL
 );

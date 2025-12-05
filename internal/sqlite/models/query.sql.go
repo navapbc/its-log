@@ -22,7 +22,7 @@ RETURNING id
 type LogItParams struct {
 	Event string
 	Value string
-	Type  int64
+	Type  string
 }
 
 // https://docs.sqlc.dev/en/latest/tutorials/getting-started-sqlite.html

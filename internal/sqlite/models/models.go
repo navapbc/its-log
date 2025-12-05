@@ -13,5 +13,5 @@ type Itslog struct {
 	Timestamp sql.NullTime
 	Event     string
 	Value     string
-	Type      int64
+	Type      string
 }

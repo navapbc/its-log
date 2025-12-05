@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"time"
 
-	"cms.hhs.gov/its-log/internal/itslog"
 	"cms.hhs.gov/its-log/internal/sqlite/models"
 	_ "modernc.org/sqlite"
 )
@@ -42,13 +41,13 @@ func (s *SqliteStorage) Init() error {
 	return nil
 }
 
-func (s *SqliteStorage) Event(event string, value any, value_type itslog.LogItType) (int64, error) {
+func (s *SqliteStorage) Event(event string, value any, value_type string) (int64, error) {
 	fmt.Printf("%s %v %v\n", event, value, value_type)
 
 	id, err := s.queries.LogIt(context.Background(), models.LogItParams{
 		Event: event,
 		Value: fmt.Sprintf("%v", value),
-		Type:  int64(value_type),
+		Type:  value_type,
 	})
 
 	if err != nil {

@@ -2,3 +2,5 @@ cmd/itslog/config.yaml
 /data/*
 **.sqlite
 itslog
+.vscode
+__*

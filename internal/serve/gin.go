@@ -1,4 +1,4 @@
-package main
+package serve
 
 import (
 	"net/http"
@@ -17,7 +17,8 @@ func PourGin(s itslog.ItsLog) *gin.Engine {
 
 	router := gin.Default()
 	apiV1 := router.Group("/v1")
-	authV1 := apiV1.Group("/", AuthMiddleWare())
+	authV1 := apiV1.Group("/")
+	authV1.Use(AuthMiddleWare())
 
 	authV1.POST("log", LogV1(s))
 	return router
@@ -25,21 +26,29 @@ func PourGin(s itslog.ItsLog) *gin.Engine {
 
 func LogV1(s itslog.ItsLog) func(c *gin.Context) {
 	return func(c *gin.Context) {
-		var event itslog.Event
-		if err := c.BindJSON(&event); err != nil {
+
+		// The middleware already did the binding check.
+		// If it failed, we never got here. So, in this function,
+		// we can ignore the error handling. If that ever becomes
+		// a performance issue, the middleware can be removed, as it
+		// represents a double-binding/allocation
+		event, err := BindEvent(c)
+		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"status": "err",
-				"error":  err.Error()})
-			return
-		}
-
-		id, err := s.Event(event.Event, event.Value, itslog.LogItType(event.ValueType))
-		if err != nil {
-			c.JSON(http.StatusOK, gin.H{
-				"status": "err",
-				"id":     err.Error(),
+				"err":    err.Error(),
 			})
 		}
+		id, err := s.Event(event.Event, event.Value, event.ValueType)
+
+		if err != nil {
+			c.JSON(http.StatusTeapot, gin.H{
+				"status": "err",
+				"err":    err.Error(),
+			})
+		}
+
+		// Everything worked.
 		c.JSON(http.StatusOK, gin.H{
 			"status": "ok",
 			"id":     id,

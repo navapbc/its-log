@@ -1,4 +1,4 @@
-package main
+package serve
 
 import (
 	"fmt"
@@ -8,18 +8,15 @@ import (
 	"github.com/spf13/viper"
 )
 
-func main() {
-	// We must explicitly read the config
-	// before doing anything else.
-	ReadConfig()
+func Serve() {
 	// I should abstract the storage engine.
 	var s itslog.ItsLog
 
 	// Instantiate the preferred storage backend
-	switch viper.GetString("storage") {
+	switch viper.GetString("app.storage") {
 	case "sqlite":
 		s = &sqlite.SqliteStorage{
-			Path: viper.GetString("sqlite_path"),
+			Path: viper.GetString("sqlite.path"),
 		}
 	case "s3":
 		// pass
@@ -34,7 +31,7 @@ func main() {
 
 	engine := PourGin(s)
 
-	host := viper.GetString("server.host")
-	port := viper.GetString("server.port")
+	host := viper.GetString("serve.host")
+	port := viper.GetString("serve.port")
 	_ = engine.Run(fmt.Sprintf("%s:%s", host, port))
 }
