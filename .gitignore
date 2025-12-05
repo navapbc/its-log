@@ -1,0 +1,4 @@
+cmd/itslog/config.yaml
+/data/*
+**.sqlite
+itslog

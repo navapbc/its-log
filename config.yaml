@@ -1,0 +1,17 @@
+server:
+  host: "localhost"
+  port: 8080
+
+gin_mode: "debug"
+api_key: "not-a-real-api-key-but-it-needs-to-be-long"
+
+storage: "sqlite"
+sqlite_path: "."
+
+
+minio:
+  host: "minio"
+  port: "8000"
+  params: 
+    disableSSL: true
+    s3ForcePathStyle: true
