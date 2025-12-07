@@ -39,7 +39,9 @@ func LogV1(s itslog.ItsLog) func(c *gin.Context) {
 				"err":    err.Error(),
 			})
 		}
-		id, err := s.Event(event.Source, event.Event, event.Value, event.Type)
+
+		event.Version = "v1"
+		id, err := s.Event(event)
 
 		if err != nil {
 			c.JSON(http.StatusTeapot, gin.H{

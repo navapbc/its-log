@@ -8,6 +8,7 @@ import (
 	"time"
 
 	defaultstorage "github.com/jadudm/its-log/internal/default-storage"
+	"github.com/jadudm/its-log/internal/itslog"
 	"github.com/spf13/viper"
 	"gocloud.dev/blob"
 	_ "gocloud.dev/blob/s3blob"
@@ -39,8 +40,8 @@ func (s *BlobStorage) Init() error {
 	return nil
 }
 
-func (s *BlobStorage) Event(source string, event string, value any, value_type string) (int64, error) {
-	fmt.Printf("Blob %s %v %v\n", event, value, value_type)
+func (s *BlobStorage) Event(e *itslog.Event) (int64, error) {
+	fmt.Printf("Blob %s %v %v\n", e.Event, e.Value, e.Type)
 	t := time.Now()
 	secondsSinceEpoch := t.Unix()
 
@@ -54,18 +55,21 @@ func (s *BlobStorage) Event(source string, event string, value any, value_type s
 		return 0, err
 	}
 
+	// TODO: At this point, the event could just be marshalled
+	// through to the S3 layer.
 	evt := make(map[string]string)
-	evt["source"] = source
-	evt["event"] = event
-	evt["value"] = fmt.Sprintf("%s", value)
-	evt["type"] = value_type
+	evt["version"] = e.Version
+	evt["source"] = e.Source
+	evt["event"] = e.Event
+	evt["value"] = e.Value
+	evt["type"] = e.Type
 	jsonString, err := json.MarshalIndent(evt, "", "  ")
 
 	if err != nil {
 		// TODO: handle error gracefully
 		fmt.Println("error marshalling")
 		d := &defaultstorage.DefaultStorage{}
-		d.Event(source, event, value, value_type)
+		d.Event(e)
 	}
 
 	_, writeErr := fmt.Fprintln(w, string(jsonString))

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/jadudm/its-log/internal/itslog"
 	"github.com/jadudm/its-log/internal/sqlite/models"
 	_ "modernc.org/sqlite"
 )
@@ -41,15 +42,15 @@ func (s *SqliteStorage) Init() error {
 	return nil
 }
 
-func (s *SqliteStorage) Event(source string, event string, value any, value_type string) (int64, error) {
-	fmt.Printf("%s %v %v\n", event, value, value_type)
+func (s *SqliteStorage) Event(e *itslog.Event) (int64, error) {
+	fmt.Printf("%s %v %v\n", e.Event, e.Value, e.Type)
 
 	id, err := s.queries.LogIt(context.Background(), models.LogItParams{
-		Version: "v1",
-		Source:  source,
-		Event:   event,
-		Value:   fmt.Sprintf("%v", value),
-		Type:    value_type,
+		Version: e.Version,
+		Source:  e.Source,
+		Event:   e.Event,
+		Value:   fmt.Sprintf("%v", e.Value),
+		Type:    e.Type,
 	})
 
 	if err != nil {

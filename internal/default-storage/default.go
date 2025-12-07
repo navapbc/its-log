@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/jadudm/its-log/internal/itslog"
 	_ "gocloud.dev/blob/s3blob"
 )
 
@@ -20,10 +21,10 @@ func (s *DefaultStorage) Init() error {
 	return nil
 }
 
-func (s *DefaultStorage) Event(source string, event string, value any, value_type string) (int64, error) {
+func (s *DefaultStorage) Event(e *itslog.Event) (int64, error) {
 	t := time.Now()
 	pfix := t.Format("2006-01-02")
-	fmt.Printf("%06d %s %s %s %s %s\n", s.Counter, pfix, source, event, value, value_type)
+	fmt.Printf("%06d %s %s %s %s %s\n", s.Counter, pfix, e.Source, e.Event, e.Value, e.Type)
 
 	s.Counter += 1
 	return s.Counter, nil

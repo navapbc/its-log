@@ -12,7 +12,7 @@ serve:
 
 app:
   gin_mode: "debug"
-  storage: "s3"
+  storage: "sqlite"
 
 sqlite:
   path: "./data"
