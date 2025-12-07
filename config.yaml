@@ -7,18 +7,20 @@ api_keys:
       kind: "admin"
 
 serve:
-  host: "localhost"
-  port: 8888
+  host: "0.0.0.0"
+  port: 9999
 
 app:
   gin_mode: "debug"
-  storage: "sqlite"
+  storage: "s3"
 
 sqlite:
-  path: "."
+  path: "./data"
 
-minio:
-  host: "minio"
-  port: "8000"
+s3:
+  bucket: "blue-bucket"
+  scheme: "http"
+  host: "localhost"
+  port: "3900"
   disableSSL: true
   s3ForcePathStyle: true

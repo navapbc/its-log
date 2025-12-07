@@ -6,7 +6,7 @@ package cmd
 import (
 	"os"
 
-	"cms.hhs.gov/its-log/internal/config"
+	"github.com/jadudm/its-log/internal/config"
 	"github.com/spf13/cobra"
 )
 

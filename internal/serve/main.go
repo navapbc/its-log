@@ -3,8 +3,9 @@ package serve
 import (
 	"fmt"
 
-	"cms.hhs.gov/its-log/internal/itslog"
-	"cms.hhs.gov/its-log/internal/sqlite"
+	"github.com/jadudm/its-log/internal/itslog"
+	"github.com/jadudm/its-log/internal/s3"
+	"github.com/jadudm/its-log/internal/sqlite"
 	"github.com/spf13/viper"
 )
 
@@ -19,7 +20,7 @@ func Serve() {
 			Path: viper.GetString("sqlite.path"),
 		}
 	case "s3":
-		// pass
+		s = &s3.BlobStorage{}
 	default:
 		// pass
 	}

@@ -12,22 +12,30 @@ import (
 const logIt = `-- name: LogIt :one
 
 INSERT INTO itslog (
-  event, value, type
+  version, source, event, value, type
 ) VALUES (
-  ?, ?, ?
+  ?, ?, ?, ?, ?
 )
 RETURNING id
 `
 
 type LogItParams struct {
-	Event string
-	Value string
-	Type  string
+	Version string
+	Source  string
+	Event   string
+	Value   string
+	Type    string
 }
 
 // https://docs.sqlc.dev/en/latest/tutorials/getting-started-sqlite.html
 func (q *Queries) LogIt(ctx context.Context, arg LogItParams) (int64, error) {
-	row := q.db.QueryRowContext(ctx, logIt, arg.Event, arg.Value, arg.Type)
+	row := q.db.QueryRowContext(ctx, logIt,
+		arg.Version,
+		arg.Source,
+		arg.Event,
+		arg.Value,
+		arg.Type,
+	)
 	var id int64
 	err := row.Scan(&id)
 	return id, err

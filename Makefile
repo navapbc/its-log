@@ -1,6 +1,10 @@
 SQLC=sqlc
+
+build: clean generate
+	go build -o its-log .
+
 clean:
-	rm -f itslog
+	rm -f its-log
 	rm -rf internal/sqlite/models
 	rm -f cmd/itslog/config.yaml
 	rm -f cmd/itslog/schema.sql
@@ -8,12 +12,13 @@ clean:
 generate:
 	cd internal/sqlite ; ${SQLC} generate
 
-build: clean generate
-	go build -o itslog ./cmd/itslog/
 
-run: generate
-	cp config.yaml cmd/itslog/
-	cd cmd/itslog ; go run ./...
+serve: generate
+	cp config.yaml cmd
+	go run ./... serve
 
 docker:
-	docker build -t itslog:latest -f Dockerfile .
+	docker build -t its-log:latest -f Dockerfile .
+	
+prod:
+	docker build -t its-log:latest -f Dockerfile --target prod .

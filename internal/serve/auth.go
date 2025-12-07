@@ -3,8 +3,8 @@ package serve
 import (
 	"net/http"
 
-	"cms.hhs.gov/its-log/internal/config"
 	"github.com/gin-gonic/gin"
+	"github.com/jadudm/its-log/internal/config"
 	"github.com/spf13/viper"
 )
 

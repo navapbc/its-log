@@ -123,3 +123,5 @@ Everything is configured with a single YAML file. All security-critical variable
 * [github.com/spf13/viper](https://github.com/spf13/viper)
 * go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
 * go get gocloud.dev
+
+aws s3 ls s3://blue-bucket/ --endpoint-url http://localhost:3900

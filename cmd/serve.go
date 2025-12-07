@@ -4,7 +4,7 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"cms.hhs.gov/its-log/internal/serve"
+	"github.com/jadudm/its-log/internal/serve"
 	"github.com/spf13/cobra"
 )
 
@@ -36,11 +36,3 @@ func init() {
 	// is called directly, e.g.:
 	// serveCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
-
-// import (
-// 	"fmt"
-
-// 	"cms.hhs.gov/its-log/internal/itslog"
-// 	"cms.hhs.gov/its-log/internal/sqlite"
-// 	"github.com/spf13/viper"
-// )

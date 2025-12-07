@@ -1,8 +1,8 @@
 package serve
 
 import (
-	"cms.hhs.gov/its-log/internal/itslog"
 	"github.com/gin-gonic/gin"
+	itslog "github.com/jadudm/its-log/internal/itslog"
 )
 
 func BindEvent(c *gin.Context) (*itslog.Event, error) {

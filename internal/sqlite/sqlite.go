@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"cms.hhs.gov/its-log/internal/sqlite/models"
+	"github.com/jadudm/its-log/internal/sqlite/models"
 	_ "modernc.org/sqlite"
 )
 
@@ -23,10 +23,10 @@ func (s *SqliteStorage) Init() error {
 	ctx := context.Background()
 
 	t := time.Now()
-
 	name := fmt.Sprintf("%s/%s.sqlite", s.Path, t.Format("2006-01-02"))
 
 	db, err := sql.Open("sqlite", name)
+	// FIXME: Should I create this if it doesn't exist?
 	if err != nil {
 		return err
 	}
@@ -41,13 +41,15 @@ func (s *SqliteStorage) Init() error {
 	return nil
 }
 
-func (s *SqliteStorage) Event(event string, value any, value_type string) (int64, error) {
+func (s *SqliteStorage) Event(source string, event string, value any, value_type string) (int64, error) {
 	fmt.Printf("%s %v %v\n", event, value, value_type)
 
 	id, err := s.queries.LogIt(context.Background(), models.LogItParams{
-		Event: event,
-		Value: fmt.Sprintf("%v", value),
-		Type:  value_type,
+		Version: "v1",
+		Source:  source,
+		Event:   event,
+		Value:   fmt.Sprintf("%v", value),
+		Type:    value_type,
 	})
 
 	if err != nil {

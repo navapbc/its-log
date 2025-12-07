@@ -1,6 +1,7 @@
-cmd/itslog/config.yaml
+cmd/config.yaml
 /data/*
 **.sqlite
-itslog
+its-log
 .vscode
 __*
+*.json

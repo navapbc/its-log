@@ -3,8 +3,8 @@ package serve
 import (
 	"net/http"
 
-	"cms.hhs.gov/its-log/internal/itslog"
 	"github.com/gin-gonic/gin"
+	"github.com/jadudm/its-log/internal/itslog"
 	"github.com/spf13/viper"
 )
 
@@ -39,7 +39,7 @@ func LogV1(s itslog.ItsLog) func(c *gin.Context) {
 				"err":    err.Error(),
 			})
 		}
-		id, err := s.Event(event.Event, event.Value, event.ValueType)
+		id, err := s.Event(event.Source, event.Event, event.Value, event.Type)
 
 		if err != nil {
 			c.JSON(http.StatusTeapot, gin.H{
