@@ -2,7 +2,6 @@
 
 ## containerized
 
-
 ### stand up the stack
 
 To start, run the containerized stack:
@@ -19,6 +18,11 @@ This runs a stack with
 Garage is a FOSS S3-compatible object server.
 
 ### configure garage
+
+Currently, nothing is provided to automatically create buckets
+at startup. Therefore, the env must be stood up, logged into, and
+configured with at least one bucket. TODO: add automatic config code
+at launch time for testing.
 
 ```
 source configure-garage.env

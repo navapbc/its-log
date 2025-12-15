@@ -13,7 +13,7 @@ import (
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "its-log",
-	Short: "A simple application logger for compliant environments",
+	Short: "A simple, valueless event logger",
 	Long: `It's better than bad, it's good!
 	
 its-log is a server and command-line tool for collecting and managing
