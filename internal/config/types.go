@@ -9,6 +9,6 @@ type ApiKey struct {
 	Kind        string `mapstructure:"kind"`
 }
 
-type ApiConfig struct {
+type ApiKeys struct {
 	Keys []ApiKey `mapstructure:"api_keys"`
 }
