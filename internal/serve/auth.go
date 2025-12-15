@@ -5,7 +5,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/jadudm/its-log/internal/config"
-	"github.com/spf13/viper"
 )
 
 // its-log is intended to be used by a single application.
@@ -18,17 +17,11 @@ import (
 //
 // would likely do the trick.
 
-func AuthMiddleWare() gin.HandlerFunc {
+func AuthMiddleWare(apiKeys config.ApiKeys) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var apiConfig config.ApiConfig
-		err := viper.Unmarshal(&apiConfig)
-		// TODO: Handle config failure
-		if err != nil {
-			panic(err)
-		}
 
 		api_key := c.GetHeader("x-api-key")
-		for _, key := range apiConfig.Keys {
+		for _, key := range apiKeys.Keys {
 			if key.Kind == config.LOGGING_KEY_KIND &&
 				len(api_key) > 32 &&
 				api_key == key.Key {

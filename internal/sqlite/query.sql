@@ -2,8 +2,8 @@
 
 -- name: LogIt :one
 INSERT INTO itslog (
-  version, source, event, value, type
+  source, event
 ) VALUES (
-  ?, ?, ?, ?, ?
+  ?, ?
 )
 RETURNING id;

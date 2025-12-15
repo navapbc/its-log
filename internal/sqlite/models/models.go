@@ -11,9 +11,6 @@ import (
 type Itslog struct {
 	ID        int64
 	Timestamp sql.NullTime
-	Version   string
 	Source    string
 	Event     string
-	Value     string
-	Type      string
 }

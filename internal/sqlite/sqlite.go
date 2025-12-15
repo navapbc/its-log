@@ -43,14 +43,10 @@ func (s *SqliteStorage) Init() error {
 }
 
 func (s *SqliteStorage) Event(e *itslog.Event) (int64, error) {
-	fmt.Printf("%s %v %v\n", e.Event, e.Value, e.Type)
 
 	id, err := s.queries.LogIt(context.Background(), models.LogItParams{
-		Version: e.Version,
-		Source:  e.Source,
-		Event:   e.Event,
-		Value:   fmt.Sprintf("%v", e.Value),
-		Type:    e.Type,
+		Source: e.Source,
+		Event:  e.Event,
 	})
 
 	if err != nil {
