@@ -18,7 +18,11 @@ serve: generate
 	go run ./... serve
 
 docker:
-	docker build -t its-log:latest -f Dockerfile .
+	cd containers ; \
+	docker build \
+		--platform "linux/amd64" \
+		-t its-log:latest \
+		-f Dockerfile ..
 	
 prod:
-	docker build -t its-log:latest -f Dockerfile --target prod .
+	docker build -t its-log:latest -f Dockerfile --target prod ..
