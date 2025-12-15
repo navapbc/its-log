@@ -6,9 +6,6 @@ type ItsLog interface {
 }
 
 type Event struct {
-	Version string
-	Source  string `json:"source" binding:"required"`
-	Event   string `json:"event" binding:"required"`
-	Value   string `json:"value" binding:"required"`
-	Type    string `json:"type" binding:"required"`
+	Source string `json:"source" binding:"required"`
+	Event  string `json:"event" binding:"required"`
 }
