@@ -4,7 +4,7 @@
 
 `its-log` is a tiny event logger.
 
-On a Mac M4, `its-log` can sustain logging 60K events/second to a local SQLite database.
+On a Mac M4, `its-log` can sustain logging 35K events/second to a local SQLite database.
 
 Events are **app-specific, keyed, valueless moments in time**.
 
@@ -20,7 +20,5 @@ There are two endpoints in the `its-log` API:
 
 * PUT /event/&lt;app-id>/&lt;event><br/>
     Log a timestamped event 
-* PUT /unique/&lt;app-id>/&lt;event><br/>
-    Log an event today, uniquely
 
 These are described in the [API docs](docs/api.md).

@@ -4,8 +4,6 @@ There are two endpoints:
 
 * PUT /event/&lt;app-id>/&lt;event><br/>
     Log a timestamped event 
-* PUT /unique/&lt;app-id>/&lt;event><br/>
-    Log an event today, uniquely
 
 ### PUT /event/&lt;app-id>/&lt;event>
 
@@ -40,31 +38,3 @@ PUT //its-log/gov.hhs.cms.bb2/api.called
 PUT //its-log/gov.hhs.cms.bb2/api.called
 PUT //its-log/gov.hhs.cms.bb2/api.called
 ```
-
-### PUT /unique/&lt;app-id>/&lt;event>
-
-Unique events are only logged once per day. Using *limited* dynamic event tags makes sense for unique events.
-
-For example, 
-
-```
-PUT //its-log/gov.hhs.cms.bb2/auth.app.alicemedical
-PUT //its-log/gov.hhs.cms.bb2/auth.app.bobshealth
-PUT //its-log/gov.hhs.cms.bb2/auth.app.bobshealth
-```
-
-This sequence will yield two events in the database: one for the event `auth.app.alicemedical` and one for `auth.app.bobshealth`. Only the first event for each tag will be stored. Logs rotate daily; therefore, if the same sequence comes in on the next day, again, only two events will be logged.
-
-Note that CUI/PHI/PII should not be used for events. If (say) app names are considered "sensitive," then the *application* should do something like the following:
-
-1. Add a secret to your environment; call this `LOGGING_SALT`. A `sha1(uuid.uuid4()).hexdigest()` is suitable
-2. `app_name_salted = f'{app_name}:{LOGGING_SALT}'`
-3. Log a key using the salted name; for example, `auth.app.{app_name_salted}`
-
-Now, events should take the form:
-
-```
-PUT its-log/gov.hhs.cms.bb2/auth.app.031edd7d41651593c5fe5...
-```
-
-This will allow for analysis that (for example) can assert that there were 36 unique applications logged in during a given day, or if the same application logged in every day for a week. Using this approach, it is *not* possible to say (from the data stored in `its-log`) that the application logging in every day was `bobshealth`.

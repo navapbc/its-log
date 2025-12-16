@@ -7,14 +7,15 @@ import (
 	"github.com/jadudm/its-log/internal/itslog"
 )
 
-func Event(storage itslog.ItsLog) func(c *gin.Context) {
+func Event(storage itslog.ItsLog, ch_evt_out chan<- *itslog.Event) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		appID := c.Param("appID")
 		evtID := c.Param("eventID")
-		storage.Event(&itslog.Event{
+		// Send the event to the Enqueue-er
+		ch_evt_out <- &itslog.Event{
 			Source: appID,
 			Event:  evtID,
-		})
+		}
 		// Everything worked.
 		c.JSON(http.StatusOK, gin.H{
 			"status": "ok",

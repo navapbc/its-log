@@ -25,8 +25,19 @@ func (s *DefaultStorage) Init() error {
 func (s *DefaultStorage) Event(e *itslog.Event) (int64, error) {
 	t := time.Now()
 	pfix := t.Format("2006-01-02")
-	log.Printf("%06d %s %s %s\n", s.Counter, pfix, e.Source, e.Event)
+	log.Printf("%06d %s EVENT %s %s\n", s.Counter, pfix, e.Source, e.Event)
 
 	s.Counter += 1
+	return s.Counter, nil
+}
+
+func (s *DefaultStorage) ManyEvents(es []*itslog.Event) (int64, error) {
+	t := time.Now()
+	pfix := t.Format("2006-01-02")
+	for _, e := range es {
+		log.Printf("%06d %s %s %s\n", s.Counter, pfix, e.Source, e.Event)
+		s.Counter += 1
+	}
+
 	return s.Counter, nil
 }

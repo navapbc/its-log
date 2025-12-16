@@ -28,7 +28,5 @@ prod:
 	docker build -t its-log:latest -f Dockerfile --target prod ..
 
 stress:
-	cd k6 ; k6 run get.js
-	ls -alh data/
 	cd k6 ; k6 run put.js
 	ls -alh data/

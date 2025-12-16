@@ -9,9 +9,9 @@ import (
 	"context"
 )
 
-const logIt = `-- name: LogIt :one
+const logEvent = `-- name: LogEvent :one
 
-INSERT INTO itslog (
+INSERT INTO events (
   source, event
 ) VALUES (
   ?, ?
@@ -19,15 +19,40 @@ INSERT INTO itslog (
 RETURNING id
 `
 
-type LogItParams struct {
-	Source string
-	Event  string
+type LogEventParams struct {
+	Source int64
+	Event  int64
 }
 
 // https://docs.sqlc.dev/en/latest/tutorials/getting-started-sqlite.html
-func (q *Queries) LogIt(ctx context.Context, arg LogItParams) (int64, error) {
-	row := q.db.QueryRowContext(ctx, logIt, arg.Source, arg.Event)
+func (q *Queries) LogEvent(ctx context.Context, arg LogEventParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, logEvent, arg.Source, arg.Event)
 	var id int64
 	err := row.Scan(&id)
 	return id, err
+}
+
+const updateDictionary = `-- name: UpdateDictionary :exec
+INSERT OR IGNORE INTO dictionary (
+  event_source, event_name, source_hash, event_hash
+) VALUES (
+  ?, ?, ?, ?
+)
+`
+
+type UpdateDictionaryParams struct {
+	EventSource string
+	EventName   string
+	SourceHash  int64
+	EventHash   int64
+}
+
+func (q *Queries) UpdateDictionary(ctx context.Context, arg UpdateDictionaryParams) error {
+	_, err := q.db.ExecContext(ctx, updateDictionary,
+		arg.EventSource,
+		arg.EventName,
+		arg.SourceHash,
+		arg.EventHash,
+	)
+	return err
 }

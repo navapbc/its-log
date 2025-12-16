@@ -27,6 +27,8 @@ func NewEventBuffers(buffer_length int) EventBuffers {
 	return eb
 }
 
+var hasChanged bool = false
+
 func (eb *EventBuffers) AddEvent(e *itslog.Event) bool {
 	// Warning: this must be strictly sequential; this is
 	// not a parallel-safe pointer update.
@@ -50,13 +52,17 @@ func Enqueue(ch_e_in <-chan *itslog.Event, ch_flush_out chan<- EventBuffers, buf
 				timer.Reset(timeout_duration)
 				ch_flush_out <- event_buffers
 				event_buffers = NewEventBuffers(buffer_length)
+				hasChanged = true
 			}
 		case <-timer.C:
-			log.Println("flushing event buffers")
-			// Send the structure out for writing
-			ch_flush_out <- event_buffers
-			// Allocate a new structure here in this process
-			event_buffers = NewEventBuffers(buffer_length)
+			if hasChanged {
+				log.Println("flushing event buffers")
+				// Send the structure out for writing
+				ch_flush_out <- event_buffers
+				// Allocate a new structure here in this process
+				event_buffers = NewEventBuffers(buffer_length)
+				hasChanged = false
+			}
 			timer.Reset(timeout_duration)
 		}
 	}

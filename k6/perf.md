@@ -1,3 +1,17 @@
+## 2025-12-16 with dictionaries
+
+A naive approach to writing the dictionary slows us down. Now at 36K events/second. Which... makes sense. I'm doing 2x the writes to the DB, so it slowed down by a factor of 2. 
+
+I can add a trivial in-memory optimization to reduce the number of writes. Probably not worth it.
+
+█ TOTAL RESULTS 
+
+    HTTP
+    http_req_duration..............: avg=339.99µs min=25µs    med=231µs    max=55.82ms p(90)=710µs    p(95)=985µs 
+      { expected_response:true }...: avg=339.99µs min=25µs    med=231µs    max=55.82ms p(90)=710µs    p(95)=985µs 
+    http_req_failed................: 0.00%   0 out of 1903417
+    http_reqs......................: 1903417 34607.420736/s
+
 ## 2025-12-16 comparison
 
 Run on a Mac M4, OS 26.2, in two VSCode terminals. Assorted apps and streaming taking place in the background.

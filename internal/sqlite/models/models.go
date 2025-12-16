@@ -8,9 +8,18 @@ import (
 	"database/sql"
 )
 
-type Itslog struct {
+type Dictionary struct {
+	ID          int64
+	Timestamp   sql.NullTime
+	EventSource string
+	EventName   string
+	SourceHash  int64
+	EventHash   int64
+}
+
+type Event struct {
 	ID        int64
 	Timestamp sql.NullTime
-	Source    string
-	Event     string
+	Source    int64
+	Event     int64
 }
