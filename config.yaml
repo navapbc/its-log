@@ -11,8 +11,16 @@ serve:
   port: 9999
 
 app:
-  gin_mode: "debug"
+  # "debug" or "release"
+  gin_mode: "release"
   storage: "sqlite"
+  event_buffer_length: 2000
+  event_buffer_flush_seconds: 10
+  # Keeping the seed constant means the same
+  # events get hashed to the same integers.
+  # Changing this changes the dictionary.
+  hash_seed: 42
+
   # storage: "default"
 
 sqlite:

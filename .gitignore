@@ -5,3 +5,4 @@ its-log
 .vscode
 __*
 *.json
+.DS_Store
