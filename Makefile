@@ -1,5 +1,3 @@
-SQLC=sqlc
-
 build: clean generate
 	go build -o its-log .
 
@@ -10,7 +8,7 @@ clean:
 	rm -f cmd/itslog/schema.sql
 
 generate:
-	cd internal/sqlite ; ${SQLC} generate
+	cd internal/sqlite ; sqlc generate
 
 
 serve: generate
