@@ -16,7 +16,7 @@ Events are **app-specific, keyed, valueless moments in time**.
 
 ## the API
 
-There are two endpoints in the `its-log` API:
+There <strike>are two</strike> is one endpoint in the `its-log` API:
 
 * PUT /event/&lt;app-id>/&lt;event><br/>
     Log a timestamped event 
