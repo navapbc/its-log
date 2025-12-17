@@ -22,3 +22,16 @@ There <strike>are two</strike> is one endpoint in the `its-log` API:
     Log a timestamped event 
 
 These are described in the [API docs](docs/api.md).
+
+## to kick the tires
+
+```
+make serve
+```
+
+to run the logger locally, and to run performance tests ("E2E") against the local app:
+
+```
+cd k6
+k6 run put.js
+```
