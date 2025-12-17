@@ -9,8 +9,8 @@ On a Mac M4, `its-log` can sustain logging 35K events/second to a local SQLite d
 Events are **app-specific, keyed, valueless moments in time**.
 
 * moment in time: an event has a timestamp
-* app-specific: each app provides a unique ID to distinguish it from other apps using an its-log instance (e.g. `gov.hhs.cms.bb2`)
-* keyed: a key or label tells us what the event was: "v3.patient.api"
+* app-specific: each app provides a unique ID to distinguish it from other apps using an its-log instance (e.g. `gov.agency.app`)
+* keyed: a key or label tells us what the event was: "v3.api"
 * valueless: no value (e.g. `42`) is associated with a key; there are keys but not values.
 
 
