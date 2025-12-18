@@ -25,6 +25,9 @@ app:
 
 sqlite:
   path: "./data"
+  # To test without generating files, tell SQLite
+  # to create an in-memory database.
+  # path: ":memory:"
 
 s3:
   bucket: "blue-bucket"

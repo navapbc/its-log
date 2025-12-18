@@ -25,13 +25,20 @@ These are described in the [API docs](docs/api.md).
 
 ## to kick the tires
 
+To run the test suite (which is small, but exercises the API and process network supporting it)
+
+```
+make test
+```
+
+In order to run performance checks
+
 ```
 make serve
 ```
 
-to run the logger locally, and to run performance tests ("E2E") against the local app:
+to run the logger locally. Once it is running, performance [K6](https://k6.io/) load tests can be run against the server with
 
 ```
-cd k6
-k6 run put.js
+make k6
 ```

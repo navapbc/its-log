@@ -1,3 +1,5 @@
+.PHONY: build clean generate serve docker prod stress k6 test
+
 build: clean generate
 	go build -o its-log .
 
@@ -28,3 +30,10 @@ prod:
 stress:
 	cd k6 ; k6 run put.js
 	ls -alh data/
+
+k6:
+	cd k6 ; k6 run put.js
+	ls -alh data/
+
+test:
+	go test ./...

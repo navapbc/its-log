@@ -1,3 +1,9 @@
+## 2025-12-17 :memory:
+
+When the SQLite database is configured to use `:memory:` instead of an on-disk file, the throughput goes from ~40K to 65K events/second.
+
+This is almost certainly approaching the theoretical limit for how fast this configuration can run.
+
 ## 2025-12-16 with dictionaries
 
 A naive approach to writing the dictionary slows us down. Now at 36K events/second. Which... makes sense. I'm doing 2x the writes to the DB, so it slowed down by a factor of 2. 
