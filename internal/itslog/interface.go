@@ -9,6 +9,6 @@ type ItsLog interface {
 }
 
 type Event struct {
-	Source string `json:"source" binding:"required"`
-	Event  string `json:"event" binding:"required"`
+	Source string
+	Event  string
 }

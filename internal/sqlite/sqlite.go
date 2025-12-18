@@ -30,8 +30,12 @@ func (s *SqliteStorage) Init() error {
 	ctx := context.Background()
 
 	t := time.Now()
-	name := fmt.Sprintf("%s/%s.sqlite", s.Path, t.Format("2006-01-02"))
-
+	var name string
+	if s.Path != ":memory:" {
+		name = fmt.Sprintf("%s/%s.sqlite", s.Path, t.Format("2006-01-02"))
+	} else {
+		name = s.Path
+	}
 	db, err := sql.Open("sqlite", name)
 	// FIXME: Should I create this if it doesn't exist?
 	if err != nil {
@@ -69,11 +73,11 @@ func hashSourceAndEvent(h maphash.Hash, source string, event string) (int64, int
 }
 
 func (s *SqliteStorage) Event(e *itslog.Event) (int64, error) {
-	source_h, evt_h := hashSourceAndEvent(s.h, e.Source, e.Event)
+	source_h, event_h := hashSourceAndEvent(s.h, e.Source, e.Event)
 	// This is an unsigned to signed conversion...
 	id, err := s.queries.LogEvent(context.Background(), models.LogEventParams{
 		Source: source_h,
-		Event:  evt_h,
+		Event:  event_h,
 	})
 
 	if err != nil {
@@ -96,12 +100,12 @@ func (s *SqliteStorage) ManyEvents(es []*itslog.Event) (int64, error) {
 	for _, e := range es {
 		if e != nil {
 			// Store all of the events in a single transaction
-			source_h, evt_h := hashSourceAndEvent(s.h, e.Source, e.Event)
+			source_h, event_h := hashSourceAndEvent(s.h, e.Source, e.Event)
 
 			var err error
 			_, err = qtx.LogEvent(ctx, models.LogEventParams{
 				Source: source_h,
-				Event:  evt_h,
+				Event:  event_h,
 			})
 
 			if err != nil {
@@ -117,7 +121,7 @@ func (s *SqliteStorage) ManyEvents(es []*itslog.Event) (int64, error) {
 				EventSource: e.Source,
 				EventName:   e.Event,
 				SourceHash:  source_h,
-				EventHash:   evt_h,
+				EventHash:   event_h,
 			})
 			if err != nil {
 				log.Println("Error in storing dictionary:" + err.Error())
@@ -131,4 +135,34 @@ func (s *SqliteStorage) ManyEvents(es []*itslog.Event) (int64, error) {
 	tx.Commit()
 
 	return counter, nil
+}
+
+// -1 if there was an error, 0 if the row was not found, 1 if it was found
+func (s *SqliteStorage) TestEventExists(source string, event string) int64 {
+	// First hash the value
+	source_h, event_h := hashSourceAndEvent(s.h, source, event)
+	// Check if it can be found in the events table.
+	res, err := s.queries.TestEventPairExists(context.Background(), models.TestEventPairExistsParams{
+		Source: source_h,
+		Event:  event_h,
+	})
+	// If there was an error, just return false.
+	if err != nil {
+		return -1
+	}
+	// If it wasn't found, return an error now.
+	if res != 1 {
+		return res
+	}
+
+	// Now do the same with the dictionary
+	res, err = s.queries.TestDictionaryPairExists(context.Background(), models.TestDictionaryPairExistsParams{
+		SourceHash: source_h,
+		EventHash:  event_h,
+	})
+	// If there was an error, just return false.
+	if err != nil {
+		return -1
+	}
+	return res
 }

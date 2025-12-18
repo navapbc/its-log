@@ -32,6 +32,52 @@ func (q *Queries) LogEvent(ctx context.Context, arg LogEventParams) (int64, erro
 	return id, err
 }
 
+const testDictionaryPairExists = `-- name: TestDictionaryPairExists :one
+SELECT EXISTS(
+  SELECT 1 
+  FROM dictionary
+  WHERE 
+    source_hash = ?
+    AND
+    event_hash = ?
+  )
+`
+
+type TestDictionaryPairExistsParams struct {
+	SourceHash int64
+	EventHash  int64
+}
+
+func (q *Queries) TestDictionaryPairExists(ctx context.Context, arg TestDictionaryPairExistsParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, testDictionaryPairExists, arg.SourceHash, arg.EventHash)
+	var column_1 int64
+	err := row.Scan(&column_1)
+	return column_1, err
+}
+
+const testEventPairExists = `-- name: TestEventPairExists :one
+SELECT EXISTS(
+  SELECT 1 
+  FROM events 
+  WHERE 
+    source = ?
+    AND
+    event = ?
+  )
+`
+
+type TestEventPairExistsParams struct {
+	Source int64
+	Event  int64
+}
+
+func (q *Queries) TestEventPairExists(ctx context.Context, arg TestEventPairExistsParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, testEventPairExists, arg.Source, arg.Event)
+	var column_1 int64
+	err := row.Scan(&column_1)
+	return column_1, err
+}
+
 const updateDictionary = `-- name: UpdateDictionary :exec
 INSERT OR IGNORE INTO dictionary (
   event_source, event_name, source_hash, event_hash

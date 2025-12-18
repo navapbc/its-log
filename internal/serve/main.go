@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-func PourGin(s itslog.ItsLog, apiKeys config.ApiKeys, ch_evt_out chan<- *itslog.Event) *gin.Engine {
+func PourGin(apiKeys config.ApiKeys, ch_evt_out chan<- *itslog.Event) *gin.Engine {
 	// We may want production mode.
 	// This is configured via the envrionment
 	if viper.GetString("gin_mode") == "release" {
@@ -22,7 +22,7 @@ func PourGin(s itslog.ItsLog, apiKeys config.ApiKeys, ch_evt_out chan<- *itslog.
 	authV1 := apiV1.Group("/")
 	authV1.Use(AuthMiddleWare(apiKeys))
 
-	authV1.PUT("event/:appID/:eventID", Event(s, ch_evt_out))
+	authV1.PUT("event/:appID/:eventID", Event(ch_evt_out))
 
 	return router
 }
@@ -39,7 +39,7 @@ func Serve(storage itslog.ItsLog, apiKeys config.ApiKeys) {
 	go csp.Enqueue(ch_evt, ch_eb, event_buffer_length, event_buffer_flush_seconds)
 	go csp.FlushBuffers(ch_eb, storage)
 
-	engine := PourGin(storage, apiKeys, ch_evt)
+	engine := PourGin(apiKeys, ch_evt)
 	host := viper.GetString("serve.host")
 	port := viper.GetString("serve.port")
 	_ = engine.Run(fmt.Sprintf("%s:%s", host, port))

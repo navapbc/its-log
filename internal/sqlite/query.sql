@@ -15,3 +15,24 @@ INSERT OR IGNORE INTO dictionary (
 ) VALUES (
   ?, ?, ?, ?
 );
+
+-- name: TestEventPairExists :one
+SELECT EXISTS(
+  SELECT 1 
+  FROM events 
+  WHERE 
+    source = ?
+    AND
+    event = ?
+  );
+
+
+-- name: TestDictionaryPairExists :one
+SELECT EXISTS(
+  SELECT 1 
+  FROM dictionary
+  WHERE 
+    source_hash = ?
+    AND
+    event_hash = ?
+  );
