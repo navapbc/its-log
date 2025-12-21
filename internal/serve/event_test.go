@@ -90,7 +90,7 @@ func TestPutMessageToDb(t *testing.T) {
 		Path: ":memory:",
 	}
 	viper.Set("app.hash_seed", 42)
-	err := storage.Init()
+	err := storage.Init(time.Now())
 
 	if err != nil {
 		panic(err)

@@ -1,7 +1,7 @@
 -- https://docs.sqlc.dev/en/latest/tutorials/getting-started-sqlite.html
 
 -- name: LogEvent :one
-INSERT INTO events (
+INSERT INTO itslog_events (
   source, event
 ) VALUES (
   ?, ?
@@ -12,27 +12,109 @@ RETURNING id;
 -- However, there may be times where we want to be 
 -- more explicit about the timestamp of an entry.
 -- name: LogTimestampedEvent :one
-INSERT INTO events (
+INSERT INTO itslog_events (
   timestamp, source, event
 ) VALUES (
   ?, ?, ?
 )
 RETURNING id;
 
-
-
 -- name: UpdateDictionary :exec
-INSERT OR IGNORE INTO dictionary (
-  event_source, event_name, source_hash, event_hash
+INSERT OR IGNORE INTO itslog_dictionary (
+  source_name, event_name, source_hash, event_hash
 ) VALUES (
   ?, ?, ?, ?
 );
 
+--------------------------------------------------------
+-- SUMMARIZING DATA
+--------------------------------------------------------
+-- name: InsertSummary :exec
+INSERT INTO itslog_summary (
+  operation, source, event, value 
+  ) VALUES (
+  ?, ?, ?, ?
+  );
+
+------------------------
+-- By the hour
+------------------------
+-- name: EventCountsByTheHour :many
+SELECT 
+  strftime('%H', timestamp) AS hour,
+  source,
+  event,
+  COUNT(*) AS event_count
+FROM itslog_events
+GROUP BY hour, source, event
+ORDER BY hour, source, event;
+
+-- name: SourceCountsByTheHour :many
+SELECT 
+  strftime('%H', timestamp) AS hour,
+  source,
+  event,
+  COUNT(*) AS source_count
+FROM itslog_events
+GROUP BY hour, source
+ORDER BY hour, source;
+
+------------------------
+-- By the day
+------------------------
+-- name: EventCountsForTheDay :many
+SELECT 
+  source,
+  event,
+  COUNT(*) AS event_count
+FROM itslog_events
+GROUP BY source, event
+ORDER BY source, event;
+
+-- name: SourceCountsForTheDay :many
+SELECT 
+  source,
+  COUNT(*) AS source_count
+FROM itslog_events
+GROUP BY source
+ORDER BY source;
+
+------------------------
+-- Summary helpers
+------------------------
+-- name: GetSourceName :one
+SELECT
+  source_name
+  FROM itslog_dictionary
+  WHERE
+    source_hash = ?
+  LIMIT 1;
+
+-- name: GetEventName :one
+SELECT
+  event_name
+  FROM itslog_dictionary
+  WHERE
+    source_hash = ?
+    AND
+    event_hash = ?
+  LIMIT 1;
+
+
+-- name: DeleteSummaryData :exec
+DELETE FROM itslog_summary;
+
+-- NAH name: ResetSummaryDataSequence :exec
+-- DELETE FROM SQLITE_SEQUENCE WHERE name='table_name';
+
+--------------------------------------------------------
+-- TEST HELPERS
+--------------------------------------------------------
 -- Used for unit/end-to-end testing.
 -- name: TestEventPairExists :one
 SELECT EXISTS(
   SELECT 1 
-  FROM events 
+  FROM itslog_events 
   WHERE 
     source = ?
     AND
@@ -43,7 +125,7 @@ SELECT EXISTS(
 -- name: TestDictionaryPairExists :one
 SELECT EXISTS(
   SELECT 1 
-  FROM dictionary
+  FROM itslog_dictionary
   WHERE 
     source_hash = ?
     AND

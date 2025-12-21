@@ -20,12 +20,23 @@ var app_count *int64
 var events_per_app *int64
 
 func randomTimeThisMonth() time.Time {
-	now := time.Now()
+	now := time.Now().UTC()
 	startOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
 	startOfNextMonth := startOfMonth.AddDate(0, 1, 0)
 	duration := startOfNextMonth.Sub(startOfMonth)
 	randomDuration := time.Duration(rand.Int63n(int64(duration)))
 	randomTime := startOfMonth.Add(randomDuration)
+	randomTime = randomTime.Truncate(time.Second)
+	return randomTime
+}
+
+func randomTimeToday() time.Time {
+	now := time.Now().UTC()
+	startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	startOfTomorrow := startOfDay.AddDate(0, 0, 1)
+	duration := startOfTomorrow.Sub(startOfDay)
+	randomDuration := time.Duration(rand.Int63n(int64(duration)))
+	randomTime := startOfDay.Add(randomDuration)
 	randomTime = randomTime.Truncate(time.Second)
 	return randomTime
 }
@@ -37,36 +48,43 @@ var randomDataCmd = &cobra.Command{
 	Long:  `Generate random data.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("randomData called")
-		storage := &sqlite.SqliteStorage{
-			Path: viper.GetString("sqlite.path"),
-		}
-		storage.Init()
+		// Create a database for today and yesterday
+		for _, t := range []time.Time{
+			time.Now(),
+			time.Now().AddDate(0, 0, -1),
+		} {
+			storage := &sqlite.SqliteStorage{
+				Path: viper.GetString("sqlite.path"),
+			}
+			storage.Init(t)
 
-		for range *row_count {
-			q := storage.GetQueries()
-			// Do everything this month, randomly.
-			//fmt.Sprintf("app_%04d", rand.Intn(int(*app_count+1)))
-			the_time := randomTimeThisMonth()
-			the_app := rand.Int63n(*app_count + 1)
-			the_evt := rand.Int63n(*events_per_app + 1)
-			// Insert a fake-stamped event from this month
-			q.LogTimestampedEvent(context.Background(),
-				models.LogTimestampedEventParams{
-					Timestamp: the_time,
-					Source:    the_app,
-					Event:     the_evt,
-				})
-			// Insert a dictionary entry for this fake app/event
-			q.UpdateDictionary(context.Background(),
-				models.UpdateDictionaryParams{
-					EventSource: fmt.Sprintf("app_%03d", the_app),
-					EventName:   fmt.Sprintf("event_%03d", the_evt),
-					SourceHash:  the_app,
-					EventHash:   the_evt,
-				})
-		}
+			for range *row_count {
+				q := storage.GetQueries()
+				// Do everything this month, randomly.
+				//fmt.Sprintf("app_%04d", rand.Intn(int(*app_count+1)))
+				the_time := randomTimeToday()
+				the_app := rand.Int63n(*app_count + 1)
+				the_evt := rand.Int63n(*events_per_app + 1)
+				// Insert a fake-stamped event from this month
+				q.LogTimestampedEvent(context.Background(),
+					models.LogTimestampedEventParams{
+						Timestamp: the_time,
+						Source:    the_app,
+						Event:     the_evt,
+					})
+				// Insert a dictionary entry for this fake app/event
+				q.UpdateDictionary(context.Background(),
+					models.UpdateDictionaryParams{
+						SourceName: fmt.Sprintf("app_%03d", the_app),
+						EventName:  fmt.Sprintf("event_%03d", the_evt),
+						SourceHash: the_app,
+						EventHash:  the_evt,
+					})
+			}
 
-		storage.Close()
+			storage.Close()
+
+		}
 	},
 }
 

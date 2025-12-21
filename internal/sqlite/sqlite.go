@@ -29,13 +29,13 @@ type SqliteStorage struct {
 // Init() will be called repeatedly during a single run; specifically,
 // before each flush of the buffers. Therefore, everything here should
 // be safe to do over-and-over during the life of the service.
-func (s *SqliteStorage) Init() error {
+func (s *SqliteStorage) Init(t time.Time) error {
 	ctx := context.Background()
 
-	t := time.Now()
 	var name string
 	if s.Path != ":memory:" {
-		name = fmt.Sprintf("%s/%s.sqlite", s.Path, t.Format("2006-01-02"))
+		// Heads up: we need to set the date format, because SQLite is really just treating dates as text.
+		name = fmt.Sprintf("%s/%s.sqlite?_time_format=sqlite", s.Path, t.Format("2006-01-02"))
 	} else {
 		name = s.Path
 	}
@@ -129,10 +129,10 @@ func (s *SqliteStorage) ManyEvents(es []*itslog.Event) (int64, error) {
 			// quietly ignore conflicts. This could be optimized to only update
 			// when we see a new hash value.
 			err = qtx.UpdateDictionary(ctx, models.UpdateDictionaryParams{
-				EventSource: e.Source,
-				EventName:   e.Event,
-				SourceHash:  source_h,
-				EventHash:   event_h,
+				SourceName: e.Source,
+				EventName:  e.Event,
+				SourceHash: source_h,
+				EventHash:  event_h,
 			})
 			if err != nil {
 				log.Println("Error in storing dictionary:" + err.Error())

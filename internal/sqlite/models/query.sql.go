@@ -7,12 +7,183 @@ package models
 
 import (
 	"context"
+	"database/sql"
 	"time"
 )
 
+const deleteSummaryData = `-- name: DeleteSummaryData :exec
+DELETE FROM itslog_summary
+`
+
+func (q *Queries) DeleteSummaryData(ctx context.Context) error {
+	_, err := q.db.ExecContext(ctx, deleteSummaryData)
+	return err
+}
+
+const eventCountsByTheHour = `-- name: EventCountsByTheHour :many
+SELECT 
+  strftime('%H', timestamp) AS hour,
+  source,
+  event,
+  COUNT(*) AS event_count
+FROM itslog_events
+GROUP BY hour, source, event
+ORDER BY hour, source, event
+`
+
+type EventCountsByTheHourRow struct {
+	Hour       interface{}
+	Source     int64
+	Event      int64
+	EventCount int64
+}
+
+// ----------------------
+// By the hour
+// ----------------------
+func (q *Queries) EventCountsByTheHour(ctx context.Context) ([]EventCountsByTheHourRow, error) {
+	rows, err := q.db.QueryContext(ctx, eventCountsByTheHour)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []EventCountsByTheHourRow
+	for rows.Next() {
+		var i EventCountsByTheHourRow
+		if err := rows.Scan(
+			&i.Hour,
+			&i.Source,
+			&i.Event,
+			&i.EventCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const eventCountsForTheDay = `-- name: EventCountsForTheDay :many
+SELECT 
+  source,
+  event,
+  COUNT(*) AS event_count
+FROM itslog_events
+GROUP BY source, event
+ORDER BY source, event
+`
+
+type EventCountsForTheDayRow struct {
+	Source     int64
+	Event      int64
+	EventCount int64
+}
+
+// ----------------------
+// By the day
+// ----------------------
+func (q *Queries) EventCountsForTheDay(ctx context.Context) ([]EventCountsForTheDayRow, error) {
+	rows, err := q.db.QueryContext(ctx, eventCountsForTheDay)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []EventCountsForTheDayRow
+	for rows.Next() {
+		var i EventCountsForTheDayRow
+		if err := rows.Scan(&i.Source, &i.Event, &i.EventCount); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getEventName = `-- name: GetEventName :one
+SELECT
+  event_name
+  FROM itslog_dictionary
+  WHERE
+    source_hash = ?
+    AND
+    event_hash = ?
+  LIMIT 1
+`
+
+type GetEventNameParams struct {
+	SourceHash int64
+	EventHash  int64
+}
+
+func (q *Queries) GetEventName(ctx context.Context, arg GetEventNameParams) (string, error) {
+	row := q.db.QueryRowContext(ctx, getEventName, arg.SourceHash, arg.EventHash)
+	var event_name string
+	err := row.Scan(&event_name)
+	return event_name, err
+}
+
+const getSourceName = `-- name: GetSourceName :one
+SELECT
+  source_name
+  FROM itslog_dictionary
+  WHERE
+    source_hash = ?
+  LIMIT 1
+`
+
+// ----------------------
+// Summary helpers
+// ----------------------
+func (q *Queries) GetSourceName(ctx context.Context, sourceHash int64) (string, error) {
+	row := q.db.QueryRowContext(ctx, getSourceName, sourceHash)
+	var source_name string
+	err := row.Scan(&source_name)
+	return source_name, err
+}
+
+const insertSummary = `-- name: InsertSummary :exec
+INSERT INTO itslog_summary (
+  operation, source, event, value 
+  ) VALUES (
+  ?, ?, ?, ?
+  )
+`
+
+type InsertSummaryParams struct {
+	Operation string
+	Source    string
+	Event     sql.NullString
+	Value     float64
+}
+
+// ------------------------------------------------------
+// SUMMARIZING DATA
+// ------------------------------------------------------
+func (q *Queries) InsertSummary(ctx context.Context, arg InsertSummaryParams) error {
+	_, err := q.db.ExecContext(ctx, insertSummary,
+		arg.Operation,
+		arg.Source,
+		arg.Event,
+		arg.Value,
+	)
+	return err
+}
+
 const logEvent = `-- name: LogEvent :one
 
-INSERT INTO events (
+INSERT INTO itslog_events (
   source, event
 ) VALUES (
   ?, ?
@@ -34,7 +205,7 @@ func (q *Queries) LogEvent(ctx context.Context, arg LogEventParams) (int64, erro
 }
 
 const logTimestampedEvent = `-- name: LogTimestampedEvent :one
-INSERT INTO events (
+INSERT INTO itslog_events (
   timestamp, source, event
 ) VALUES (
   ?, ?, ?
@@ -48,6 +219,9 @@ type LogTimestampedEventParams struct {
 	Event     int64
 }
 
+// This is largely for generating fake entries.
+// However, there may be times where we want to be
+// more explicit about the timestamp of an entry.
 func (q *Queries) LogTimestampedEvent(ctx context.Context, arg LogTimestampedEventParams) (int64, error) {
 	row := q.db.QueryRowContext(ctx, logTimestampedEvent, arg.Timestamp, arg.Source, arg.Event)
 	var id int64
@@ -55,10 +229,93 @@ func (q *Queries) LogTimestampedEvent(ctx context.Context, arg LogTimestampedEve
 	return id, err
 }
 
+const sourceCountsByTheHour = `-- name: SourceCountsByTheHour :many
+SELECT 
+  strftime('%H', timestamp) AS hour,
+  source,
+  event,
+  COUNT(*) AS source_count
+FROM itslog_events
+GROUP BY hour, source
+ORDER BY hour, source
+`
+
+type SourceCountsByTheHourRow struct {
+	Hour        interface{}
+	Source      int64
+	Event       int64
+	SourceCount int64
+}
+
+func (q *Queries) SourceCountsByTheHour(ctx context.Context) ([]SourceCountsByTheHourRow, error) {
+	rows, err := q.db.QueryContext(ctx, sourceCountsByTheHour)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []SourceCountsByTheHourRow
+	for rows.Next() {
+		var i SourceCountsByTheHourRow
+		if err := rows.Scan(
+			&i.Hour,
+			&i.Source,
+			&i.Event,
+			&i.SourceCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const sourceCountsForTheDay = `-- name: SourceCountsForTheDay :many
+SELECT 
+  source,
+  COUNT(*) AS source_count
+FROM itslog_events
+GROUP BY source
+ORDER BY source
+`
+
+type SourceCountsForTheDayRow struct {
+	Source      int64
+	SourceCount int64
+}
+
+func (q *Queries) SourceCountsForTheDay(ctx context.Context) ([]SourceCountsForTheDayRow, error) {
+	rows, err := q.db.QueryContext(ctx, sourceCountsForTheDay)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []SourceCountsForTheDayRow
+	for rows.Next() {
+		var i SourceCountsForTheDayRow
+		if err := rows.Scan(&i.Source, &i.SourceCount); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const testDictionaryPairExists = `-- name: TestDictionaryPairExists :one
 SELECT EXISTS(
   SELECT 1 
-  FROM dictionary
+  FROM itslog_dictionary
   WHERE 
     source_hash = ?
     AND
@@ -79,9 +336,10 @@ func (q *Queries) TestDictionaryPairExists(ctx context.Context, arg TestDictiona
 }
 
 const testEventPairExists = `-- name: TestEventPairExists :one
+
 SELECT EXISTS(
   SELECT 1 
-  FROM events 
+  FROM itslog_events 
   WHERE 
     source = ?
     AND
@@ -94,6 +352,12 @@ type TestEventPairExistsParams struct {
 	Event  int64
 }
 
+// NAH name: ResetSummaryDataSequence :exec
+// DELETE FROM SQLITE_SEQUENCE WHERE name='table_name';
+// ------------------------------------------------------
+// TEST HELPERS
+// ------------------------------------------------------
+// Used for unit/end-to-end testing.
 func (q *Queries) TestEventPairExists(ctx context.Context, arg TestEventPairExistsParams) (int64, error) {
 	row := q.db.QueryRowContext(ctx, testEventPairExists, arg.Source, arg.Event)
 	var column_1 int64
@@ -102,23 +366,23 @@ func (q *Queries) TestEventPairExists(ctx context.Context, arg TestEventPairExis
 }
 
 const updateDictionary = `-- name: UpdateDictionary :exec
-INSERT OR IGNORE INTO dictionary (
-  event_source, event_name, source_hash, event_hash
+INSERT OR IGNORE INTO itslog_dictionary (
+  source_name, event_name, source_hash, event_hash
 ) VALUES (
   ?, ?, ?, ?
 )
 `
 
 type UpdateDictionaryParams struct {
-	EventSource string
-	EventName   string
-	SourceHash  int64
-	EventHash   int64
+	SourceName string
+	EventName  string
+	SourceHash int64
+	EventHash  int64
 }
 
 func (q *Queries) UpdateDictionary(ctx context.Context, arg UpdateDictionaryParams) error {
 	_, err := q.db.ExecContext(ctx, updateDictionary,
-		arg.EventSource,
+		arg.SourceName,
 		arg.EventName,
 		arg.SourceHash,
 		arg.EventHash,

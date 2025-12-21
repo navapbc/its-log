@@ -16,7 +16,7 @@ type DefaultStorage struct {
 // Memory buckets! great for testing.
 // b, err := blob.OpenBucket(ctx, "mem://?prefix=a/subfolder/")
 
-func (s *DefaultStorage) Init() error {
+func (s *DefaultStorage) Init(t time.Time) error {
 	fmt.Println("default storage initialized")
 	s.Counter = 0
 	return nil
@@ -40,6 +40,10 @@ func (s *DefaultStorage) ManyEvents(es []*itslog.Event) (int64, error) {
 	}
 
 	return s.Counter, nil
+}
+
+func (s *DefaultStorage) Summarize() {
+	//pass
 }
 
 func (s *DefaultStorage) Close() {

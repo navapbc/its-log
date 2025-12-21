@@ -35,9 +35,12 @@ func Serve(storage itslog.ItsLog, apiKeys config.ApiKeys) {
 	// saving events that come in via the API
 	ch_eb := make(chan csp.EventBuffers)
 	ch_evt := make(chan *itslog.Event)
+
 	// FIXME: add these constants to the configuration
 	go csp.Enqueue(ch_evt, ch_eb, event_buffer_length, event_buffer_flush_seconds)
 	go csp.FlushBuffers(ch_eb, storage)
+	// This updates *yesterdays* database on minute one of the day
+	go csp.Summarize(storage)
 
 	engine := PourGin(apiKeys, ch_evt)
 	host := viper.GetString("serve.host")

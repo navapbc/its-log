@@ -2,6 +2,7 @@ package csp
 
 import (
 	"log"
+	"time"
 
 	"github.com/jadudm/its-log/internal/itslog"
 )
@@ -9,7 +10,7 @@ import (
 // Broken out for testing
 func FlushBuffersOnce(ch_flush_in <-chan EventBuffers, storage itslog.ItsLog) {
 	// Open the storage for writing before we flush
-	err := storage.Init()
+	err := storage.Init(time.Now())
 	if err != nil {
 		panic(err)
 	}

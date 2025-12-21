@@ -5,21 +5,30 @@
 package models
 
 import (
+	"database/sql"
 	"time"
 )
 
-type Dictionary struct {
-	ID          int64
-	Timestamp   time.Time
-	EventSource string
-	EventName   string
-	SourceHash  int64
-	EventHash   int64
+type ItslogDictionary struct {
+	ID         int64
+	Timestamp  time.Time
+	SourceName string
+	EventName  string
+	SourceHash int64
+	EventHash  int64
 }
 
-type Event struct {
+type ItslogEvent struct {
 	ID        int64
 	Timestamp time.Time
 	Source    int64
 	Event     int64
+}
+
+type ItslogSummary struct {
+	ID        int64
+	Operation string
+	Source    string
+	Event     sql.NullString
+	Value     float64
 }
