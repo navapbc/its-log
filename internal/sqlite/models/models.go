@@ -5,12 +5,12 @@
 package models
 
 import (
-	"database/sql"
+	"time"
 )
 
 type Dictionary struct {
 	ID          int64
-	Timestamp   sql.NullTime
+	Timestamp   time.Time
 	EventSource string
 	EventName   string
 	SourceHash  int64
@@ -19,7 +19,7 @@ type Dictionary struct {
 
 type Event struct {
 	ID        int64
-	Timestamp sql.NullTime
+	Timestamp time.Time
 	Source    int64
 	Event     int64
 }

@@ -6,6 +6,7 @@ type ItsLog interface {
 	Init() error
 	Event(e *Event) (int64, error)
 	ManyEvents(e []*Event) (int64, error)
+	Close()
 }
 
 type Event struct {

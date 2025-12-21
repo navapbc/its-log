@@ -41,3 +41,7 @@ func (s *DefaultStorage) ManyEvents(es []*itslog.Event) (int64, error) {
 
 	return s.Counter, nil
 }
+
+func (s *DefaultStorage) Close() {
+	// pass
+}

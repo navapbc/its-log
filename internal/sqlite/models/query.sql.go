@@ -7,6 +7,7 @@ package models
 
 import (
 	"context"
+	"time"
 )
 
 const logEvent = `-- name: LogEvent :one
@@ -27,6 +28,28 @@ type LogEventParams struct {
 // https://docs.sqlc.dev/en/latest/tutorials/getting-started-sqlite.html
 func (q *Queries) LogEvent(ctx context.Context, arg LogEventParams) (int64, error) {
 	row := q.db.QueryRowContext(ctx, logEvent, arg.Source, arg.Event)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
+}
+
+const logTimestampedEvent = `-- name: LogTimestampedEvent :one
+INSERT INTO events (
+  timestamp, source, event
+) VALUES (
+  ?, ?, ?
+)
+RETURNING id
+`
+
+type LogTimestampedEventParams struct {
+	Timestamp time.Time
+	Source    int64
+	Event     int64
+}
+
+func (q *Queries) LogTimestampedEvent(ctx context.Context, arg LogTimestampedEventParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, logTimestampedEvent, arg.Timestamp, arg.Source, arg.Event)
 	var id int64
 	err := row.Scan(&id)
 	return id, err

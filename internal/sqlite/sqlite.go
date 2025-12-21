@@ -26,6 +26,9 @@ type SqliteStorage struct {
 	db      *sql.DB
 }
 
+// Init() will be called repeatedly during a single run; specifically,
+// before each flush of the buffers. Therefore, everything here should
+// be safe to do over-and-over during the life of the service.
 func (s *SqliteStorage) Init() error {
 	ctx := context.Background()
 
@@ -60,6 +63,14 @@ func (s *SqliteStorage) Init() error {
 	s.h.SetSeed(seed)
 
 	return nil
+}
+
+// This is a massive hole in the abstraction.
+// It is used for random data generation, so that I can
+// reach down to the SQLC queries directly, and generate
+// random events with random timestamps.
+func (s *SqliteStorage) GetQueries() *models.Queries {
+	return s.queries
 }
 
 func hashSourceAndEvent(h maphash.Hash, source string, event string) (int64, int64) {
@@ -135,6 +146,10 @@ func (s *SqliteStorage) ManyEvents(es []*itslog.Event) (int64, error) {
 	tx.Commit()
 
 	return counter, nil
+}
+
+func (s *SqliteStorage) Close() {
+	s.db.Close()
 }
 
 // -1 if there was an error, 0 if the row was not found, 1 if it was found

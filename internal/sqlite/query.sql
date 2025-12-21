@@ -8,6 +8,18 @@ INSERT INTO events (
 )
 RETURNING id;
 
+-- This is largely for generating fake entries. 
+-- However, there may be times where we want to be 
+-- more explicit about the timestamp of an entry.
+-- name: LogTimestampedEvent :one
+INSERT INTO events (
+  timestamp, source, event
+) VALUES (
+  ?, ?, ?
+)
+RETURNING id;
+
+
 
 -- name: UpdateDictionary :exec
 INSERT OR IGNORE INTO dictionary (
@@ -16,6 +28,7 @@ INSERT OR IGNORE INTO dictionary (
   ?, ?, ?, ?
 );
 
+-- Used for unit/end-to-end testing.
 -- name: TestEventPairExists :one
 SELECT EXISTS(
   SELECT 1 

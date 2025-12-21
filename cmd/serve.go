@@ -36,13 +36,8 @@ func serve_cmd(cmd *cobra.Command, args []string) {
 		storage = &sqlite.SqliteStorage{
 			Path: viper.GetString("sqlite.path"),
 		}
-		err := storage.Init()
-		if err != nil {
-			panic(err)
-		}
 	case "default":
 		storage = &defaultstorage.DefaultStorage{}
-		storage.Init()
 	}
 
 	// Parse the API key config
