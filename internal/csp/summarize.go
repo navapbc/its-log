@@ -1,7 +1,8 @@
 package csp
 
 import (
-	"time"
+	"os"
+	"path/filepath"
 
 	"github.com/jadudm/its-log/internal/sqlite"
 	cron "github.com/robfig/cron/v3"
@@ -20,12 +21,21 @@ func Summarize() {
 	c := cron.New()
 	c.AddFunc(START_OF_THE_DAY,
 		func() {
-			yesterday := time.Now().AddDate(0, 0, -1)
-			storage := &sqlite.SqliteStorage{
-				Path: viper.GetString("sqlite.path"),
+			path := viper.GetString("sqlite.path")
+			files, err := os.ReadDir(path)
+			if err != nil {
+				panic(err)
 			}
-			storage.Init(yesterday)
-			storage.Summarize()
+			for _, file := range files {
+				storage := &sqlite.SqliteStorage{
+					Path: filepath.Join(path, file.Name()),
+				}
+				//FIXME: Walk the path, and try and process/summarize everything there.
+				// The metadata should tell us if it was already done.
+				storage.Init()
+				storage.Summarize()
+
+			}
 		})
 	c.Start()
 }

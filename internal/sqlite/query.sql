@@ -27,10 +27,22 @@ INSERT OR IGNORE INTO itslog_dictionary (
 );
 
 --------------------------------------------------------
+-- METADATA
+--------------------------------------------------------
+
+-- name: InsertMetadata :exec
+INSERT OR REPLACE INTO itslog_metadata (key, value) 
+  VALUES (?, ?);
+
+-- name: GetMetadata :one
+SELECT key, value FROM itslog_metadata
+  WHERE key = ? LIMIT 1;
+
+--------------------------------------------------------
 -- SUMMARIZING DATA
 --------------------------------------------------------
 -- name: InsertSummary :exec
-INSERT INTO itslog_summary (
+INSERT OR REPLACE INTO itslog_summary (
   operation, source, event, value 
   ) VALUES (
   ?, ?, ?, ?
@@ -99,6 +111,22 @@ SELECT
     AND
     event_hash = ?
   LIMIT 1;
+
+-- name: GetSourceNames :many
+SELECT
+  source_name
+  FROM 
+  itslog_dictionary
+;
+
+-- name: GetEventNamesForSource :many
+SELECT
+  event_name
+  FROM
+  itslog_dictionary
+  WHERE 
+  source_name = ?
+;
 
 
 -- name: DeleteSummaryData :exec

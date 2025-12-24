@@ -45,5 +45,10 @@ func Serve(storage itslog.ItsLog, apiKeys config.ApiKeys) {
 	engine := PourGin(apiKeys, ch_evt)
 	host := viper.GetString("serve.host")
 	port := viper.GetString("serve.port")
-	_ = engine.Run(fmt.Sprintf("%s:%s", host, port))
+	cert := viper.GetString("serve.cert")
+	key := viper.GetString("serve.key")
+	if cert != "mock" && key != "mock" {
+		_ = engine.RunTLS(fmt.Sprintf("%s:%s", host, port), cert, key)
+	}
+	panic("failed to find cert/key. leaving in a panic.")
 }

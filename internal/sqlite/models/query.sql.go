@@ -12,6 +12,9 @@ import (
 )
 
 const deleteSummaryData = `-- name: DeleteSummaryData :exec
+;
+
+
 DELETE FROM itslog_summary
 `
 
@@ -134,6 +137,57 @@ func (q *Queries) GetEventName(ctx context.Context, arg GetEventNameParams) (str
 	return event_name, err
 }
 
+const getEventNamesForSource = `-- name: GetEventNamesForSource :many
+;
+
+SELECT
+  event_name
+  FROM
+  itslog_dictionary
+  WHERE 
+  source_name = ?
+`
+
+func (q *Queries) GetEventNamesForSource(ctx context.Context, sourceName string) ([]string, error) {
+	rows, err := q.db.QueryContext(ctx, getEventNamesForSource, sourceName)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var event_name string
+		if err := rows.Scan(&event_name); err != nil {
+			return nil, err
+		}
+		items = append(items, event_name)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getMetadata = `-- name: GetMetadata :one
+SELECT key, value FROM itslog_metadata
+  WHERE key = ? LIMIT 1
+`
+
+type GetMetadataRow struct {
+	Key   string
+	Value string
+}
+
+func (q *Queries) GetMetadata(ctx context.Context, key string) (GetMetadataRow, error) {
+	row := q.db.QueryRowContext(ctx, getMetadata, key)
+	var i GetMetadataRow
+	err := row.Scan(&i.Key, &i.Value)
+	return i, err
+}
+
 const getSourceName = `-- name: GetSourceName :one
 SELECT
   source_name
@@ -153,8 +207,57 @@ func (q *Queries) GetSourceName(ctx context.Context, sourceHash int64) (string, 
 	return source_name, err
 }
 
+const getSourceNames = `-- name: GetSourceNames :many
+SELECT
+  source_name
+  FROM 
+  itslog_dictionary
+`
+
+func (q *Queries) GetSourceNames(ctx context.Context) ([]string, error) {
+	rows, err := q.db.QueryContext(ctx, getSourceNames)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var source_name string
+		if err := rows.Scan(&source_name); err != nil {
+			return nil, err
+		}
+		items = append(items, source_name)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const insertMetadata = `-- name: InsertMetadata :exec
+
+INSERT OR REPLACE INTO itslog_metadata (key, value) 
+  VALUES (?, ?)
+`
+
+type InsertMetadataParams struct {
+	Key   string
+	Value string
+}
+
+// ------------------------------------------------------
+// METADATA
+// ------------------------------------------------------
+func (q *Queries) InsertMetadata(ctx context.Context, arg InsertMetadataParams) error {
+	_, err := q.db.ExecContext(ctx, insertMetadata, arg.Key, arg.Value)
+	return err
+}
+
 const insertSummary = `-- name: InsertSummary :exec
-INSERT INTO itslog_summary (
+INSERT OR REPLACE INTO itslog_summary (
   operation, source, event, value 
   ) VALUES (
   ?, ?, ?, ?

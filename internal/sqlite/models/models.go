@@ -25,6 +25,12 @@ type ItslogEvent struct {
 	Event     int64
 }
 
+type ItslogMetadatum struct {
+	ID    int64
+	Key   string
+	Value string
+}
+
 type ItslogSummary struct {
 	ID        int64
 	Operation string

@@ -5,10 +5,10 @@ package cmd
 
 import (
 	"github.com/jadudm/its-log/internal/config"
-	defaultstorage "github.com/jadudm/its-log/internal/default-storage"
 	"github.com/jadudm/its-log/internal/itslog"
 	"github.com/jadudm/its-log/internal/serve"
 	"github.com/jadudm/its-log/internal/sqlite"
+	"github.com/madflojo/testcerts"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -37,7 +37,7 @@ func serve_cmd(cmd *cobra.Command, args []string) {
 			Path: viper.GetString("sqlite.path"),
 		}
 	case "default":
-		storage = &defaultstorage.DefaultStorage{}
+		//storage = &defaultstorage.DefaultStorage{}
 	}
 
 	// Parse the API key config
@@ -48,6 +48,18 @@ func serve_cmd(cmd *cobra.Command, args []string) {
 		panic(err)
 	}
 
+	// Set up for TLS.
+	if viper.GetString("serve.cert") == "mock" && viper.GetString("serve.key") == "mock" {
+		cert, key, err := testcerts.GenerateCertsToTempFile("/tmp")
+		if err != nil {
+			panic(err)
+		}
+		viper.Set("serve.cert", cert)
+		viper.Set("serve.key", key)
+		serve.Serve(storage, apiConfig)
+	}
+
+	// This will fail if we don't have a cert/key set in the config.
 	serve.Serve(storage, apiConfig)
 }
 

@@ -29,12 +29,13 @@ type SqliteStorage struct {
 // Init() will be called repeatedly during a single run; specifically,
 // before each flush of the buffers. Therefore, everything here should
 // be safe to do over-and-over during the life of the service.
-func (s *SqliteStorage) Init(t time.Time) error {
+func (s *SqliteStorage) Init() error {
 	ctx := context.Background()
 
 	var name string
 	if s.Path != ":memory:" {
 		// Heads up: we need to set the date format, because SQLite is really just treating dates as text.
+		t := time.Now()
 		name = fmt.Sprintf("%s/%s.sqlite?_time_format=sqlite", s.Path, t.Format("2006-01-02"))
 	} else {
 		name = s.Path

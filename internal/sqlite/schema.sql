@@ -22,6 +22,8 @@ CREATE TABLE IF NOT EXISTS itslog_dictionary (
     event_hash INTEGER NOT NULL
 );
 
+CREATE UNIQUE INDEX IF NOT EXISTS dictionary_pairs_ndx ON itslog_dictionary (source_hash, event_hash);
+
 CREATE TABLE IF NOT EXISTS itslog_summary (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     operation TEXT NOT NULL,
@@ -30,4 +32,15 @@ CREATE TABLE IF NOT EXISTS itslog_summary (
     value REAL NOT NULL
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS dictionary_pairs_ndx ON itslog_dictionary (source_hash, event_hash);
+-- This lets us write and rewrite the data to the same table. 
+-- The operation (e.g. `app.by-day`) source (`app_001`) and event (`v2_api`)
+-- are "unique", and we then want to record/update the value.
+CREATE UNIQUE INDEX IF NOT EXISTS summary_ndx ON itslog_summary (operation, source, event);
+
+CREATE TABLE IF NOT EXISTS itslog_metadata (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    key TEXT NOT NULL,
+    value TEXT NOT NULL
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS metadata_ndx ON itslog_metadata (key);

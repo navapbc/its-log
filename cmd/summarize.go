@@ -4,7 +4,7 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"fmt"
+	"path/filepath"
 	"time"
 
 	"github.com/jadudm/its-log/internal/sqlite"
@@ -12,42 +12,26 @@ import (
 	"github.com/spf13/viper"
 )
 
+var filename string
+
 // summarizeCmd represents the summarize command
 var summarizeCmd = &cobra.Command{
 	Use:   "summarize",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Summarize the data in a database",
+	Long:  `Provide the name of a database at sqlite.path to be summarized.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("summarize called")
+		//
 		storage := &sqlite.SqliteStorage{
-			Path: viper.GetString("sqlite.path"),
+			Path: filepath.Join(viper.GetString("sqlite.path"), filename),
 		}
 
-		t := time.Now()
-		// FIXME: Give the command line flexibility
-		// to choose the date, or to go back N days, or...
-		yesterday := t.AddDate(0, 0, -1)
-
-		storage.Init(yesterday)
+		storage.Init()
 		storage.Summarize()
 	},
 }
 
 func init() {
+	pfix := time.Now().Format("2006-01-02")
 	rootCmd.AddCommand(summarizeCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// summarizeCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// summarizeCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.Flags().StringP("filename", "f", pfix+".sqlite", "name of database in sqlite.path")
 }

@@ -8,7 +8,10 @@ api_keys:
 
 serve:
   host: "0.0.0.0"
-  port: 9999
+  # When cert/key are "mock", we run with TLS.
+  port: 8443
+  cert: "mock" 
+  key: "mock"
 
 app:
   # "debug" or "release"
