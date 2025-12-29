@@ -182,3 +182,7 @@ func (s *SqliteStorage) TestEventExists(source string, event string) int64 {
 	}
 	return res
 }
+
+func (s *SqliteStorage) GetDB() *sql.DB {
+	return s.db
+}

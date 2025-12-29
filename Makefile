@@ -12,9 +12,11 @@ clean:
 generate:
 	cd internal/sqlite ; sqlc generate
 
+config:
+	mkdir -p ~/.itslog
+	cp config.yaml ~/.itslog
 
-serve: generate
-	cp config.yaml cmd
+serve: generate config
 	go run ./... serve
 
 docker:
@@ -37,3 +39,6 @@ k6:
 
 test:
 	go test ./...
+
+etl: generate config
+	cd pipeline ; make etl

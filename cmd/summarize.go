@@ -4,6 +4,7 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"fmt"
 	"path/filepath"
 	"time"
 
@@ -12,7 +13,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-var filename string
+var filename *string
 
 // summarizeCmd represents the summarize command
 var summarizeCmd = &cobra.Command{
@@ -20,9 +21,10 @@ var summarizeCmd = &cobra.Command{
 	Short: "Summarize the data in a database",
 	Long:  `Provide the name of a database at sqlite.path to be summarized.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		//
+		fullPath := filepath.Join(viper.GetString("sqlite.path"), *filename)
+		fmt.Printf("Summarizing `%s`\n", fullPath)
 		storage := &sqlite.SqliteStorage{
-			Path: filepath.Join(viper.GetString("sqlite.path"), filename),
+			Path: fullPath,
 		}
 
 		storage.Init()
@@ -32,6 +34,6 @@ var summarizeCmd = &cobra.Command{
 
 func init() {
 	pfix := time.Now().Format("2006-01-02")
+	filename = summarizeCmd.Flags().StringP("filename", "f", pfix+".sqlite", "name of database in sqlite.path")
 	rootCmd.AddCommand(summarizeCmd)
-	rootCmd.Flags().StringP("filename", "f", pfix+".sqlite", "name of database in sqlite.path")
 }
