@@ -61,11 +61,16 @@ function addId(s) {
 // Generate an event that is "authentic" to our particular context.
 function generateEvents() {
     const root = "blue";
+    var testclient = ["EOB", "Patient", "Coverage", "DigitalInsuranceCard", "Profile", "Metadata", "OIDC"];
+    var fhir = ["Patient", "Coverage", "ExplanationOfBenefit"];
+
     var sources = {
-        "testclient": ["EOB", addId("Patient"), "Coverage", "DigitalInsuranceCard"],
-        "fhir.v2": [addId("Patient"), "Coverage", "ExplanationOfBenefit"],
-        "fhir.v3": [addId("Patient"), "Coverage", "ExplanationOfBenefit"],
+        "testclient.v2": testclient,
+        "testclient.v3": testclient,
+        "fhir.v2": fhir,
+        "fhir.v3": fhir,
     }
+
     // From https://www.medicare.gov/providers-services/claims-appeals-complaints/claims/share-your-medicare-claims/connected-apps
     const applications = [
         "AaNeel - CS", 
@@ -98,11 +103,12 @@ function generateEvents() {
         "WhatMeds"
     ]
 
-    var e = getRandD(sources)
+    var e = getRandD(sources);
+    var app = getRandE(applications);
+    var bene = generateHash(getRandE(patient_names)).toString(16);
 
     return [
-        { "source": root + "." + e.source, "event": e.event },
-        { "source": root + ".application", "event": getRandE(applications)}
+        { "source": [root, e.source].join("."), "event": [e.event, app, bene].join(".") },
     ]
 
 };

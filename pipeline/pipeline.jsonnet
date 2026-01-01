@@ -12,6 +12,10 @@
       action: "sql",
       filename: "count-by-source.sql",
     },
+    {
+      action: "sql",
+      filename: "count-by-bene.sql",
+    },
     // fileCopy copies from one location to another
     {
       action: "fileCopy",
