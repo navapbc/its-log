@@ -40,7 +40,6 @@ func Serve(storage itslog.ItsLog, apiKeys config.ApiKeys) {
 	go csp.Enqueue(ch_evt, ch_eb, event_buffer_length, event_buffer_flush_seconds)
 	go csp.FlushBuffers(ch_eb, storage)
 	// This updates *yesterdays* database on minute one of the day
-	go csp.Summarize()
 
 	engine := PourGin(apiKeys, ch_evt)
 	host := viper.GetString("serve.host")

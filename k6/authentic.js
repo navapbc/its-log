@@ -22,6 +22,22 @@ export const options = {
   insecureSkipTLSVerify: true,
 };
 
+// CONSTANTS
+// names
+const patient_names = []
+for (const source_number of Array(30).keys()) {
+  patient_names.push("Alice." + source_number) 
+}
+for (const source_number of Array(30).keys()) {
+  patient_names.push("Bob." + source_number) 
+}
+// API PARAMS
+const params = {
+            headers: {"x-api-key": "not-a-real-api-key-but-it-needs-to-be-long"}
+        };
+
+
+// HELPER FUNS
 function getRandE(list) {
   const randomIndex = Math.floor(Math.random() * list.length);
   return list[randomIndex];
@@ -32,19 +48,6 @@ function getRandD(d) {
   return { "source": keyAtIndex, "event": getRandE(d[keyAtIndex]) };
 }
 
-const patient_names = []
-for (const source_number of Array(30).keys()) {
-  patient_names.push("Alice." + source_number) 
-}
-for (const source_number of Array(30).keys()) {
-  patient_names.push("Bob." + source_number) 
-}
-
-const params = {
-            headers: {"x-api-key": "not-a-real-api-key-but-it-needs-to-be-long"}
-        };
-
-
 const generateHash = (string) => {
   let hash = 0;
   for (const char of string) {
@@ -54,9 +57,6 @@ const generateHash = (string) => {
   return hash;
 };
 
-function addId(s) {
-    return s + "-" + generateHash(getRandE(patient_names)).toString(16)
-}
 
 // Generate an event that is "authentic" to our particular context.
 function generateEvents() {
@@ -107,8 +107,16 @@ function generateEvents() {
     var app = getRandE(applications);
     var bene = generateHash(getRandE(patient_names)).toString(16);
 
+
     return [
-        { "source": [root, e.source].join("."), "event": [e.event, app, bene].join(".") },
+      // First, return blue.endpoint.{source}/{event}
+        { "source": [root, "endpoint", e.source].join("."), "event": e.event },
+        // Now, blue.endpoint_app.{source}.{event}/{app}
+        { "source": [root, "endpoint_app", e.source, e.event].join("."), "event": [app].join(".") },
+        // blue.endpoint_user.{source}.{event}/{bene}
+        { "source": [root, "endpoint_user", e.source, e.event].join("."), "event": [bene].join(".") },
+        // blue.{app}/{bene}
+        { "source": [root, e.source].join("."), "event": [bene].join(".") },
     ]
 
 };

@@ -2,7 +2,7 @@
 
 -- name: LogEvent :one
 INSERT INTO itslog_events (
-  source, event
+  source_hash, event_hash
 ) VALUES (
   ?, ?
 )
@@ -13,7 +13,7 @@ RETURNING id;
 -- more explicit about the timestamp of an entry.
 -- name: LogTimestampedEvent :one
 INSERT INTO itslog_events (
-  timestamp, source, event
+  timestamp, source_hash, event_hash
 ) VALUES (
   ?, ?, ?
 )
@@ -43,7 +43,7 @@ SELECT key, value FROM itslog_metadata
 --------------------------------------------------------
 -- name: InsertSummary :exec
 INSERT OR REPLACE INTO itslog_summary (
-  operation, source, event, value 
+  operation, source_name, event_name, value 
   ) VALUES (
   ?, ?, ?, ?
   );
@@ -54,42 +54,42 @@ INSERT OR REPLACE INTO itslog_summary (
 -- name: EventCountsByTheHour :many
 SELECT 
   strftime('%H', timestamp) AS hour,
-  source,
-  event,
+  source_hash,
+  event_hash,
   COUNT(*) AS event_count
 FROM itslog_events
-GROUP BY hour, source, event
-ORDER BY hour, source, event;
+GROUP BY hour, source_hash, event_hash
+ORDER BY hour, source_hash, event_hash;
 
 -- name: SourceCountsByTheHour :many
 SELECT 
   strftime('%H', timestamp) AS hour,
-  source,
-  event,
+  source_hash,
+  event_hash,
   COUNT(*) AS source_count
 FROM itslog_events
-GROUP BY hour, source
-ORDER BY hour, source;
+GROUP BY hour, source_hash
+ORDER BY hour, source_hash;
 
 ------------------------
 -- By the day
 ------------------------
 -- name: EventCountsForTheDay :many
 SELECT 
-  source,
-  event,
+  source_hash,
+  event_hash,
   COUNT(*) AS event_count
 FROM itslog_events
-GROUP BY source, event
-ORDER BY source, event;
+GROUP BY source_hash, event_hash
+ORDER BY source_hash, event_hash;
 
 -- name: SourceCountsForTheDay :many
 SELECT 
-  source,
+  source_hash,
   COUNT(*) AS source_count
 FROM itslog_events
-GROUP BY source
-ORDER BY source;
+GROUP BY source_hash
+ORDER BY source_hash;
 
 ------------------------
 -- Summary helpers
@@ -144,9 +144,9 @@ SELECT EXISTS(
   SELECT 1 
   FROM itslog_events 
   WHERE 
-    source = ?
+    source_hash = ?
     AND
-    event = ?
+    event_hash = ?
   );
 
 

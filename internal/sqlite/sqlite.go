@@ -88,8 +88,8 @@ func (s *SqliteStorage) Event(e *itslog.Event) (int64, error) {
 	source_h, event_h := hashSourceAndEvent(s.h, e.Source, e.Event)
 	// This is an unsigned to signed conversion...
 	id, err := s.queries.LogEvent(context.Background(), models.LogEventParams{
-		Source: source_h,
-		Event:  event_h,
+		SourceHash: source_h,
+		EventHash:  event_h,
 	})
 
 	if err != nil {
@@ -116,8 +116,8 @@ func (s *SqliteStorage) ManyEvents(es []*itslog.Event) (int64, error) {
 
 			var err error
 			_, err = qtx.LogEvent(ctx, models.LogEventParams{
-				Source: source_h,
-				Event:  event_h,
+				SourceHash: source_h,
+				EventHash:  event_h,
 			})
 
 			if err != nil {
@@ -159,8 +159,8 @@ func (s *SqliteStorage) TestEventExists(source string, event string) int64 {
 	source_h, event_h := hashSourceAndEvent(s.h, source, event)
 	// Check if it can be found in the events table.
 	res, err := s.queries.TestEventPairExists(context.Background(), models.TestEventPairExistsParams{
-		Source: source_h,
-		Event:  event_h,
+		SourceHash: source_h,
+		EventHash:  event_h,
 	})
 	// If there was an error, just return false.
 	if err != nil {

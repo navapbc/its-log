@@ -23,15 +23,15 @@ CREATE TABLE IF NOT EXISTS itslog_summary (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     operation TEXT NOT NULL,
-    source TEXT NOT NULL,
-    event TEXT,
+    source_name TEXT NOT NULL,
+    event_name TEXT,
     value REAL NOT NULL
 );
 
 -- This lets us write and rewrite the data to the same table. 
 -- The operation (e.g. `app.by-day`) source (`app_001`) and event (`v2_api`)
 -- are "unique", and we then want to record/update the value.
-CREATE UNIQUE INDEX IF NOT EXISTS summary_ndx ON itslog_summary (operation, source, event);
+CREATE UNIQUE INDEX IF NOT EXISTS summary_ndx ON itslog_summary (operation, source_name, event_name);
 
 CREATE TABLE IF NOT EXISTS itslog_metadata (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

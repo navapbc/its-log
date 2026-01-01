@@ -5,20 +5,20 @@ DELETE FROM itslog_summary WHERE operation = 'count.by_day.by_source';
 -- Compute the counts per event source
 WITH 
 counts AS (
-  SELECT 'count.by_day.by_source' as operation, source, count(*) as event_count
-  FROM itslog_events
-  GROUP BY source),
+  SELECT 'count.by_day.by_source' as operation, ie.source_hash, count(*) as event_count
+  FROM itslog_events ie
+  GROUP BY ie.source_hash),
 distinct_names AS (
-  SELECT distinct(source_hash), source_name 
-  FROM itslog_dictionary),
+  SELECT distinct(id.source_hash), id.source_name 
+  FROM itslog_dictionary id),
 final AS (
-    SELECT operation, source_name, event_count
-    FROM counts
-    JOIN distinct_names
-    WHERE distinct_names.source_hash = counts.source
+    SELECT c.operation, c.source_hash, c.event_count
+    FROM counts c
+    JOIN distinct_names dn
+    WHERE dn.source_hash = c.source_hash
   )
 INSERT INTO itslog_summary 
-    (operation, source, event, value)
+    (operation, source_name, event_name, value)
 SELECT 
     operation, source_name, NULL, event_count 
 FROM final;

@@ -10,18 +10,18 @@ WITH
     FROM itslog_dictionary
   ),
   count_per_bene AS (
-    select benes.bene, count(ie.event) as event_count
+    select benes.bene, count(ie.event_hash) as event_count
     from itslog_events ie
     join benes
     where 
-      benes.event_hash = ie.event
-    group by benes.bene, ie.event
+      benes.event_hash = ie.event_hash
+    group by benes.bene, ie.event_hash
   ),
   final as (
     select bene, sum(event_count) as bene_count from count_per_bene group by bene
   )
 INSERT INTO itslog_summary 
-    (operation, source, event, value)
+    (operation, source_name, event_name, value)
 SELECT 
     'count.by_day.by_bene', bene, NULL, bene_count 
 FROM final;

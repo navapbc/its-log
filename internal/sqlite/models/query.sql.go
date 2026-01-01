@@ -26,18 +26,18 @@ func (q *Queries) DeleteSummaryData(ctx context.Context) error {
 const eventCountsByTheHour = `-- name: EventCountsByTheHour :many
 SELECT 
   strftime('%H', timestamp) AS hour,
-  source,
-  event,
+  source_hash,
+  event_hash,
   COUNT(*) AS event_count
 FROM itslog_events
-GROUP BY hour, source, event
-ORDER BY hour, source, event
+GROUP BY hour, source_hash, event_hash
+ORDER BY hour, source_hash, event_hash
 `
 
 type EventCountsByTheHourRow struct {
 	Hour       interface{}
-	Source     int64
-	Event      int64
+	SourceHash int64
+	EventHash  int64
 	EventCount int64
 }
 
@@ -55,8 +55,8 @@ func (q *Queries) EventCountsByTheHour(ctx context.Context) ([]EventCountsByTheH
 		var i EventCountsByTheHourRow
 		if err := rows.Scan(
 			&i.Hour,
-			&i.Source,
-			&i.Event,
+			&i.SourceHash,
+			&i.EventHash,
 			&i.EventCount,
 		); err != nil {
 			return nil, err
@@ -74,17 +74,17 @@ func (q *Queries) EventCountsByTheHour(ctx context.Context) ([]EventCountsByTheH
 
 const eventCountsForTheDay = `-- name: EventCountsForTheDay :many
 SELECT 
-  source,
-  event,
+  source_hash,
+  event_hash,
   COUNT(*) AS event_count
 FROM itslog_events
-GROUP BY source, event
-ORDER BY source, event
+GROUP BY source_hash, event_hash
+ORDER BY source_hash, event_hash
 `
 
 type EventCountsForTheDayRow struct {
-	Source     int64
-	Event      int64
+	SourceHash int64
+	EventHash  int64
 	EventCount int64
 }
 
@@ -100,7 +100,7 @@ func (q *Queries) EventCountsForTheDay(ctx context.Context) ([]EventCountsForThe
 	var items []EventCountsForTheDayRow
 	for rows.Next() {
 		var i EventCountsForTheDayRow
-		if err := rows.Scan(&i.Source, &i.Event, &i.EventCount); err != nil {
+		if err := rows.Scan(&i.SourceHash, &i.EventHash, &i.EventCount); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -258,17 +258,17 @@ func (q *Queries) InsertMetadata(ctx context.Context, arg InsertMetadataParams) 
 
 const insertSummary = `-- name: InsertSummary :exec
 INSERT OR REPLACE INTO itslog_summary (
-  operation, source, event, value 
+  operation, source_name, event_name, value 
   ) VALUES (
   ?, ?, ?, ?
   )
 `
 
 type InsertSummaryParams struct {
-	Operation string
-	Source    string
-	Event     sql.NullString
-	Value     float64
+	Operation  string
+	SourceName string
+	EventName  sql.NullString
+	Value      float64
 }
 
 // ------------------------------------------------------
@@ -277,8 +277,8 @@ type InsertSummaryParams struct {
 func (q *Queries) InsertSummary(ctx context.Context, arg InsertSummaryParams) error {
 	_, err := q.db.ExecContext(ctx, insertSummary,
 		arg.Operation,
-		arg.Source,
-		arg.Event,
+		arg.SourceName,
+		arg.EventName,
 		arg.Value,
 	)
 	return err
@@ -287,7 +287,7 @@ func (q *Queries) InsertSummary(ctx context.Context, arg InsertSummaryParams) er
 const logEvent = `-- name: LogEvent :one
 
 INSERT INTO itslog_events (
-  source, event
+  source_hash, event_hash
 ) VALUES (
   ?, ?
 )
@@ -295,13 +295,13 @@ RETURNING id
 `
 
 type LogEventParams struct {
-	Source int64
-	Event  int64
+	SourceHash int64
+	EventHash  int64
 }
 
 // https://docs.sqlc.dev/en/latest/tutorials/getting-started-sqlite.html
 func (q *Queries) LogEvent(ctx context.Context, arg LogEventParams) (int64, error) {
-	row := q.db.QueryRowContext(ctx, logEvent, arg.Source, arg.Event)
+	row := q.db.QueryRowContext(ctx, logEvent, arg.SourceHash, arg.EventHash)
 	var id int64
 	err := row.Scan(&id)
 	return id, err
@@ -309,7 +309,7 @@ func (q *Queries) LogEvent(ctx context.Context, arg LogEventParams) (int64, erro
 
 const logTimestampedEvent = `-- name: LogTimestampedEvent :one
 INSERT INTO itslog_events (
-  timestamp, source, event
+  timestamp, source_hash, event_hash
 ) VALUES (
   ?, ?, ?
 )
@@ -317,16 +317,16 @@ RETURNING id
 `
 
 type LogTimestampedEventParams struct {
-	Timestamp time.Time
-	Source    int64
-	Event     int64
+	Timestamp  time.Time
+	SourceHash int64
+	EventHash  int64
 }
 
 // This is largely for generating fake entries.
 // However, there may be times where we want to be
 // more explicit about the timestamp of an entry.
 func (q *Queries) LogTimestampedEvent(ctx context.Context, arg LogTimestampedEventParams) (int64, error) {
-	row := q.db.QueryRowContext(ctx, logTimestampedEvent, arg.Timestamp, arg.Source, arg.Event)
+	row := q.db.QueryRowContext(ctx, logTimestampedEvent, arg.Timestamp, arg.SourceHash, arg.EventHash)
 	var id int64
 	err := row.Scan(&id)
 	return id, err
@@ -335,18 +335,18 @@ func (q *Queries) LogTimestampedEvent(ctx context.Context, arg LogTimestampedEve
 const sourceCountsByTheHour = `-- name: SourceCountsByTheHour :many
 SELECT 
   strftime('%H', timestamp) AS hour,
-  source,
-  event,
+  source_hash,
+  event_hash,
   COUNT(*) AS source_count
 FROM itslog_events
-GROUP BY hour, source
-ORDER BY hour, source
+GROUP BY hour, source_hash
+ORDER BY hour, source_hash
 `
 
 type SourceCountsByTheHourRow struct {
 	Hour        interface{}
-	Source      int64
-	Event       int64
+	SourceHash  int64
+	EventHash   int64
 	SourceCount int64
 }
 
@@ -361,8 +361,8 @@ func (q *Queries) SourceCountsByTheHour(ctx context.Context) ([]SourceCountsByTh
 		var i SourceCountsByTheHourRow
 		if err := rows.Scan(
 			&i.Hour,
-			&i.Source,
-			&i.Event,
+			&i.SourceHash,
+			&i.EventHash,
 			&i.SourceCount,
 		); err != nil {
 			return nil, err
@@ -380,15 +380,15 @@ func (q *Queries) SourceCountsByTheHour(ctx context.Context) ([]SourceCountsByTh
 
 const sourceCountsForTheDay = `-- name: SourceCountsForTheDay :many
 SELECT 
-  source,
+  source_hash,
   COUNT(*) AS source_count
 FROM itslog_events
-GROUP BY source
-ORDER BY source
+GROUP BY source_hash
+ORDER BY source_hash
 `
 
 type SourceCountsForTheDayRow struct {
-	Source      int64
+	SourceHash  int64
 	SourceCount int64
 }
 
@@ -401,7 +401,7 @@ func (q *Queries) SourceCountsForTheDay(ctx context.Context) ([]SourceCountsForT
 	var items []SourceCountsForTheDayRow
 	for rows.Next() {
 		var i SourceCountsForTheDayRow
-		if err := rows.Scan(&i.Source, &i.SourceCount); err != nil {
+		if err := rows.Scan(&i.SourceHash, &i.SourceCount); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -444,15 +444,15 @@ SELECT EXISTS(
   SELECT 1 
   FROM itslog_events 
   WHERE 
-    source = ?
+    source_hash = ?
     AND
-    event = ?
+    event_hash = ?
   )
 `
 
 type TestEventPairExistsParams struct {
-	Source int64
-	Event  int64
+	SourceHash int64
+	EventHash  int64
 }
 
 // NAH name: ResetSummaryDataSequence :exec
@@ -462,7 +462,7 @@ type TestEventPairExistsParams struct {
 // ------------------------------------------------------
 // Used for unit/end-to-end testing.
 func (q *Queries) TestEventPairExists(ctx context.Context, arg TestEventPairExistsParams) (int64, error) {
-	row := q.db.QueryRowContext(ctx, testEventPairExists, arg.Source, arg.Event)
+	row := q.db.QueryRowContext(ctx, testEventPairExists, arg.SourceHash, arg.EventHash)
 	var column_1 int64
 	err := row.Scan(&column_1)
 	return column_1, err

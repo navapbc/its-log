@@ -19,10 +19,10 @@ type ItslogDictionary struct {
 }
 
 type ItslogEvent struct {
-	ID        int64
-	Timestamp time.Time
-	Source    int64
-	Event     int64
+	ID         int64
+	Timestamp  time.Time
+	SourceHash int64
+	EventHash  int64
 }
 
 type ItslogMetadatum struct {
@@ -32,9 +32,10 @@ type ItslogMetadatum struct {
 }
 
 type ItslogSummary struct {
-	ID        int64
-	Operation string
-	Source    string
-	Event     sql.NullString
-	Value     float64
+	ID         int64
+	Timestamp  time.Time
+	Operation  string
+	SourceName string
+	EventName  sql.NullString
+	Value      float64
 }
