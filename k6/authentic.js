@@ -107,26 +107,37 @@ function generateEvents() {
     var app = getRandE(applications);
     var bene = generateHash(getRandE(patient_names)).toString(16);
 
-
     return [
-      // First, return blue.endpoint.{source}/{event}
-        { "source": [root, "endpoint", e.source].join("."), "event": e.event },
         // Now, blue.endpoint_app.{source}.{event}/{app}
-        { "source": [root, "endpoint_app", e.source, e.event].join("."), "event": [app].join(".") },
-        // blue.endpoint_user.{source}.{event}/{bene}
-        { "source": [root, "endpoint_user", e.source, e.event].join("."), "event": [bene].join(".") },
-        // blue.{app}/{bene}
-        { "source": [root, e.source].join("."), "event": [bene].join(".") },
+        { 
+          "endpoint": "sev",
+          "source": [ root, "endpoint", "by_app", e.source ].join("."), 
+          "event": e.event,
+          "value": app,
+        },
+        { 
+          "endpoint": "sev",
+          "source": [ root, "endpoint", "by_user", e.source ].join("."),
+          "event": app,
+          "value": bene,
+        },
     ]
 
 };
 
+const endpoints = {
+  "cse": (e) => [ e.endpoint, e.cluster, e.source, e.event ].join("/"),
+  "csev": (e) => [ e.endpoint, e.cluster, e.source, e.event, e.value ].join("/"),
+  "sev": (e) => [ e.endpoint, e.source, e.event, e.value ].join("/"),
+};
+
 // Simulated user behavior
 export default function () {
-    generateEvents().forEach((e) => 
+    generateEvents().forEach(function (e) {       
         http.put(
-        "https://localhost:8443/v1/event/" + e.source + "/" + e.event, 
+        // "https://localhost:8443/v1/event/" + e.source + "/" + e.event, 
+        "https://localhost:8443/v1/" + endpoints[e.endpoint](e),
         null,
         params)  
-    );
+});
 }

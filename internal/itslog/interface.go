@@ -10,6 +10,8 @@ type ItsLog interface {
 }
 
 type Event struct {
-	Source string
-	Event  string
+	Cluster string
+	Source  string
+	Event   string
+	Value   string
 }

@@ -6,16 +6,28 @@
       action: "message",
       message: "helo",
     },
+    {
+      action: "sql",
+      filename: "truncate-summary.sql",
+    },
     // SQL actions should take a connection
     // and they should be defined in advance.
     {
       action: "sql",
       filename: "count-by-source.sql",
     },
-    // {
-    //   action: "sql",
-    //   filename: "count-by-bene.sql",
-    // },
+    {
+      action: "sql",
+      filename: "count-by-event.sql",
+    },
+    {
+      action: "sql",
+      filename: "distinct-values.sql",
+    },
+    {
+      action: "sql",
+      filename: "distinct-values-by-source.sql",
+    },
     // fileCopy copies from one location to another
     {
       action: "fileCopy",

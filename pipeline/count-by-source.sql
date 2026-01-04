@@ -12,7 +12,7 @@ distinct_names AS (
   SELECT distinct(id.source_hash), id.source_name 
   FROM itslog_dictionary id),
 final AS (
-    SELECT c.operation, c.source_hash, c.event_count
+    SELECT c.operation, dn.source_name, c.event_count
     FROM counts c
     JOIN distinct_names dn
     WHERE dn.source_hash = c.source_hash
@@ -22,7 +22,3 @@ INSERT INTO itslog_summary
 SELECT 
     operation, source_name, NULL, event_count 
 FROM final;
-
--- This could be part of some kind of check or assertion?
--- We would need to know what we expect from our data.
--- select * from itslog_summary where operation = 'count.by_day.by_source' order by source;

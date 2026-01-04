@@ -21,9 +21,11 @@ func PourGin(apiKeys config.ApiKeys, ch_evt_out chan<- *itslog.Event) *gin.Engin
 	apiV1 := router.Group("/v1")
 	authV1 := apiV1.Group("/")
 	authV1.Use(AuthMiddleWare(apiKeys))
-
-	authV1.PUT("event/:appID/:eventID", Event(ch_evt_out))
-
+	// /v1/cv/63e53061/blue.endpoint.fhir.v3/Coverage/Casedok.6a1bf074
+	authV1.PUT("se/:appID/:eventID", Event("se", ch_evt_out))
+	authV1.PUT("sev/:appID/:eventID/:value", Event("sev", ch_evt_out))
+	authV1.PUT("cse/:cluster/:appID/:eventID", Event("cse", ch_evt_out))
+	authV1.PUT("csev/:cluster/:appID/:eventID/:value", Event("csev", ch_evt_out))
 	return router
 }
 

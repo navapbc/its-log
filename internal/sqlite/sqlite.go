@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"hash/maphash"
 	"log"
+	"strings"
 	"time"
 	"unsafe"
 
@@ -74,22 +75,37 @@ func (s *SqliteStorage) GetQueries() *models.Queries {
 	return s.queries
 }
 
-func hashSourceAndEvent(h maphash.Hash, source string, event string) (int64, int64) {
-	h.Write([]byte(source))
-	source_h := h.Sum64()
-	h.Reset()
-	h.Write([]byte(event))
-	evt_h := h.Sum64()
-	h.Reset()
-	return int64(source_h), int64(evt_h)
+func hashValue(hash maphash.Hash, s string) int64 {
+	if s == "" {
+		return 0
+	}
+	hash.Write([]byte(s))
+	h := hash.Sum64()
+	hash.Reset()
+	return int64(h)
 }
 
 func (s *SqliteStorage) Event(e *itslog.Event) (int64, error) {
-	source_h, event_h := hashSourceAndEvent(s.h, e.Source, e.Event)
+	cluster_h := hashValue(s.h, e.Cluster)
+	source_h := hashValue(s.h, e.Source)
+	event_h := hashValue(s.h, e.Event)
+	value_h := hashValue(s.h, e.Value)
+
+	valid_cluster := false
+	valid_value := false
+	if cluster_h != 0 {
+		valid_cluster = true
+	}
+	if value_h != 0 {
+		valid_value = true
+	}
+
 	// This is an unsigned to signed conversion...
-	id, err := s.queries.LogEvent(context.Background(), models.LogEventParams{
-		SourceHash: source_h,
-		EventHash:  event_h,
+	id, err := s.queries.LogClusteredEventWithValue(context.Background(), models.LogClusteredEventWithValueParams{
+		ClusterHash: sql.NullInt64{Int64: cluster_h, Valid: valid_cluster},
+		SourceHash:  source_h,
+		EventHash:   event_h,
+		ValueHash:   sql.NullInt64{Int64: value_h, Valid: valid_value},
 	})
 
 	if err != nil {
@@ -111,13 +127,26 @@ func (s *SqliteStorage) ManyEvents(es []*itslog.Event) (int64, error) {
 	qtx := s.queries.WithTx(tx)
 	for _, e := range es {
 		if e != nil {
-			// Store all of the events in a single transaction
-			source_h, event_h := hashSourceAndEvent(s.h, e.Source, e.Event)
+			source_h := hashValue(s.h, e.Source)
+			event_h := hashValue(s.h, e.Event)
 
-			var err error
-			_, err = qtx.LogEvent(ctx, models.LogEventParams{
-				SourceHash: source_h,
-				EventHash:  event_h,
+			cluster_h := hashValue(s.h, e.Cluster)
+			valid_cluster := false
+			if cluster_h != 0 {
+				valid_cluster = true
+			}
+
+			value_h := hashValue(s.h, e.Value)
+			valid_value := false
+			if value_h != 0 {
+				valid_value = true
+			}
+
+			_, err := qtx.LogClusteredEventWithValue(context.Background(), models.LogClusteredEventWithValueParams{
+				ClusterHash: sql.NullInt64{Int64: cluster_h, Valid: valid_cluster},
+				SourceHash:  source_h,
+				EventHash:   event_h,
+				ValueHash:   sql.NullInt64{Int64: value_h, Valid: valid_value},
 			})
 
 			if err != nil {
@@ -140,6 +169,17 @@ func (s *SqliteStorage) ManyEvents(es []*itslog.Event) (int64, error) {
 				return -1, err
 			}
 
+			if valid_value {
+				qtx.UpdateLookup(ctx, models.UpdateLookupParams{
+					Name: e.Value,
+					Hash: value_h,
+				})
+				if err != nil {
+					log.Println("Error in storing value lookup:" + err.Error())
+					return -1, err
+				}
+			}
+
 			counter += 1
 		}
 	}
@@ -150,13 +190,20 @@ func (s *SqliteStorage) ManyEvents(es []*itslog.Event) (int64, error) {
 }
 
 func (s *SqliteStorage) Close() {
-	s.db.Close()
+	// NOTE: If we're using an in-memory DB, we should not close the DB.
+	// This will erase it. Also note, memory DBs are only used for testing
+	// at this time. There's probably a better way...
+	if !strings.Contains(s.Path, ":memory:") {
+		s.db.Close()
+	}
 }
 
 // -1 if there was an error, 0 if the row was not found, 1 if it was found
 func (s *SqliteStorage) TestEventExists(source string, event string) int64 {
 	// First hash the value
-	source_h, event_h := hashSourceAndEvent(s.h, source, event)
+	source_h := hashValue(s.h, source)
+	event_h := hashValue(s.h, event)
+
 	// Check if it can be found in the events table.
 	res, err := s.queries.TestEventPairExists(context.Background(), models.TestEventPairExistsParams{
 		SourceHash: source_h,
@@ -164,6 +211,7 @@ func (s *SqliteStorage) TestEventExists(source string, event string) int64 {
 	})
 	// If there was an error, just return false.
 	if err != nil {
+		log.Println(err)
 		return -1
 	}
 	// If it wasn't found, return an error now.

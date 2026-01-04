@@ -12,30 +12,33 @@ import (
 type ItslogDictionary struct {
 	ID         int64
 	Timestamp  time.Time
+	SourceHash int64
 	SourceName string
 	EventName  string
-	SourceHash int64
 	EventHash  int64
 }
 
 type ItslogEvent struct {
-	ID         int64
-	Timestamp  time.Time
-	SourceHash int64
-	EventHash  int64
+	ID          int64
+	Timestamp   time.Time
+	ClusterHash sql.NullInt64
+	SourceHash  int64
+	EventHash   int64
+	ValueHash   sql.NullInt64
 }
 
-type ItslogMetadatum struct {
-	ID    int64
-	Key   string
-	Value string
+type ItslogLookup struct {
+	ID        int64
+	Timestamp time.Time
+	Hash      int64
+	Name      string
 }
 
 type ItslogSummary struct {
 	ID         int64
 	Timestamp  time.Time
 	Operation  string
-	SourceName string
+	SourceName sql.NullString
 	EventName  sql.NullString
 	Value      float64
 }

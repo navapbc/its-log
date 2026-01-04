@@ -11,277 +11,54 @@ import (
 	"time"
 )
 
-const deleteSummaryData = `-- name: DeleteSummaryData :exec
-;
-
-
-DELETE FROM itslog_summary
+const logClusteredEvent = `-- name: LogClusteredEvent :one
+INSERT INTO itslog_events (
+  cluster_hash, source_hash, event_hash
+) VALUES (
+  ?, ?, ?
+)
+RETURNING id
 `
 
-func (q *Queries) DeleteSummaryData(ctx context.Context) error {
-	_, err := q.db.ExecContext(ctx, deleteSummaryData)
-	return err
+type LogClusteredEventParams struct {
+	ClusterHash sql.NullInt64
+	SourceHash  int64
+	EventHash   int64
 }
 
-const eventCountsByTheHour = `-- name: EventCountsByTheHour :many
-SELECT 
-  strftime('%H', timestamp) AS hour,
-  source_hash,
-  event_hash,
-  COUNT(*) AS event_count
-FROM itslog_events
-GROUP BY hour, source_hash, event_hash
-ORDER BY hour, source_hash, event_hash
-`
-
-type EventCountsByTheHourRow struct {
-	Hour       interface{}
-	SourceHash int64
-	EventHash  int64
-	EventCount int64
+func (q *Queries) LogClusteredEvent(ctx context.Context, arg LogClusteredEventParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, logClusteredEvent, arg.ClusterHash, arg.SourceHash, arg.EventHash)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
 }
 
-// ----------------------
-// By the hour
-// ----------------------
-func (q *Queries) EventCountsByTheHour(ctx context.Context) ([]EventCountsByTheHourRow, error) {
-	rows, err := q.db.QueryContext(ctx, eventCountsByTheHour)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []EventCountsByTheHourRow
-	for rows.Next() {
-		var i EventCountsByTheHourRow
-		if err := rows.Scan(
-			&i.Hour,
-			&i.SourceHash,
-			&i.EventHash,
-			&i.EventCount,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const eventCountsForTheDay = `-- name: EventCountsForTheDay :many
-SELECT 
-  source_hash,
-  event_hash,
-  COUNT(*) AS event_count
-FROM itslog_events
-GROUP BY source_hash, event_hash
-ORDER BY source_hash, event_hash
-`
-
-type EventCountsForTheDayRow struct {
-	SourceHash int64
-	EventHash  int64
-	EventCount int64
-}
-
-// ----------------------
-// By the day
-// ----------------------
-func (q *Queries) EventCountsForTheDay(ctx context.Context) ([]EventCountsForTheDayRow, error) {
-	rows, err := q.db.QueryContext(ctx, eventCountsForTheDay)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []EventCountsForTheDayRow
-	for rows.Next() {
-		var i EventCountsForTheDayRow
-		if err := rows.Scan(&i.SourceHash, &i.EventHash, &i.EventCount); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getEventName = `-- name: GetEventName :one
-SELECT
-  event_name
-  FROM itslog_dictionary
-  WHERE
-    source_hash = ?
-    AND
-    event_hash = ?
-  LIMIT 1
-`
-
-type GetEventNameParams struct {
-	SourceHash int64
-	EventHash  int64
-}
-
-func (q *Queries) GetEventName(ctx context.Context, arg GetEventNameParams) (string, error) {
-	row := q.db.QueryRowContext(ctx, getEventName, arg.SourceHash, arg.EventHash)
-	var event_name string
-	err := row.Scan(&event_name)
-	return event_name, err
-}
-
-const getEventNamesForSource = `-- name: GetEventNamesForSource :many
-;
-
-SELECT
-  event_name
-  FROM
-  itslog_dictionary
-  WHERE 
-  source_name = ?
-`
-
-func (q *Queries) GetEventNamesForSource(ctx context.Context, sourceName string) ([]string, error) {
-	rows, err := q.db.QueryContext(ctx, getEventNamesForSource, sourceName)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []string
-	for rows.Next() {
-		var event_name string
-		if err := rows.Scan(&event_name); err != nil {
-			return nil, err
-		}
-		items = append(items, event_name)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getMetadata = `-- name: GetMetadata :one
-SELECT key, value FROM itslog_metadata
-  WHERE key = ? LIMIT 1
-`
-
-type GetMetadataRow struct {
-	Key   string
-	Value string
-}
-
-func (q *Queries) GetMetadata(ctx context.Context, key string) (GetMetadataRow, error) {
-	row := q.db.QueryRowContext(ctx, getMetadata, key)
-	var i GetMetadataRow
-	err := row.Scan(&i.Key, &i.Value)
-	return i, err
-}
-
-const getSourceName = `-- name: GetSourceName :one
-SELECT
-  source_name
-  FROM itslog_dictionary
-  WHERE
-    source_hash = ?
-  LIMIT 1
-`
-
-// ----------------------
-// Summary helpers
-// ----------------------
-func (q *Queries) GetSourceName(ctx context.Context, sourceHash int64) (string, error) {
-	row := q.db.QueryRowContext(ctx, getSourceName, sourceHash)
-	var source_name string
-	err := row.Scan(&source_name)
-	return source_name, err
-}
-
-const getSourceNames = `-- name: GetSourceNames :many
-SELECT
-  source_name
-  FROM 
-  itslog_dictionary
-`
-
-func (q *Queries) GetSourceNames(ctx context.Context) ([]string, error) {
-	rows, err := q.db.QueryContext(ctx, getSourceNames)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []string
-	for rows.Next() {
-		var source_name string
-		if err := rows.Scan(&source_name); err != nil {
-			return nil, err
-		}
-		items = append(items, source_name)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const insertMetadata = `-- name: InsertMetadata :exec
-
-INSERT OR REPLACE INTO itslog_metadata (key, value) 
-  VALUES (?, ?)
-`
-
-type InsertMetadataParams struct {
-	Key   string
-	Value string
-}
-
-// ------------------------------------------------------
-// METADATA
-// ------------------------------------------------------
-func (q *Queries) InsertMetadata(ctx context.Context, arg InsertMetadataParams) error {
-	_, err := q.db.ExecContext(ctx, insertMetadata, arg.Key, arg.Value)
-	return err
-}
-
-const insertSummary = `-- name: InsertSummary :exec
-INSERT OR REPLACE INTO itslog_summary (
-  operation, source_name, event_name, value 
-  ) VALUES (
+const logClusteredEventWithValue = `-- name: LogClusteredEventWithValue :one
+INSERT INTO itslog_events (
+  cluster_hash, source_hash, event_hash, value_hash
+) VALUES (
   ?, ?, ?, ?
-  )
+)
+RETURNING id
 `
 
-type InsertSummaryParams struct {
-	Operation  string
-	SourceName string
-	EventName  sql.NullString
-	Value      float64
+type LogClusteredEventWithValueParams struct {
+	ClusterHash sql.NullInt64
+	SourceHash  int64
+	EventHash   int64
+	ValueHash   sql.NullInt64
 }
 
-// ------------------------------------------------------
-// SUMMARIZING DATA
-// ------------------------------------------------------
-func (q *Queries) InsertSummary(ctx context.Context, arg InsertSummaryParams) error {
-	_, err := q.db.ExecContext(ctx, insertSummary,
-		arg.Operation,
-		arg.SourceName,
-		arg.EventName,
-		arg.Value,
+func (q *Queries) LogClusteredEventWithValue(ctx context.Context, arg LogClusteredEventWithValueParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, logClusteredEventWithValue,
+		arg.ClusterHash,
+		arg.SourceHash,
+		arg.EventHash,
+		arg.ValueHash,
 	)
-	return err
+	var id int64
+	err := row.Scan(&id)
+	return id, err
 }
 
 const logEvent = `-- name: LogEvent :one
@@ -302,6 +79,28 @@ type LogEventParams struct {
 // https://docs.sqlc.dev/en/latest/tutorials/getting-started-sqlite.html
 func (q *Queries) LogEvent(ctx context.Context, arg LogEventParams) (int64, error) {
 	row := q.db.QueryRowContext(ctx, logEvent, arg.SourceHash, arg.EventHash)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
+}
+
+const logEventWithValue = `-- name: LogEventWithValue :one
+INSERT INTO itslog_events (
+  source_hash, event_hash, value_hash
+) VALUES (
+  ?, ?, ?
+)
+RETURNING id
+`
+
+type LogEventWithValueParams struct {
+	SourceHash int64
+	EventHash  int64
+	ValueHash  sql.NullInt64
+}
+
+func (q *Queries) LogEventWithValue(ctx context.Context, arg LogEventWithValueParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, logEventWithValue, arg.SourceHash, arg.EventHash, arg.ValueHash)
 	var id int64
 	err := row.Scan(&id)
 	return id, err
@@ -332,89 +131,6 @@ func (q *Queries) LogTimestampedEvent(ctx context.Context, arg LogTimestampedEve
 	return id, err
 }
 
-const sourceCountsByTheHour = `-- name: SourceCountsByTheHour :many
-SELECT 
-  strftime('%H', timestamp) AS hour,
-  source_hash,
-  event_hash,
-  COUNT(*) AS source_count
-FROM itslog_events
-GROUP BY hour, source_hash
-ORDER BY hour, source_hash
-`
-
-type SourceCountsByTheHourRow struct {
-	Hour        interface{}
-	SourceHash  int64
-	EventHash   int64
-	SourceCount int64
-}
-
-func (q *Queries) SourceCountsByTheHour(ctx context.Context) ([]SourceCountsByTheHourRow, error) {
-	rows, err := q.db.QueryContext(ctx, sourceCountsByTheHour)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []SourceCountsByTheHourRow
-	for rows.Next() {
-		var i SourceCountsByTheHourRow
-		if err := rows.Scan(
-			&i.Hour,
-			&i.SourceHash,
-			&i.EventHash,
-			&i.SourceCount,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const sourceCountsForTheDay = `-- name: SourceCountsForTheDay :many
-SELECT 
-  source_hash,
-  COUNT(*) AS source_count
-FROM itslog_events
-GROUP BY source_hash
-ORDER BY source_hash
-`
-
-type SourceCountsForTheDayRow struct {
-	SourceHash  int64
-	SourceCount int64
-}
-
-func (q *Queries) SourceCountsForTheDay(ctx context.Context) ([]SourceCountsForTheDayRow, error) {
-	rows, err := q.db.QueryContext(ctx, sourceCountsForTheDay)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []SourceCountsForTheDayRow
-	for rows.Next() {
-		var i SourceCountsForTheDayRow
-		if err := rows.Scan(&i.SourceHash, &i.SourceCount); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const testDictionaryPairExists = `-- name: TestDictionaryPairExists :one
 SELECT EXISTS(
   SELECT 1 
@@ -439,7 +155,6 @@ func (q *Queries) TestDictionaryPairExists(ctx context.Context, arg TestDictiona
 }
 
 const testEventPairExists = `-- name: TestEventPairExists :one
-
 SELECT EXISTS(
   SELECT 1 
   FROM itslog_events 
@@ -455,8 +170,6 @@ type TestEventPairExistsParams struct {
 	EventHash  int64
 }
 
-// NAH name: ResetSummaryDataSequence :exec
-// DELETE FROM SQLITE_SEQUENCE WHERE name='table_name';
 // ------------------------------------------------------
 // TEST HELPERS
 // ------------------------------------------------------
@@ -490,5 +203,23 @@ func (q *Queries) UpdateDictionary(ctx context.Context, arg UpdateDictionaryPara
 		arg.SourceHash,
 		arg.EventHash,
 	)
+	return err
+}
+
+const updateLookup = `-- name: UpdateLookup :exec
+INSERT OR IGNORE INTO itslog_lookup (
+  hash, name
+) VALUES (
+  ?, ?
+)
+`
+
+type UpdateLookupParams struct {
+	Hash int64
+	Name string
+}
+
+func (q *Queries) UpdateLookup(ctx context.Context, arg UpdateLookupParams) error {
+	_, err := q.db.ExecContext(ctx, updateLookup, arg.Hash, arg.Name)
 	return err
 }

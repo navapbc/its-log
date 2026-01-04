@@ -8,6 +8,32 @@ INSERT INTO itslog_events (
 )
 RETURNING id;
 
+-- name: LogEventWithValue :one
+INSERT INTO itslog_events (
+  source_hash, event_hash, value_hash
+) VALUES (
+  ?, ?, ?
+)
+RETURNING id;
+
+-- name: LogClusteredEvent :one
+INSERT INTO itslog_events (
+  cluster_hash, source_hash, event_hash
+) VALUES (
+  ?, ?, ?
+)
+RETURNING id;
+
+-- name: LogClusteredEventWithValue :one
+INSERT INTO itslog_events (
+  cluster_hash, source_hash, event_hash, value_hash
+) VALUES (
+  ?, ?, ?, ?
+)
+RETURNING id;
+
+
+
 -- This is largely for generating fake entries. 
 -- However, there may be times where we want to be 
 -- more explicit about the timestamp of an entry.
@@ -26,114 +52,13 @@ INSERT OR IGNORE INTO itslog_dictionary (
   ?, ?, ?, ?
 );
 
---------------------------------------------------------
--- METADATA
---------------------------------------------------------
+-- name: UpdateLookup :exec
+INSERT OR IGNORE INTO itslog_lookup (
+  hash, name
+) VALUES (
+  ?, ?
+);
 
--- name: InsertMetadata :exec
-INSERT OR REPLACE INTO itslog_metadata (key, value) 
-  VALUES (?, ?);
-
--- name: GetMetadata :one
-SELECT key, value FROM itslog_metadata
-  WHERE key = ? LIMIT 1;
-
---------------------------------------------------------
--- SUMMARIZING DATA
---------------------------------------------------------
--- name: InsertSummary :exec
-INSERT OR REPLACE INTO itslog_summary (
-  operation, source_name, event_name, value 
-  ) VALUES (
-  ?, ?, ?, ?
-  );
-
-------------------------
--- By the hour
-------------------------
--- name: EventCountsByTheHour :many
-SELECT 
-  strftime('%H', timestamp) AS hour,
-  source_hash,
-  event_hash,
-  COUNT(*) AS event_count
-FROM itslog_events
-GROUP BY hour, source_hash, event_hash
-ORDER BY hour, source_hash, event_hash;
-
--- name: SourceCountsByTheHour :many
-SELECT 
-  strftime('%H', timestamp) AS hour,
-  source_hash,
-  event_hash,
-  COUNT(*) AS source_count
-FROM itslog_events
-GROUP BY hour, source_hash
-ORDER BY hour, source_hash;
-
-------------------------
--- By the day
-------------------------
--- name: EventCountsForTheDay :many
-SELECT 
-  source_hash,
-  event_hash,
-  COUNT(*) AS event_count
-FROM itslog_events
-GROUP BY source_hash, event_hash
-ORDER BY source_hash, event_hash;
-
--- name: SourceCountsForTheDay :many
-SELECT 
-  source_hash,
-  COUNT(*) AS source_count
-FROM itslog_events
-GROUP BY source_hash
-ORDER BY source_hash;
-
-------------------------
--- Summary helpers
-------------------------
--- name: GetSourceName :one
-SELECT
-  source_name
-  FROM itslog_dictionary
-  WHERE
-    source_hash = ?
-  LIMIT 1;
-
--- name: GetEventName :one
-SELECT
-  event_name
-  FROM itslog_dictionary
-  WHERE
-    source_hash = ?
-    AND
-    event_hash = ?
-  LIMIT 1;
-
--- name: GetSourceNames :many
-SELECT
-  source_name
-  FROM 
-  itslog_dictionary
-;
-
--- name: GetEventNamesForSource :many
-SELECT
-  event_name
-  FROM
-  itslog_dictionary
-  WHERE 
-  source_name = ?
-;
-
-
--- name: DeleteSummaryData :exec
-DELETE FROM itslog_summary;
-
--- NAH name: ResetSummaryDataSequence :exec
--- DELETE FROM SQLITE_SEQUENCE WHERE name='table_name';
 
 --------------------------------------------------------
 -- TEST HELPERS

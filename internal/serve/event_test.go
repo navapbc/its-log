@@ -37,7 +37,7 @@ func setup(consumer func(chan *itslog.Event)) *gin.Engine {
 	var ch_evt_out = make(chan *itslog.Event)
 	router := gin.Default()
 	apiV1 := router.Group("/v1")
-	apiV1.PUT("event/:appID/:eventID", Event(ch_evt_out))
+	apiV1.PUT("se/:appID/:eventID", Event("se", ch_evt_out))
 	// This drains the channel so we don't have to worry about
 	// it as part of the testing.
 	go consumer(ch_evt_out)
@@ -54,7 +54,7 @@ func TestPutMessage(t *testing.T) {
 	router := setup(blackHole)
 	apitest.New().
 		Handler(router).
-		Put("/v1/event/us.me.lewiston/forage-bagels").
+		Put("/v1/se/us.me.lewiston/forage-bagels").
 		Expect(t).
 		Status(http.StatusOK).
 		End()
@@ -73,7 +73,7 @@ func TestPutMessageEq(t *testing.T) {
 	router := setup(checkEq(t, &itslog.Event{Source: source, Event: event}))
 	apitest.New().
 		Handler(router).
-		Put(fmt.Sprintf("/v1/event/%s/%s", source, event)).
+		Put(fmt.Sprintf("/v1/se/%s/%s", source, event)).
 		Expect(t).
 		Status(http.StatusOK).
 		End()
@@ -109,13 +109,16 @@ func TestPutMessageToDb(t *testing.T) {
 	router := setup(consumer)
 	apitest.New().
 		Handler(router).
-		Put(fmt.Sprintf("/v1/event/%s/%s", source, event)).
+		Put(fmt.Sprintf("/v1/se/%s/%s", source, event)).
 		Expect(t).
 		Status(http.StatusOK).
 		End()
 
 	// Wait for Enqueue to flush the buffer w/ a 1-second timeout
 	time.Sleep(2 * time.Second)
+	// Flushing closes the DB.
+	// With in-memory testing, this erases the DB.
+
 	// Check if the value is in both the events and dictionary tables.
 	result := storage.TestEventExists(source, event)
 	if result != 1 {
