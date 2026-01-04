@@ -129,6 +129,7 @@ const endpoints = {
   "cse": (e) => [ e.endpoint, e.cluster, e.source, e.event ].join("/"),
   "csev": (e) => [ e.endpoint, e.cluster, e.source, e.event, e.value ].join("/"),
   "sev": (e) => [ e.endpoint, e.source, e.event, e.value ].join("/"),
+  "se": (e) => [ e.endpoint, e.source, e.event ].join("/"),
 };
 
 // Simulated user behavior

@@ -21,6 +21,10 @@
       filename: "count-by-event.sql",
     },
     {
+      action: "assert",
+      filename: "assert-source-counts.sql",
+    },
+    {
       action: "sql",
       filename: "distinct-values.sql",
     },

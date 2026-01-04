@@ -33,7 +33,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS lookup_hashes_ndx ON itslog_lookup (hash);
 
 CREATE TABLE IF NOT EXISTS itslog_summary (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    timestamp DATE DEFAULT CURRENT_DATE NOT NULL,
     operation TEXT NOT NULL,
     source_name TEXT,
     event_name TEXT,

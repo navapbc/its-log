@@ -1,6 +1,7 @@
 package etl
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"os"
@@ -17,6 +18,7 @@ func initMap() {
 	actionMap["message"] = Message
 	actionMap["sql"] = Sql
 	actionMap["fileCopy"] = FileCopy
+	actionMap["assert"] = Assert
 }
 
 func Run(runscript string, sql *sql.DB) {
@@ -41,8 +43,56 @@ func Sql(action gjson.Result, sql *sql.DB) error {
 	if err != nil {
 		panic(err)
 	}
-	_, err = sql.Exec(string(query))
+
+	// Get a Tx for making transaction requests.
+	ctx := context.Background()
+	tx, err := sql.BeginTx(ctx, nil)
 	if err != nil {
+		panic(err)
+	}
+	// Defer a rollback in case anything fails.
+	defer tx.Rollback()
+
+	_, err = tx.ExecContext(ctx, string(query))
+	if err != nil {
+		panic(err)
+	}
+	// Commit the transaction.
+	if err = tx.Commit(); err != nil {
+		panic(err)
+	}
+	return nil
+}
+
+func Assert(action gjson.Result, sql *sql.DB) error {
+	fmt.Printf("== assert: %s ==\n", action.Get("filename").String())
+	query, err := os.ReadFile(action.Get("filename").String())
+	if err != nil {
+		panic(err)
+	}
+
+	// Get a Tx for making transaction requests.
+	ctx := context.Background()
+	tx, err := sql.BeginTx(ctx, nil)
+	if err != nil {
+		panic(err)
+	}
+	// Defer a rollback in case anything fails.
+	defer tx.Rollback()
+
+	res := tx.QueryRowContext(ctx, string(query))
+	var found bool
+	err = res.Scan(&found)
+	if err != nil {
+		panic(err)
+	}
+	if !found {
+		fmt.Println("assertion returned false")
+		tx.Rollback()
+		os.Exit(-1)
+	}
+	// Commit the transaction.
+	if err = tx.Commit(); err != nil {
 		panic(err)
 	}
 	return nil
