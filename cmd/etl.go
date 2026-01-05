@@ -39,7 +39,6 @@ to quickly create a Cobra application.`,
 		db.Close()
 
 		etlMgr := &etl.ETLManager{
-			DB: db,
 			Open: func() *sql.DB {
 				db, _ := sql.Open("sqlite", *etlParams.etlFilename)
 				return db

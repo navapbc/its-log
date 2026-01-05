@@ -10,7 +10,6 @@ import (
 )
 
 type ETLManager struct {
-	DB    *sql.DB
 	Open  func() *sql.DB
 	Close func(*sql.DB)
 }
