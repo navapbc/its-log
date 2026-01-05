@@ -29,17 +29,31 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		// First check if we can open the datbase; fail fast if we can't.
 		db, err := sql.Open("sqlite", *etlParams.etlFilename)
 		// FIXME: Should I create this if it doesn't exist?
 		if err != nil {
 			panic(err)
+		}
+		// Don't leave it open.
+		db.Close()
+
+		etlMgr := &etl.ETLManager{
+			DB: db,
+			Open: func() *sql.DB {
+				db, _ := sql.Open("sqlite", *etlParams.etlFilename)
+				return db
+			},
+			Close: func(db *sql.DB) {
+				db.Close()
+			},
 		}
 
 		script, err := os.ReadFile(*etlParams.etlRunscript)
 		if err != nil {
 			panic(err)
 		}
-		etl.Run(string(script), db)
+		etl.Run(string(script), etlMgr)
 	},
 }
 

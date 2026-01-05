@@ -9,7 +9,13 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-type ActionHandler func(gjson.Result, *sql.DB) error
+type ETLManager struct {
+	DB    *sql.DB
+	Open  func() *sql.DB
+	Close func(*sql.DB)
+}
+
+type ActionHandler func(gjson.Result, *ETLManager) error
 type ActionMap map[string]ActionHandler
 
 var actionMap ActionMap = make(ActionMap, 0)
@@ -21,28 +27,31 @@ func initMap() {
 	actionMap["assert"] = Assert
 }
 
-func Run(runscript string, sql *sql.DB) {
+func Run(runscript string, etlM *ETLManager) {
 	initMap()
 	actions := gjson.Get(runscript, "actions")
 	actions.ForEach(func(ndx, action gjson.Result) bool {
 		// println(key.String() + " | " + value.String())
-		err := actionMap[action.Get("action").String()](action, sql)
+		err := actionMap[action.Get("action").String()](action, etlM)
 		// Continue as long as we got a nil result
 		return err == nil
 	})
 }
 
-func Message(action gjson.Result, sql *sql.DB) error {
+func Message(action gjson.Result, etlM *ETLManager) error {
 	fmt.Printf("== message ==\n%s\n", action.Get("message").String())
 	return nil
 }
 
-func Sql(action gjson.Result, sql *sql.DB) error {
+func Sql(action gjson.Result, etlM *ETLManager) error {
 	fmt.Printf("== sql: %s ==\n", action.Get("filename").String())
 	query, err := os.ReadFile(action.Get("filename").String())
 	if err != nil {
 		panic(err)
 	}
+
+	sql := etlM.Open()
+	defer etlM.Close(sql)
 
 	// Get a Tx for making transaction requests.
 	ctx := context.Background()
@@ -61,15 +70,19 @@ func Sql(action gjson.Result, sql *sql.DB) error {
 	if err = tx.Commit(); err != nil {
 		panic(err)
 	}
+
 	return nil
 }
 
-func Assert(action gjson.Result, sql *sql.DB) error {
+func Assert(action gjson.Result, etlM *ETLManager) error {
 	fmt.Printf("== assert: %s ==\n", action.Get("filename").String())
 	query, err := os.ReadFile(action.Get("filename").String())
 	if err != nil {
 		panic(err)
 	}
+
+	sql := etlM.Open()
+	defer etlM.Close(sql)
 
 	// Get a Tx for making transaction requests.
 	ctx := context.Background()
@@ -95,10 +108,11 @@ func Assert(action gjson.Result, sql *sql.DB) error {
 	if err = tx.Commit(); err != nil {
 		panic(err)
 	}
+
 	return nil
 }
 
-func FileCopy(action gjson.Result, sql *sql.DB) error {
+func FileCopy(action gjson.Result, etlM *ETLManager) error {
 	fmt.Printf("== file copy ==\n  src: %s\n  dst: %s\n", action.Get("source").String(), action.Get("destination").String())
 	return nil
 }

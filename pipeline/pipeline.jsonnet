@@ -6,12 +6,16 @@
       action: "message",
       message: "helo",
     },
+    // WARNING: The first thing we do is truncate the entire summary table.
+    // Why? To make sure each pipeline run is clean. Perhaps this is a bad idea.
     {
       action: "sql",
       filename: "truncate-summary.sql",
     },
-    // SQL actions should take a connection
-    // and they should be defined in advance.
+    {
+      action: "sql",
+      filename: "count-total.sql"
+    },
     {
       action: "sql",
       filename: "count-by-source.sql",
@@ -19,6 +23,10 @@
     {
       action: "sql",
       filename: "count-by-event.sql",
+    },
+    {
+      action: "assert",
+      filename: "assert-source-and-total.sql",
     },
     {
       action: "assert",

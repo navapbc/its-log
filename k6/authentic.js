@@ -12,10 +12,13 @@ export const options = {
   scenarios: {
     typical_usage: {
       executor: 'ramping-vus',
-      startVUs: 1,
+      startVUs: 10,
       gracefulRampDown: "2s",
       stages: [
-        { duration: "20s", target: 30 },
+        { duration: "2s",  target: 30 },
+        { duration: "5s", target: 60 },
+        { duration: "5s", target: 60 },
+        { duration: "2s", target: 30 },
       ],
     },
   },
