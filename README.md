@@ -4,7 +4,7 @@
 
 `its-log` is a tiny event logger.
 
-On a Mac M4, `its-log` can sustain logging 40K events/second to a local SQLite database.
+On a Mac M4, `its-log` can sustain logging 30K events/second to a local SQLite database.
 
 Events are **app-specific, keyed, valueless moments in time**.
 
