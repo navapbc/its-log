@@ -4,7 +4,7 @@
     // everything can have a "message" option
     {
       action: "message",
-      message: "helo",
+      message: "HELO",
     },
     // WARNING: The first thing we do is truncate the entire summary table.
     // Why? To make sure each pipeline run is clean. Perhaps this is a bad idea.

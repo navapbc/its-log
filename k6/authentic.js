@@ -15,10 +15,9 @@ export const options = {
       startVUs: 10,
       gracefulRampDown: "2s",
       stages: [
-        { duration: "2s",  target: 30 },
+        { duration: "5s",  target: 30 },
         { duration: "5s", target: 60 },
-        { duration: "5s", target: 60 },
-        { duration: "2s", target: 30 },
+        { duration: "20s", target: 60 },
       ],
     },
   },

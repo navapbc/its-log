@@ -36,7 +36,7 @@ type ItslogLookup struct {
 
 type ItslogSummary struct {
 	ID         int64
-	Timestamp  time.Time
+	Date       time.Time
 	Operation  string
 	SourceName sql.NullString
 	EventName  sql.NullString
