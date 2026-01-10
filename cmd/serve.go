@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/jadudm/its-log/internal/config"
+	defaultstorage "github.com/jadudm/its-log/internal/default-storage"
 	"github.com/jadudm/its-log/internal/itslog"
 	"github.com/jadudm/its-log/internal/serve"
 	"github.com/jadudm/its-log/internal/sqlite"
@@ -36,7 +37,7 @@ func serve_cmd(cmd *cobra.Command, args []string) {
 			Path: viper.GetString("storage.path"),
 		}
 	case "default":
-		//storage = &defaultstorage.DefaultStorage{}
+		storage = &defaultstorage.DefaultStorage{}
 	}
 
 	// Parse the API key config
@@ -50,6 +51,7 @@ func serve_cmd(cmd *cobra.Command, args []string) {
 
 	// Set up for TLS.
 	if viper.GetString("serve.cert") == "mock" && viper.GetString("serve.key") == "mock" {
+		// If we end up on an immutable filesystem, this will become an issue.
 		cert, key, err := testcerts.GenerateCertsToTempFile("/tmp")
 		if err != nil {
 			panic(err)

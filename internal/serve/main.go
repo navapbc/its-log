@@ -3,6 +3,7 @@ package serve
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jadudm/its-log/internal/config"
@@ -34,6 +35,9 @@ func PourGin(apiKeys config.ApiKeys, ch_evt_out chan<- *itslog.Event) *gin.Engin
 	auth_logV1.PUT("sev/:appID/:eventID/:value", Event("sev", ch_evt_out))
 	auth_logV1.PUT("cse/:cluster/:appID/:eventID", Event("cse", ch_evt_out))
 	auth_logV1.PUT("csev/:cluster/:appID/:eventID/:value", Event("csev", ch_evt_out))
+
+	// See https://gin-gonic.com/en/docs/deployment/
+	router.SetTrustedProxies(strings.Split(viper.GetString("proxies.trusted"), ","))
 
 	return router
 }

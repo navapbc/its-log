@@ -16,7 +16,7 @@ type DefaultStorage struct {
 // Memory buckets! great for testing.
 // b, err := blob.OpenBucket(ctx, "mem://?prefix=a/subfolder/")
 
-func (s *DefaultStorage) Init(t time.Time) error {
+func (s *DefaultStorage) Init() error {
 	fmt.Println("default storage initialized")
 	s.Counter = 0
 	return nil

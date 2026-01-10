@@ -19,6 +19,7 @@ services:
     volumes:
       - ..:/app
       - ../data/itslog:/data
+      - ../data/go:/go
     env_file: .env.local
 
 
