@@ -1,9 +1,8 @@
-/*
-Copyright © 2025 NAME HERE <EMAIL ADDRESS>
-*/
 package cmd
 
 import (
+	"encoding/json"
+
 	"github.com/jadudm/its-log/internal/config"
 	"github.com/jadudm/its-log/internal/itslog"
 	"github.com/jadudm/its-log/internal/serve"
@@ -31,10 +30,10 @@ func serve_cmd(cmd *cobra.Command, args []string) {
 	// Instantiate the preferred storage backend
 	// This may become a choice at some point.
 	var storage itslog.ItsLog
-	switch viper.GetString("app.storage") {
+	switch viper.GetString("storage") {
 	case "sqlite":
 		storage = &sqlite.SqliteStorage{
-			Path: viper.GetString("sqlite.path"),
+			Path: viper.GetString("storage.path"),
 		}
 	case "default":
 		//storage = &defaultstorage.DefaultStorage{}
@@ -42,7 +41,8 @@ func serve_cmd(cmd *cobra.Command, args []string) {
 
 	// Parse the API key config
 	var apiConfig config.ApiKeys
-	err := viper.Unmarshal(&apiConfig)
+	key_string := viper.GetString("apikeys")
+	err := json.Unmarshal([]byte(key_string), &apiConfig)
 	// TODO: Handle config failure
 	if err != nil {
 		panic(err)

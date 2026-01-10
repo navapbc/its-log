@@ -35,14 +35,15 @@ func (q *Queries) LogClusteredEvent(ctx context.Context, arg LogClusteredEventPa
 
 const logClusteredEventWithValue = `-- name: LogClusteredEventWithValue :one
 INSERT INTO itslog_events (
-  cluster_hash, source_hash, event_hash, value_hash
+  timestamp, cluster_hash, source_hash, event_hash, value_hash
 ) VALUES (
-  ?, ?, ?, ?
+  ?, ?, ?, ?, ?
 )
 RETURNING id
 `
 
 type LogClusteredEventWithValueParams struct {
+	Timestamp   time.Time
 	ClusterHash sql.NullInt64
 	SourceHash  int64
 	EventHash   int64
@@ -51,6 +52,7 @@ type LogClusteredEventWithValueParams struct {
 
 func (q *Queries) LogClusteredEventWithValue(ctx context.Context, arg LogClusteredEventWithValueParams) (int64, error) {
 	row := q.db.QueryRowContext(ctx, logClusteredEventWithValue,
+		arg.Timestamp,
 		arg.ClusterHash,
 		arg.SourceHash,
 		arg.EventHash,
@@ -221,5 +223,23 @@ type UpdateLookupParams struct {
 
 func (q *Queries) UpdateLookup(ctx context.Context, arg UpdateLookupParams) error {
 	_, err := q.db.ExecContext(ctx, updateLookup, arg.Hash, arg.Name)
+	return err
+}
+
+const updateMeta = `-- name: UpdateMeta :exec
+INSERT OR REPLACE INTO itslog_metadata (
+  key, value
+) VALUES (
+  ?, ?
+)
+`
+
+type UpdateMetaParams struct {
+	Key   int64
+	Value string
+}
+
+func (q *Queries) UpdateMeta(ctx context.Context, arg UpdateMetaParams) error {
+	_, err := q.db.ExecContext(ctx, updateMeta, arg.Key, arg.Value)
 	return err
 }

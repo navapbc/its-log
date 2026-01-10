@@ -60,7 +60,7 @@ func (s *SqliteStorage) Init() error {
 	// Rethink this... can we have different seeds with different runs?
 	// Perhaps not in the same DB... unless... well, it would update.
 	// Need the string : int mapping, and it would be OK.
-	fixedSeed := viper.GetInt("app.hash_seed")
+	fixedSeed := viper.GetInt("hash.seed")
 	seed := *(*maphash.Seed)(unsafe.Pointer(&fixedSeed))
 	s.h.SetSeed(seed)
 
@@ -83,36 +83,6 @@ func hashValue(hash maphash.Hash, s string) int64 {
 	h := hash.Sum64()
 	hash.Reset()
 	return int64(h)
-}
-
-func (s *SqliteStorage) Event(e *itslog.Event) (int64, error) {
-	cluster_h := hashValue(s.h, e.Cluster)
-	source_h := hashValue(s.h, e.Source)
-	event_h := hashValue(s.h, e.Event)
-	value_h := hashValue(s.h, e.Value)
-
-	valid_cluster := false
-	valid_value := false
-	if cluster_h != 0 {
-		valid_cluster = true
-	}
-	if value_h != 0 {
-		valid_value = true
-	}
-
-	// This is an unsigned to signed conversion...
-	id, err := s.queries.LogClusteredEventWithValue(context.Background(), models.LogClusteredEventWithValueParams{
-		ClusterHash: sql.NullInt64{Int64: cluster_h, Valid: valid_cluster},
-		SourceHash:  source_h,
-		EventHash:   event_h,
-		ValueHash:   sql.NullInt64{Int64: value_h, Valid: valid_value},
-	})
-
-	if err != nil {
-		panic(err)
-	}
-
-	return id, nil
 }
 
 func (s *SqliteStorage) ManyEvents(es []*itslog.Event) (int64, error) {
@@ -234,3 +204,33 @@ func (s *SqliteStorage) TestEventExists(source string, event string) int64 {
 func (s *SqliteStorage) GetDB() *sql.DB {
 	return s.db
 }
+
+// func (s *SqliteStorage) Event(e *itslog.Event) (int64, error) {
+// 	cluster_h := hashValue(s.h, e.Cluster)
+// 	source_h := hashValue(s.h, e.Source)
+// 	event_h := hashValue(s.h, e.Event)
+// 	value_h := hashValue(s.h, e.Value)
+
+// 	valid_cluster := false
+// 	valid_value := false
+// 	if cluster_h != 0 {
+// 		valid_cluster = true
+// 	}
+// 	if value_h != 0 {
+// 		valid_value = true
+// 	}
+
+// 	// This is an unsigned to signed conversion...
+// 	id, err := s.queries.LogClusteredEventWithValue(context.Background(), models.LogClusteredEventWithValueParams{
+// 		ClusterHash: sql.NullInt64{Int64: cluster_h, Valid: valid_cluster},
+// 		SourceHash:  source_h,
+// 		EventHash:   event_h,
+// 		ValueHash:   sql.NullInt64{Int64: value_h, Valid: valid_value},
+// 	})
+
+// 	if err != nil {
+// 		panic(err)
+// 	}
+
+// 	return id, nil
+// }

@@ -1,14 +1,17 @@
 package config
 
-var LOGGING_KEY_KIND = "log"
-var ADMIN_KEY_KIND = "admin"
+var KEY_KIND_LOGGING = "log"
+var KEY_KIND_ADMIN = "admin"
+var KEY_KIND_READONLY = "read-only"
 
 type ApiKey struct {
-	Application string `mapstructure:"application"`
-	Key         string `mapstructure:"key"`
-	Kind        string `mapstructure:"kind"`
+	KeyID string `mapstructure:"id"`
+	Key   string `mapstructure:"key"`
+	Kind  string `mapstructure:"kind"`
 }
 
-type ApiKeys struct {
-	Keys []ApiKey `mapstructure:"api_keys"`
-}
+// type ApiKeys struct {
+// 	Keys []ApiKey `mapstructure:"api_keys"`
+// }
+
+type ApiKeys []ApiKey

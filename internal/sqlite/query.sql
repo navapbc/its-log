@@ -26,13 +26,11 @@ RETURNING id;
 
 -- name: LogClusteredEventWithValue :one
 INSERT INTO itslog_events (
-  cluster_hash, source_hash, event_hash, value_hash
+  timestamp, cluster_hash, source_hash, event_hash, value_hash
 ) VALUES (
-  ?, ?, ?, ?
+  ?, ?, ?, ?, ?
 )
 RETURNING id;
-
-
 
 -- This is largely for generating fake entries. 
 -- However, there may be times where we want to be 
@@ -55,6 +53,13 @@ INSERT OR IGNORE INTO itslog_dictionary (
 -- name: UpdateLookup :exec
 INSERT OR IGNORE INTO itslog_lookup (
   hash, name
+) VALUES (
+  ?, ?
+);
+
+-- name: UpdateMeta :exec
+INSERT OR REPLACE INTO itslog_metadata (
+  key, value
 ) VALUES (
   ?, ?
 );

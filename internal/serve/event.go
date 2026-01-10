@@ -3,6 +3,7 @@ package serve
 import (
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jadudm/its-log/internal/itslog"
@@ -24,10 +25,11 @@ func Event(root string, ch_evt_out chan<- *itslog.Event) func(c *gin.Context) {
 
 		// Send the event to the Enqueue-er
 		ch_evt_out <- &itslog.Event{
-			Cluster: cluster,
-			Source:  appID,
-			Event:   evtID,
-			Value:   value,
+			Timestamp: time.Now(),
+			Cluster:   cluster,
+			Source:    appID,
+			Event:     evtID,
+			Value:     value,
 		}
 		// Everything worked.
 		c.JSON(http.StatusOK, gin.H{

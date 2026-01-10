@@ -1,0 +1,33 @@
+services:
+  # jupyter:
+  #     image: quay.io/jupyter/datascience-notebook:latest
+  #     ports:
+  #       - "8888:8888"
+  #     volumes:
+  #       - ./data:/home/jovyan/work
+  #     environment:
+  #       - JUPYTER_ENABLE_LAB=yes
+  #     command: "start-notebook.sh --NotebookApp.token=''"
+  itslog:
+    image: golang:1.25-trixie
+    command: bash -c "
+      cd /app && 
+      go run ./... serve
+      "
+    ports:
+      - "8443:8443"
+    volumes:
+      - ..:/app
+      - ../data/itslog:/data
+    env_file: .env.local
+
+
+# s3:
+#   bucket: "blue-bucket"
+#   scheme: "http"
+#   host: "localhost"
+#   port: "3900"
+#   disableSSL: true
+#   s3ForcePathStyle: true
+
+    

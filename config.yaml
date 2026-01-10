@@ -1,10 +1,13 @@
 api_keys:
     - application: "one app"
-      key: "not-a-real-api-key-but-it-needs-to-be-long"
+      key: "73ed42a40dcd82f1fa43de58fa63c5e5e6a4137672af8948ad10104da5cea045"
       kind: "log"
     - application: "ci/cd"
-      key: "this-is-a-long-key-that-provides-admin-access"
+      key: "c68df289d7f0ec5ff40cf14ae767b73d342c563c203d424ea054d85fb3fdbaf1"
       kind: "admin"
+    - application: "analysis"
+      key: "b36f7281166e2dfe18567ec06547f36e3b5e42141c310a41df098a67c3cda29b"
+      kind: "read-only"
 
 serve:
   host: "0.0.0.0"
@@ -17,8 +20,8 @@ app:
   # "debug" or "release"
   gin_mode: "release"
   storage: "sqlite"
-  event_buffer_length: 2000
-  event_buffer_flush_seconds: 10
+  event_buffer_length: 100
+  event_buffer_flush_seconds: 1
   # Keeping the seed constant means the same
   # events get hashed to the same integers.
   # Changing this changes the dictionary.

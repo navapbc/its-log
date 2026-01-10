@@ -1,6 +1,7 @@
 package serve
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -17,18 +18,19 @@ import (
 //
 // would likely do the trick.
 
-func AuthMiddleWare(apiKeys config.ApiKeys) gin.HandlerFunc {
+func AuthMiddleWare(auth_kind string, apiKeys config.ApiKeys) gin.HandlerFunc {
 	return func(c *gin.Context) {
-
 		api_key := c.GetHeader("x-api-key")
-		for _, key := range apiKeys.Keys {
-			if key.Kind == config.LOGGING_KEY_KIND &&
-				len(api_key) > 32 &&
-				api_key == key.Key {
-				return
-			} else {
-				c.AbortWithStatus(http.StatusUnauthorized)
+		for _, key := range apiKeys {
+			if key.Kind == auth_kind && len(api_key) > 32 {
+				log.Printf("%s %s\n", auth_kind, key.Key)
+				// If the key is the right kind
+				if api_key == key.Key {
+					return
+				}
 			}
 		}
+		// Otherwise, fail.
+		c.AbortWithStatus(http.StatusUnauthorized)
 	}
 }

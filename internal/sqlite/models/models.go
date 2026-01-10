@@ -34,6 +34,13 @@ type ItslogLookup struct {
 	Name      string
 }
 
+type ItslogMetadatum struct {
+	ID        int64
+	Timestamp time.Time
+	Key       int64
+	Value     string
+}
+
 type ItslogSummary struct {
 	ID         int64
 	Date       time.Time
@@ -41,4 +48,25 @@ type ItslogSummary struct {
 	SourceName sql.NullString
 	EventName  sql.NullString
 	Value      float64
+}
+
+type ItslogSummaryCountByEvent struct {
+	Operation  string
+	SourceName string
+	EventName  string
+	EventCount int64
+}
+
+type ItslogSummaryCountBySource struct {
+	Operation  string
+	SourceName string
+	EventName  interface{}
+	EventCount int64
+}
+
+type ItslogSummaryCountTotal struct {
+	Operation  string
+	SourceName interface{}
+	EventName  interface{}
+	EventCount int64
 }

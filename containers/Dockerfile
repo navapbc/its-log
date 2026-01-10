@@ -2,13 +2,14 @@
 FROM golang:1.25.5-trixie AS builder
 RUN apt-get update && apt-get install -y make
 ENV GOPROXY=direct
-RUN go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
+# RUN go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
+WORKDIR /tmp
+ADD https://github.com/sqlc-dev/sqlc/releases/download/v1.30.0/sqlc_1.30.0_linux_amd64.tar.gz .
+RUN tar xvzf sqlc_1.30.0_linux_amd64.tar.gz
+RUN mv /tmp/sqlc /usr/local/bin/sqlc
 WORKDIR /app
 COPY .. /app
 RUN make build
-
-FROM golang:1.25.5-trixie AS dummy
-RUN pwd
 
 # The run stage
 FROM golang:1.25.5-trixie AS prod

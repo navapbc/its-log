@@ -1,47 +1,41 @@
-/*
-Copyright © 2025 NAME HERE <EMAIL ADDRESS>
-*/
 package cmd
 
 import (
 	"os"
+	"strings"
 
-	"github.com/jadudm/its-log/internal/config"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // rootCmd represents the base command when called without any subcommands
-var rootCmd = &cobra.Command{
-	Use:   "its-log",
-	Short: "A simple, valueless event logger",
-	Long: `It's better than bad, it's good!
+var (
+	rootCmd = &cobra.Command{
+		Use:   "its-log",
+		Short: "A simple, valueless event logger",
+		Long: `It's better than bad, it's good!
 	
 its-log is a server and command-line tool for collecting and managing
 simple, event-based data about applications in resource-constrained,
 NIST-controlled environments. If you just want to count things, then
 everyone wants its-log.`,
-}
+	}
+)
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
-	config.ReadConfig()
 	err := rootCmd.Execute()
 	if err != nil {
 		os.Exit(1)
 	}
 }
 
-// TODO: This is likely where a --config or similar flag will go,
-// in case we want to run with an additional path to a config file.
 func init() {
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.its-log.yaml)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	replacer := strings.NewReplacer(".", "_")
+	viper.SetEnvKeyReplacer(replacer)
+	// Everything we want in the env for Viper
+	// must be prefixed with ITSLOG_
+	viper.SetEnvPrefix("ITSLOG")
+	viper.AutomaticEnv()
 }

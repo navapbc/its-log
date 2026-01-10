@@ -17,17 +17,18 @@ config:
 	cp config.yaml ~/.itslog
 
 serve: generate config
-	go run ./... serve
+# 	go run ./... serve
+	cd containers ; docker compose up
 
 docker:
 	cd containers ; \
 	docker build \
 		--platform "linux/amd64" \
-		-t its-log:latest \
+		-t itslog:latest \
 		-f Dockerfile ..
 	
 prod:
-	docker build -t its-log:latest -f Dockerfile --target prod ..
+	docker build -t itslog:latest -f Dockerfile --target prod ..
 
 stress:
 	cd k6 ; k6 run put.js
