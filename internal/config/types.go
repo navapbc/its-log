@@ -2,7 +2,7 @@ package config
 
 var KEY_KIND_LOGGING = "log"
 var KEY_KIND_ADMIN = "admin"
-var KEY_KIND_READONLY = "read-only"
+var KEY_KIND_READONLY = "readonly"
 
 type ApiKey struct {
 	KeyID string `mapstructure:"id"`

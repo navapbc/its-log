@@ -42,3 +42,7 @@ to run the logger locally. Once it is running, performance [K6](https://k6.io/) 
 ```
 make k6
 ```
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=navapbc/its-log&type=date&legend=top-left)](https://www.star-history.com/#navapbc/its-log&type=date&legend=top-left)

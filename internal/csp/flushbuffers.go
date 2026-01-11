@@ -10,6 +10,8 @@ import (
 func FlushBuffersOnce(ch_flush_in <-chan EventBuffers, storage itslog.ItsLog) {
 	// Open the storage for writing before we flush
 	err := storage.Init()
+	defer storage.Close()
+
 	if err != nil {
 		panic(err)
 	}
@@ -22,8 +24,6 @@ func FlushBuffersOnce(ch_flush_in <-chan EventBuffers, storage itslog.ItsLog) {
 		log.Printf("Failed to write event buffer; lost %d events\n", len(eb.Events))
 	}
 
-	// Close after every flush so the DB updates/etc.
-	storage.Close()
 }
 
 // For use in infinite contexts

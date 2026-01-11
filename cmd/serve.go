@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 
 	"github.com/jadudm/its-log/internal/config"
-	defaultstorage "github.com/jadudm/its-log/internal/default-storage"
 	"github.com/jadudm/its-log/internal/itslog"
 	"github.com/jadudm/its-log/internal/serve"
 	"github.com/jadudm/its-log/internal/sqlite"
@@ -31,13 +30,8 @@ func serve_cmd(cmd *cobra.Command, args []string) {
 	// Instantiate the preferred storage backend
 	// This may become a choice at some point.
 	var storage itslog.ItsLog
-	switch viper.GetString("storage") {
-	case "sqlite":
-		storage = &sqlite.SqliteStorage{
-			Path: viper.GetString("storage.path"),
-		}
-	case "default":
-		storage = &defaultstorage.DefaultStorage{}
+	storage = &sqlite.SqliteStorage{
+		Path: viper.GetString("storage.path"),
 	}
 
 	// Parse the API key config

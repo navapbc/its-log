@@ -47,7 +47,17 @@ CREATE TABLE IF NOT EXISTS itslog_metadata (
     key INTEGER NOT NULL,
     value TEXT NOT NULL
 );
-CREATE UNIQUE INDEX IF NOT EXISTS lookup_hashes_ndx ON itslog_metadata (key);
+CREATE UNIQUE INDEX IF NOT EXISTS key_hashes_ndx ON itslog_metadata (key);
+
+CREATE TABLE IF NOT EXISTS itslog_etl (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    inserted DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    name TEXT NOT NULL,
+    last_run DATETIME,
+    sql TEXT NOT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS step_name_hashes_ndx ON itslog_etl (name);
+
 
 -------------------------------------------------------------------------------------
 -- SUMMARIES

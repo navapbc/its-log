@@ -18,6 +18,14 @@ type ItslogDictionary struct {
 	EventHash  int64
 }
 
+type ItslogEtl struct {
+	ID       int64
+	Inserted time.Time
+	Name     string
+	LastRun  sql.NullTime
+	Sql      string
+}
+
 type ItslogEvent struct {
 	ID          int64
 	Timestamp   time.Time

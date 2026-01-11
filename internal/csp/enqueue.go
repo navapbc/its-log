@@ -53,6 +53,8 @@ func Enqueue(ch_e_in <-chan *itslog.Event, ch_flush_out chan<- EventBuffers, buf
 				event_buffers = NewEventBuffers(buffer_length)
 			}
 		case <-timer.C:
+			// This will flush once at startup, because the timer fires.
+			// This has a side-effect of creating the DB.
 			log.Println("flushing stale buffers")
 			// Send the structure out for writing
 			ch_flush_out <- event_buffers

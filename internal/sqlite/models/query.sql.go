@@ -11,6 +11,47 @@ import (
 	"time"
 )
 
+const getETL = `-- name: GetETL :one
+SELECT sql, last_run
+FROM itslog_etl
+WHERE
+  name = ?
+LIMIT 1
+`
+
+type GetETLRow struct {
+	Sql     string
+	LastRun sql.NullTime
+}
+
+func (q *Queries) GetETL(ctx context.Context, name string) (GetETLRow, error) {
+	row := q.db.QueryRowContext(ctx, getETL, name)
+	var i GetETLRow
+	err := row.Scan(&i.Sql, &i.LastRun)
+	return i, err
+}
+
+const insertETL = `-- name: InsertETL :exec
+INSERT OR REPLACE INTO itslog_etl (
+  name, sql
+) VALUES (
+  ?, ?
+)
+`
+
+type InsertETLParams struct {
+	Name string
+	Sql  string
+}
+
+// ------------------------------------------------------
+// ETL
+// ------------------------------------------------------
+func (q *Queries) InsertETL(ctx context.Context, arg InsertETLParams) error {
+	_, err := q.db.ExecContext(ctx, insertETL, arg.Name, arg.Sql)
+	return err
+}
+
 const logClusteredEvent = `-- name: LogClusteredEvent :one
 INSERT INTO itslog_events (
   cluster_hash, source_hash, event_hash
@@ -79,6 +120,9 @@ type LogEventParams struct {
 }
 
 // https://docs.sqlc.dev/en/latest/tutorials/getting-started-sqlite.html
+// ------------------------------------------------------
+// LOGGING
+// ------------------------------------------------------
 func (q *Queries) LogEvent(ctx context.Context, arg LogEventParams) (int64, error) {
 	row := q.db.QueryRowContext(ctx, logEvent, arg.SourceHash, arg.EventHash)
 	var id int64
@@ -157,6 +201,9 @@ func (q *Queries) TestDictionaryPairExists(ctx context.Context, arg TestDictiona
 }
 
 const testEventPairExists = `-- name: TestEventPairExists :one
+;
+
+
 SELECT EXISTS(
   SELECT 1 
   FROM itslog_events 
@@ -208,6 +255,20 @@ func (q *Queries) UpdateDictionary(ctx context.Context, arg UpdateDictionaryPara
 	return err
 }
 
+const updateLastRun = `-- name: UpdateLastRun :exec
+;
+
+UPDATE itslog_etl
+  SET 
+    last_run = CURRENT_TIMESTAMP 
+WHERE name = ?
+`
+
+func (q *Queries) UpdateLastRun(ctx context.Context, name string) error {
+	_, err := q.db.ExecContext(ctx, updateLastRun, name)
+	return err
+}
+
 const updateLookup = `-- name: UpdateLookup :exec
 INSERT OR IGNORE INTO itslog_lookup (
   hash, name
@@ -239,6 +300,9 @@ type UpdateMetaParams struct {
 	Value string
 }
 
+// ------------------------------------------------------
+// METADATA
+// ------------------------------------------------------
 func (q *Queries) UpdateMeta(ctx context.Context, arg UpdateMetaParams) error {
 	_, err := q.db.ExecContext(ctx, updateMeta, arg.Key, arg.Value)
 	return err

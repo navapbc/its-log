@@ -20,24 +20,36 @@ func PourGin(apiKeys config.ApiKeys, ch_evt_out chan<- *itslog.Event) *gin.Engin
 	}
 
 	router := gin.Default()
+	// See https://gin-gonic.com/en/docs/deployment/
+	router.SetTrustedProxies(strings.Split(viper.GetString("proxies.trusted"), ","))
+
+	// The entire API is currently v1
 	apiV1 := router.Group("/v1")
 
-	auth_readV1 := apiV1.Group("/")
-
-	auth_readV1.Use(AuthMiddleWare(config.KEY_KIND_READONLY, apiKeys))
-
-	auth_readV1.GET("select/:date/:operation", Read)
-
+	// Logging
 	auth_logV1 := apiV1.Group("/")
-
 	auth_logV1.Use(AuthMiddleWare(config.KEY_KIND_LOGGING, apiKeys))
 	auth_logV1.PUT("se/:appID/:eventID", Event("se", ch_evt_out))
 	auth_logV1.PUT("sev/:appID/:eventID/:value", Event("sev", ch_evt_out))
 	auth_logV1.PUT("cse/:cluster/:appID/:eventID", Event("cse", ch_evt_out))
 	auth_logV1.PUT("csev/:cluster/:appID/:eventID/:value", Event("csev", ch_evt_out))
 
-	// See https://gin-gonic.com/en/docs/deployment/
-	router.SetTrustedProxies(strings.Split(viper.GetString("proxies.trusted"), ","))
+	// ETL
+	auth_adminV1 := apiV1.Group("/")
+	auth_adminV1.Use(AuthMiddleWare(config.KEY_KIND_ADMIN, apiKeys))
+	// Insert a new ETL step
+	auth_adminV1.POST("etl/:date/:name", ETL)
+	// Run an ETL step
+	auth_adminV1.PUT("etl/:date/:name", ETL)
+	// Retrieve the contents of a step, including the last run and run status
+	auth_adminV1.GET("etl/:date/:name", ETL)
+	// Remove a step
+	auth_adminV1.DELETE("etl/:date/:name", ETL)
+
+	// Querying the data
+	auth_readV1 := apiV1.Group("/")
+	auth_readV1.Use(AuthMiddleWare(config.KEY_KIND_READONLY, apiKeys))
+	auth_readV1.GET("select/:date/:operation", Read)
 
 	return router
 }

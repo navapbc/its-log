@@ -1,5 +1,8 @@
 -- https://docs.sqlc.dev/en/latest/tutorials/getting-started-sqlite.html
 
+--------------------------------------------------------
+-- LOGGING
+--------------------------------------------------------
 -- name: LogEvent :one
 INSERT INTO itslog_events (
   source_hash, event_hash
@@ -57,12 +60,40 @@ INSERT OR IGNORE INTO itslog_lookup (
   ?, ?
 );
 
+--------------------------------------------------------
+-- METADATA
+--------------------------------------------------------
 -- name: UpdateMeta :exec
 INSERT OR REPLACE INTO itslog_metadata (
   key, value
 ) VALUES (
   ?, ?
 );
+
+--------------------------------------------------------
+-- ETL
+--------------------------------------------------------
+-- name: InsertETL :exec
+INSERT OR REPLACE INTO itslog_etl (
+  name, sql
+) VALUES (
+  ?, ?
+);
+
+-- name: GetETL :one
+SELECT sql, last_run
+FROM itslog_etl
+WHERE
+  name = ?
+LIMIT 1
+;
+
+-- name: UpdateLastRun :exec
+UPDATE itslog_etl
+  SET 
+    last_run = CURRENT_TIMESTAMP 
+WHERE name = ?
+;
 
 
 --------------------------------------------------------

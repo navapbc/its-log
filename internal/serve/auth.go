@@ -1,7 +1,6 @@
 package serve
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -16,6 +15,10 @@ import (
 //
 // python -c 'import secrets ; print(secrets.token_urlsafe(32))'
 //
+// or
+//
+// openssl rand -hex 32
+//
 // would likely do the trick.
 
 func AuthMiddleWare(auth_kind string, apiKeys config.ApiKeys) gin.HandlerFunc {
@@ -23,7 +26,6 @@ func AuthMiddleWare(auth_kind string, apiKeys config.ApiKeys) gin.HandlerFunc {
 		api_key := c.GetHeader("x-api-key")
 		for _, key := range apiKeys {
 			if key.Kind == auth_kind && len(api_key) > 32 {
-				log.Printf("%s %s\n", auth_kind, key.Key)
 				// If the key is the right kind
 				if api_key == key.Key {
 					return

@@ -21,10 +21,11 @@ import (
 var ddl string
 
 type SqliteStorage struct {
-	Path    string          // where the SQLite file lives
-	queries *models.Queries // sqlc queries
-	h       maphash.Hash    // For hashing str to int, consistently
-	db      *sql.DB
+	Path     string          // where the SQLite file lives
+	Filename string          // an optional filename override
+	queries  *models.Queries // sqlc queries
+	h        maphash.Hash    // For hashing str to int, consistently
+	db       *sql.DB
 }
 
 // Init() will be called repeatedly during a single run; specifically,
@@ -34,15 +35,24 @@ func (s *SqliteStorage) Init() error {
 	ctx := context.Background()
 
 	var name string
-	if s.Path != ":memory:" {
-		// Heads up: we need to set the date format, because SQLite is really just treating dates as text.
-		t := time.Now()
-		name = fmt.Sprintf("%s/%s.sqlite?_time_format=sqlite", s.Path, t.Format("2006-01-02"))
-	} else {
+
+	if s.Path == ":memory:" {
 		name = s.Path
+	} else {
+		if strings.Contains(s.Filename, ".sqlite") {
+			// If they gave us a filename, we might be doing an ETL or similar, and loading a
+			// specific, pre-existing database.
+			name = fmt.Sprintf("%s/%s?_time_format=sqlite", s.Path, s.Filename)
+		} else {
+			// If not, we're probably in the middle of logging, and should just open the next database
+			// with the appropriate name, since we log by-day at the moment.
+			// Heads up: we need to set the date format, because SQLite is really just treating dates as text.
+			t := time.Now()
+			name = fmt.Sprintf("%s/%s.sqlite?_time_format=sqlite", s.Path, t.Format("2006-01-02"))
+		}
 	}
+
 	db, err := sql.Open("sqlite", name)
-	// FIXME: Should I create this if it doesn't exist?
 	if err != nil {
 		return err
 	}
@@ -57,9 +67,12 @@ func (s *SqliteStorage) Init() error {
 
 	// This pulls a constant seed and dupes the maphash
 	// library into using it every run as the same seed.
-	// Rethink this... can we have different seeds with different runs?
-	// Perhaps not in the same DB... unless... well, it would update.
-	// Need the string : int mapping, and it would be OK.
+	// This seed matters for how strings are mapped to integers
+	// If it changes from one run to the next, then the mapping
+	// will change. That is OK within a single DB/single run, but
+	// if the server restarts, the mappings will get duplicated.
+	// So, we need to fix the seed, and think about when/how it
+	// is changed. This could be a value stored in the DB?
 	fixedSeed := viper.GetInt("hash.seed")
 	seed := *(*maphash.Seed)(unsafe.Pointer(&fixedSeed))
 	s.h.SetSeed(seed)
