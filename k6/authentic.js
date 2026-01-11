@@ -1,6 +1,8 @@
 import http from "k6/http";
 import { check, sleep } from "k6";
 
+// k6 run --env ITSLOG_APIKEY=$APIKEY_LOGGING ./authentic.js
+
 // https://k6.io/blog/how-to-generate-a-constant-request-rate-with-the-new-scenarios-api/
 export const options = {
   thresholds: {
@@ -34,8 +36,9 @@ for (const source_number of Array(30).keys()) {
   patient_names.push("Bob." + source_number) 
 }
 // API PARAMS
+// -e MY_URL=https://test-api.k6.io script.js
 const params = {
-            headers: {"x-api-key": "not-a-real-api-key-but-it-needs-to-be-long"}
+            headers: {"x-api-key": __ENV.ITSLOG_APIKEY}
         };
 
 

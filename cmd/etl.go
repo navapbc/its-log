@@ -5,15 +5,10 @@ import (
 
 	"github.com/jadudm/its-log/internal/etl"
 	"github.com/spf13/cobra"
+	"github.com/tidwall/gjson"
 )
 
-type etlParamsT struct {
-	etlRunscript *string
-	etlApiKey    *string
-	etlUrl       *string
-}
-
-var etlParams etlParamsT
+var etlParams etl.EtlParams
 
 // etlCmd represents the etl command
 var etlCmd = &cobra.Command{
@@ -26,29 +21,13 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// First check if we can open the datbase; fail fast if we can't.
-		// db, err := sql.Open("sqlite", *etlParams.etlFilename)
-		// // FIXME: Should I create this if it doesn't exist?
-		// if err != nil {
-		// 	panic(err)
-		// }
-		// // Don't leave it open.
-		// db.Close()
 
-		// etlMgr := &etl.ETLManager{
-		// 	Open: func() *sql.DB {
-		// 		db, _ := sql.Open("sqlite", *etlParams.etlFilename)
-		// 		return db
-		// 	},
-		// 	Close: func(db *sql.DB) {
-		// 		db.Close()
-		// 	},
-		// }
-
-		script, err := os.ReadFile(*etlParams.etlRunscript)
+		script, err := os.ReadFile(etlParams.EtlRunscriptPath)
 		if err != nil {
 			panic(err)
 		}
+		etlParams.EtlApiKey = os.Getenv("ITSLOG_APIKEY")
+		etlParams.EtlUrl = gjson.Get(string(script), "server.url").String()
 		etl.Run(string(script), etlParams)
 	},
 }
@@ -59,10 +38,8 @@ func init() {
 	// etlCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	// This should take a path to an ETL "script" (JSonnet? Json?)
 	// and a path to an SQLite DB
-	etlParams.etlRunscript = etlCmd.Flags().StringP("runscript", "r", "REQUIRED", "path to runscript")
-	etlParams.etlApiKey = etlCmd.Flags().StringP("key", "k", "REQUIRED", "API key for ItsLog instance")
-	etlParams.etlUrl = etlCmd.Flags().StringP("url", "k", "REQUIRED", "base URL for ItsLog instance")
+	etlCmd.Flags().StringVar(&etlParams.EtlRunscriptPath, "runscript", "REQUIRED", "path to runscript")
+	etlCmd.Flags().StringVar(&etlParams.EtlDate, "date", "REQUIRED", "date to run ETL on")
 	etlCmd.MarkFlagRequired("runscript")
-	etlCmd.MarkFlagRequired("key")
-	etlCmd.MarkFlagRequired("url")
+	etlCmd.MarkFlagRequired("date")
 }

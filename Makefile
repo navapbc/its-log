@@ -43,3 +43,6 @@ test:
 
 etl: generate config
 	cd pipeline ; make etl
+
+pipelines:
+	cd pipeline ; make jsonnet

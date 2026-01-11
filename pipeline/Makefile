@@ -1,7 +1,5 @@
-SCRIPT?=pipeline.json
-DB?=2026-01-03.sqlite
-
 jsonnet:
-	jsonnet pipeline.jsonnet > pipeline.json
+	jsonnet run.jsonnet > run.json
+	jsonnet load.jsonnet > load.json
 etl: jsonnet
-	go run ../... etl --runscript "${SCRIPT}" --sqlite "${DB}"
+	go run ../... etl --runscript "${SCRIPT}" --date "${DATE}"
