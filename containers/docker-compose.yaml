@@ -9,26 +9,31 @@ services:
   #       - JUPYTER_ENABLE_LAB=yes
   #     command: "start-notebook.sh --NotebookApp.token=''"
   itslog:
-    image: golang:1.25-trixie
+    image: itslog:latest
+    platform: linux/amd64
     command: bash -c "
-      cd /app && 
-      go run ./... serve
+      /app/its-log serve
       "
     ports:
-      - "8443:8443"
+      - "8888:8888"
     volumes:
-      - ..:/app
+      - ../itslog:/app
       - ../data/itslog:/data
-      - ../data/go:/go
     env_file: .env.local
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://itslog:8888/v1/health"]
+      interval: 300s
+      retries: 1
+      start_period: 5s
+      timeout: 3s
 
-
-# s3:
-#   bucket: "blue-bucket"
-#   scheme: "http"
-#   host: "localhost"
-#   port: "3900"
-#   disableSSL: true
-#   s3ForcePathStyle: true
-
-    
+  e2e:
+    image: itslog-e2e:latest
+    command: "python3 /app/e2e/main.py"
+    volumes:
+      - .:/app
+    profiles:
+      - testing
+    depends_on:
+      itslog:
+        condition: service_healthy
