@@ -16,6 +16,11 @@
     },
     {
       action: "load",
+      name: "count-total-delete",
+      filename: "count-total-delete.sql",
+    },
+    {
+      action: "load",
       name: "count-total",
       filename: "count-total.sql",
     },

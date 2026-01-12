@@ -1,5 +1,8 @@
 .PHONY: build clean generate serve docker prod stress k6 test
 
+generate:
+	cd itslog ; make generate
+
 e2e: generate
 	cd containers ; docker compose --profile testing up
 

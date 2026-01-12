@@ -11,6 +11,44 @@ import (
 	"time"
 )
 
+const getAllSummaries = `-- name: GetAllSummaries :many
+SELECT id, key_id, date, operation, source_name, event_name, value FROM itslog_summary
+`
+
+// ------------------------------------------------------
+// SUMMARY
+// ------------------------------------------------------
+func (q *Queries) GetAllSummaries(ctx context.Context) ([]ItslogSummary, error) {
+	rows, err := q.db.QueryContext(ctx, getAllSummaries)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ItslogSummary
+	for rows.Next() {
+		var i ItslogSummary
+		if err := rows.Scan(
+			&i.ID,
+			&i.KeyID,
+			&i.Date,
+			&i.Operation,
+			&i.SourceName,
+			&i.EventName,
+			&i.Value,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getETL = `-- name: GetETL :one
 SELECT sql, last_run
 FROM itslog_etl
@@ -57,6 +95,35 @@ type InsertETLParams struct {
 // ------------------------------------------------------
 func (q *Queries) InsertETL(ctx context.Context, arg InsertETLParams) error {
 	_, err := q.db.ExecContext(ctx, insertETL, arg.KeyID, arg.Name, arg.Sql)
+	return err
+}
+
+const insertSummary = `-- name: InsertSummary :exec
+INSERT OR REPLACE INTO itslog_summary (
+  key_id, date, operation, source_name, event_name, value
+  ) VALUES (
+  ?, ?, ?, ?, ?, ?
+  )
+`
+
+type InsertSummaryParams struct {
+	KeyID      string
+	Date       time.Time
+	Operation  string
+	SourceName sql.NullString
+	EventName  sql.NullString
+	Value      float64
+}
+
+func (q *Queries) InsertSummary(ctx context.Context, arg InsertSummaryParams) error {
+	_, err := q.db.ExecContext(ctx, insertSummary,
+		arg.KeyID,
+		arg.Date,
+		arg.Operation,
+		arg.SourceName,
+		arg.EventName,
+		arg.Value,
+	)
 	return err
 }
 
@@ -230,9 +297,6 @@ func (q *Queries) TestDictionaryPairExists(ctx context.Context, arg TestDictiona
 }
 
 const testEventPairExists = `-- name: TestEventPairExists :one
-;
-
-
 SELECT EXISTS(
   SELECT 1 
   FROM itslog_events 
@@ -261,14 +325,15 @@ func (q *Queries) TestEventPairExists(ctx context.Context, arg TestEventPairExis
 
 const updateDictionary = `-- name: UpdateDictionary :exec
 INSERT OR IGNORE INTO itslog_dictionary (
-  key_id, source_name, event_name, source_hash, event_hash
+  key_id, timestamp, source_name, event_name, source_hash, event_hash
 ) VALUES (
-  ?, ?, ?, ?, ?
+  ?, ?, ?, ?, ?, ?
 )
 `
 
 type UpdateDictionaryParams struct {
 	KeyID      string
+	Timestamp  time.Time
 	SourceName string
 	EventName  string
 	SourceHash int64
@@ -278,6 +343,7 @@ type UpdateDictionaryParams struct {
 func (q *Queries) UpdateDictionary(ctx context.Context, arg UpdateDictionaryParams) error {
 	_, err := q.db.ExecContext(ctx, updateDictionary,
 		arg.KeyID,
+		arg.Timestamp,
 		arg.SourceName,
 		arg.EventName,
 		arg.SourceHash,
@@ -310,20 +376,26 @@ func (q *Queries) UpdateLastRun(ctx context.Context, arg UpdateLastRunParams) er
 
 const updateLookup = `-- name: UpdateLookup :exec
 INSERT OR IGNORE INTO itslog_lookup (
-  key_id, hash, name
+  key_id, timestamp, hash, name
 ) VALUES (
-  ?, ?, ?
+  ?, ?, ?, ?
 )
 `
 
 type UpdateLookupParams struct {
-	KeyID string
-	Hash  int64
-	Name  string
+	KeyID     string
+	Timestamp time.Time
+	Hash      int64
+	Name      string
 }
 
 func (q *Queries) UpdateLookup(ctx context.Context, arg UpdateLookupParams) error {
-	_, err := q.db.ExecContext(ctx, updateLookup, arg.KeyID, arg.Hash, arg.Name)
+	_, err := q.db.ExecContext(ctx, updateLookup,
+		arg.KeyID,
+		arg.Timestamp,
+		arg.Hash,
+		arg.Name,
+	)
 	return err
 }
 

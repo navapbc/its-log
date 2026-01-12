@@ -1,6 +1,7 @@
 jsonnet:
 	jsonnet run.jsonnet > run.json
 	jsonnet load.jsonnet > load.json
+	jsonnet combine.jsonnet > combine.json
 
 docker: jsonnet
 	docker build \

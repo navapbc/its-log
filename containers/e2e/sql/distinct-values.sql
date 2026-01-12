@@ -5,8 +5,8 @@ WITH dc AS (
   SELECT count(DISTINCT value_hash) AS cnt FROM itslog_events
 )
 INSERT INTO itslog_summary 
-  (key_id, operation, source_name, event_name, value)
+  (key_id, date, operation, source_name, event_name, value)
 SELECT
-  ? as key_id, 'distinct.by_day.values', NULL, NULL, dc.cnt
+  'ITSLOG_KEY_ID' as key_id, 'ITSLOG_DATE' as date, 'distinct.by_day.values', NULL as source_name, NULL as event_name, dc.cnt as value
 FROM dc
 ;

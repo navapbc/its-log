@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS itslog_dictionary (
     event_name TEXT NOT NULL,
     event_hash INTEGER NOT NULL
 );
-CREATE UNIQUE INDEX IF NOT EXISTS dictionary_pairs_ndx ON itslog_dictionary (source_hash, event_hash);
+CREATE UNIQUE INDEX IF NOT EXISTS dictionary_pairs_ndx ON itslog_dictionary (key_id, source_hash, event_hash);
 
 CREATE TABLE IF NOT EXISTS itslog_lookup (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS itslog_lookup (
     hash INTEGER NOT NULL,
     name TEXT NOT NULL
 );
-CREATE UNIQUE INDEX IF NOT EXISTS lookup_hashes_ndx ON itslog_lookup (hash);
+CREATE UNIQUE INDEX IF NOT EXISTS lookup_hashes_ndx ON itslog_lookup (key_id, hash);
 
 CREATE TABLE IF NOT EXISTS itslog_summary (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS itslog_summary (
     event_name TEXT,
     value REAL NOT NULL
 );
-CREATE UNIQUE INDEX IF NOT EXISTS summary_ndx ON itslog_summary (operation, source_name, event_name);
+CREATE UNIQUE INDEX IF NOT EXISTS summary_ndx ON itslog_summary (key_id, date, operation, source_name, event_name);
 
 CREATE TABLE IF NOT EXISTS itslog_metadata (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS itslog_metadata (
     key INTEGER NOT NULL,
     value TEXT NOT NULL
 );
-CREATE UNIQUE INDEX IF NOT EXISTS key_hashes_ndx ON itslog_metadata (key);
+CREATE UNIQUE INDEX IF NOT EXISTS key_hashes_ndx ON itslog_metadata (key_id, key);
 
 CREATE TABLE IF NOT EXISTS itslog_etl (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS itslog_etl (
     last_run DATETIME,
     sql TEXT NOT NULL
 );
-CREATE UNIQUE INDEX IF NOT EXISTS step_name_hashes_ndx ON itslog_etl (name);
+CREATE UNIQUE INDEX IF NOT EXISTS step_name_hashes_ndx ON itslog_etl (key_id, name);
 
 
 -------------------------------------------------------------------------------------

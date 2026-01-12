@@ -1,3 +1,4 @@
+import click
 import json
 import os
 from pathlib import Path
@@ -43,6 +44,7 @@ def run_script(runscript, script, date, to_do):
                     base = Path(runscript).parent
                     contents = open(os.path.join(
                         base, "sql", a['filename'])).read()
+                    contents = f"-- LOADED {time.time()}\n" + contents
                     url = "http://" + \
                         os.environ["ITSLOG_SERVE_HOST"] + ":" + \
                         os.environ["ITSLOG_SERVE_PORT"] + \
@@ -54,7 +56,8 @@ def run_script(runscript, script, date, to_do):
                     res = requests.post(url, headers=headers, json={
                         "sql": contents,
                     })
-                    # print(res.json())
+                    if res.status_code >= 300:
+                        print(res.json())
                 case "run":
                     # print(f"-- running: {a['name']}")
                     base = Path(runscript).parent
@@ -67,8 +70,21 @@ def run_script(runscript, script, date, to_do):
                         "x-api-key": key
                     }
                     res = requests.put(url, headers=headers)
-                    # print(res.json())
-
+                    if res.status_code >= 300:
+                        print(res.json())
+                case "combine":
+                    base = Path(runscript).parent
+                    url = "http://" + \
+                        os.environ["ITSLOG_SERVE_HOST"] + ":" + \
+                        os.environ["ITSLOG_SERVE_PORT"] + \
+                        f"/v1/combine/{a['source']}/{a['destination']}/{a['table']}"
+                    key = get_key("log")["key"]
+                    headers = {
+                        "x-api-key": key
+                    }
+                    res = requests.put(url, headers=headers)
+                    if res.status_code >= 300:
+                        print(res.json())
                 case _:
                     print(f"-- skipping: {a['action']}")
 
@@ -83,6 +99,12 @@ def run_etl(date):
     runscript = "/app/e2e/run.json"
     script = json.load(open(runscript))
     run_script(runscript, script, date, ["message", "run"])
+
+
+def combine():
+    runscript = "/app/e2e/combine.json"
+    script = json.load(open(runscript))
+    run_script(runscript, script, "no date", ["message", "combine"])
 
 
 applications = [
@@ -137,21 +159,42 @@ def generate_events(n, date):
         url = "http://" + \
             os.environ["ITSLOG_SERVE_HOST"] + ":" + \
             os.environ["ITSLOG_SERVE_PORT"] + \
-            f"/v1/dse/{date}/{k}.{source}/{app}"
+            f"/v1/dsev/{date}/{k}/{source}/{app}"
         key = get_key("test")["key"]
         headers = {
-            "x-api-key": key
+            "x-api-key": key,
+            'Connection': 'close'
         }
         res = requests.put(url, headers=headers)
+        if res.status_code >= 300:
+            print(res.json())
 
 
-def main():
+@click.command()
+@click.option('--actions', '-a', multiple=True)
+@click.option('--events', '-e', default=40000)
+@click.option("--days", '-d', default=4)
+def main(actions, events, days):
+    print(actions, events, days)
+    events = events
     load_env()
-    for i in range(1, 30):
+    for i in range(1, 1+days):
         date = f"2026-01-{i:02d}"
-        generate_events(1000, date)
-        load_etl(date)
-        run_etl(date)
+        # 40K/day is authentic
+        t0 = time.time()
+        if "generate" in actions:
+            generate_events(events, date)
+        t1 = time.time()
+        delta = t1 - t0
+        print(f"{delta}s ({events/delta} events per second)", flush=True)
+        # we must wait for the buffers to flush before trying to count
+        time.sleep(3)
+        if "load" in actions:
+            load_etl(date)
+        if "run" in actions:
+            run_etl(date)
+        if "combine" in actions:
+            combine()
         time.sleep(0.5)
 
 

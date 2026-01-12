@@ -11,7 +11,7 @@
     },
     {
       action: "run",
-      name: "truncate-summary",
+      name: "count-total-delete",
     },
     {
       action: "run",

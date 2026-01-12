@@ -3,7 +3,9 @@ package serve
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -222,22 +224,37 @@ func put(c *gin.Context, params ETLParams) {
 	})
 
 	if err != nil {
+		msg := "could not find ETL step"
+		log.Println(msg)
 		c.JSON(http.StatusNotFound, gin.H{
 			"status":  "error",
 			"method":  c.Request.Method,
-			"message": "could not find ETL step",
+			"message": msg,
 			"date":    params.Date,
 			"name":    params.Name,
 		})
 		return
 	}
 
+	repl := map[string]string{
+		"ITSLOG_KEY_ID": keyId,
+		"ITSLOG_DATE":   params.Date.Format("2006-01-02"),
+	}
+
+	query_string := string(row.Sql)
+	for k, v := range repl {
+		query_string = strings.ReplaceAll(query_string, k, v)
+	}
+
 	// Run the query
-	if _, err := tx.ExecContext(ctx, string(row.Sql), keyId); err != nil {
+	_, err = tx.ExecContext(ctx, query_string)
+	if err != nil {
+		msg := "could not exec sql of ETL step"
+		log.Println(msg)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
 			"method":  c.Request.Method,
-			"message": "could not exec sql of ETL step",
+			"message": msg,
 			"detail":  err.Error(),
 			"date":    params.Date,
 			"name":    params.Name,
@@ -249,10 +266,12 @@ func put(c *gin.Context, params ETLParams) {
 		KeyID: keyId,
 		Name:  params.Name,
 	}); err != nil {
+		msg := "could not update ETL metadata"
+		log.Println(msg)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
 			"method":  c.Request.Method,
-			"message": "could not update ETL metadata",
+			"message": msg,
 			"date":    params.Date,
 			"name":    params.Name,
 		})
@@ -261,10 +280,12 @@ func put(c *gin.Context, params ETLParams) {
 
 	// Commit the transaction.
 	if err = tx.Commit(); err != nil {
+		msg := "could not commit transaction"
+		log.Println(msg)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
 			"method":  c.Request.Method,
-			"message": "could not commit transaction",
+			"message": msg,
 			"date":    params.Date,
 			"name":    params.Name,
 		})

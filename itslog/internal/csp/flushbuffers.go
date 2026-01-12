@@ -2,7 +2,6 @@ package csp
 
 import (
 	"log"
-	"time"
 
 	"github.com/jadudm/its-log/internal/itslog"
 )
@@ -15,20 +14,20 @@ func FlushBuffersOnce(ch_flush_in <-chan EventBuffers, storage itslog.ItsLog) {
 	// For testing, we get events with random dates.
 	// Sort them into arrays based on date.
 	// This is a waste in production.
-	by_date := make(map[time.Time][]*itslog.Event)
+	by_date := make(map[string][]*itslog.Event)
 	for _, e := range eb.Events {
 		if e != nil {
 			d := e.Timestamp
-			if len(by_date[d]) < 1 {
-				by_date[d] = make([]*itslog.Event, 0)
+			df := d.Format("2006-01-02")
+			if len(by_date[df]) < 1 {
+				by_date[df] = make([]*itslog.Event, 0)
 			}
-			by_date[d] = append(by_date[d], e)
-
+			by_date[df] = append(by_date[df], e)
 		}
 	}
 
-	for d, es := range by_date {
-		err := storage.InitByDate(d)
+	for df, es := range by_date {
+		err := storage.InitByName(df)
 		if err != nil {
 			panic(err)
 		}

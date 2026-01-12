@@ -2,6 +2,7 @@ package serve
 
 import (
 	"fmt"
+	"math/rand"
 	"net/http"
 	"strings"
 	"time"
@@ -25,6 +26,12 @@ func Event(root string, ch_evt_out chan<- *itslog.Event) func(c *gin.Context) {
 			date := c.Param("date")
 
 			timestamp, err = time.Parse("2006-01-02", date)
+			min := time.Date(timestamp.Year(), timestamp.Month(), timestamp.Day(), 0, 0, 0, 0, time.UTC).Unix()
+			max := time.Date(timestamp.Year(), timestamp.Month(), timestamp.Day(), 23, 59, 59, 0, time.UTC).Unix()
+			delta := max - min
+			sec := rand.Int63n(delta) + min
+			timestamp = time.Unix(sec, 0)
+
 			if err != nil {
 				c.JSON(http.StatusBadRequest, gin.H{
 					"status":  "error",

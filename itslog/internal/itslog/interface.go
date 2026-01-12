@@ -7,6 +7,7 @@ type EventType int
 type ItsLog interface {
 	Init() error
 	InitByDate(time.Time) error
+	InitByName(string) error
 	// Event(e *Event) (int64, error)
 	ManyEvents(e []*Event) (int64, error)
 	Close()

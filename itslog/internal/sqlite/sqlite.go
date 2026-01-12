@@ -85,8 +85,15 @@ func (s *SqliteStorage) Init() error {
 	return _init(s, name)
 }
 
+// FIXME: replace these with the filename override, above
 func (s *SqliteStorage) InitByDate(date time.Time) error {
 	name := fmt.Sprintf("%s/%s.sqlite?_time_format=sqlite", s.Path, date.Format("2006-01-02"))
+	return _init(s, name)
+}
+
+func (s *SqliteStorage) InitByName(filename string) error {
+	// FIXME: All of these want some sanitization; no ../asdf.sqlite, etc.
+	name := fmt.Sprintf("%s/%s.sqlite?_time_format=sqlite", s.Path, filename)
 	return _init(s, name)
 }
 
@@ -136,6 +143,7 @@ func (s *SqliteStorage) ManyEvents(es []*itslog.Event) (int64, error) {
 			}
 
 			_, err := qtx.LogClusteredEventWithValue(context.Background(), models.LogClusteredEventWithValueParams{
+				Timestamp:   e.Timestamp,
 				ClusterHash: sql.NullInt64{Int64: cluster_h, Valid: valid_cluster},
 				SourceHash:  source_h,
 				EventHash:   event_h,
@@ -152,6 +160,7 @@ func (s *SqliteStorage) ManyEvents(es []*itslog.Event) (int64, error) {
 			// quietly ignore conflicts. This could be optimized to only update
 			// when we see a new hash value.
 			err = qtx.UpdateDictionary(ctx, models.UpdateDictionaryParams{
+				Timestamp:  e.Timestamp,
 				SourceName: e.Source,
 				EventName:  e.Event,
 				SourceHash: source_h,
@@ -164,8 +173,9 @@ func (s *SqliteStorage) ManyEvents(es []*itslog.Event) (int64, error) {
 
 			if valid_value {
 				qtx.UpdateLookup(ctx, models.UpdateLookupParams{
-					Name: e.Value,
-					Hash: value_h,
+					Timestamp: e.Timestamp,
+					Name:      e.Value,
+					Hash:      value_h,
 				})
 				if err != nil {
 					log.Println("Error in storing value lookup:" + err.Error())

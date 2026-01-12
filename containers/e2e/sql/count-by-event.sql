@@ -8,13 +8,11 @@ counts AS (
   FROM itslog_events ie
   GROUP BY ie.source_hash, ie.event_hash),
 final AS (
-    SELECT d.source_name, d.event_name, c.event_count
+    SELECT 'ITSLOG_KEY_ID' as key_id, 'ITSLOG_DATE' as date, 'count.by_day.by_source.by_event' as operation, d.source_name as source_name, d.event_name as event_name, c.event_count as value
     FROM counts c
     INNER JOIN itslog_dictionary AS d ON d.source_hash = c.source_hash AND d.event_hash = c.event_hash
 	GROUP BY d.source_name, d.event_name
   )
 INSERT INTO itslog_summary 
-    (key_id, operation, source_name, event_name, value)
-SELECT 
-    ? as key_id, 'count.by_day.by_source.by_event' as operation, source_name, event_name, event_count as value
-FROM final;
+    (key_id, date, operation, source_name, event_name, value)
+SELECT * from final;

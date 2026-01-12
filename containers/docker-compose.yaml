@@ -29,11 +29,23 @@ services:
 
   e2e:
     image: itslog-e2e:latest
-    command: "python3 /app/e2e/main.py"
+    command: "python3 /app/e2e/main.py -a generate -a load -a run -e 1000"
     volumes:
       - .:/app
     profiles:
       - testing
+    depends_on:
+      itslog:
+        condition: service_healthy
+
+  e2e-combine:
+    image: itslog-e2e:latest
+    platform: linux/amd64
+    command: "python3 /app/e2e/main.py -a combine -d 1"
+    volumes:
+      - .:/app
+    profiles:
+      - combine
     depends_on:
       itslog:
         condition: service_healthy

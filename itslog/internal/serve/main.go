@@ -55,6 +55,8 @@ func PourGin(apiKeys config.ApiKeys, ch_evt_out chan<- *itslog.Event) *gin.Engin
 	auth_adminV1.GET("etl/:date/:name", ETL)
 	// Remove a step
 	auth_adminV1.DELETE("etl/:date/:name", ETL)
+	// Combine a table from one DB into another DB
+	auth_adminV1.PUT("combine/:source/:destination/:table", Combine)
 
 	// Querying the data
 	auth_readV1 := apiV1.Group("/")

@@ -31,16 +31,16 @@ To run the test suite (which is small, but exercises the API and process network
 make test
 ```
 
-In order to run performance checks
+To build containers
 
 ```
-make serve
+make docker
 ```
 
-to run the logger locally. Once it is running, performance [K6](https://k6.io/) load tests can be run against the server with
+To run a deterministic E2E suite, which stands up the logger and a "client," which generates authentic data for testing the pipeline front-to-back:
 
 ```
-make k6
+make e2e
 ```
 
 ## Star History

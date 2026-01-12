@@ -48,17 +48,30 @@ RETURNING id;
 
 -- name: UpdateDictionary :exec
 INSERT OR IGNORE INTO itslog_dictionary (
-  key_id, source_name, event_name, source_hash, event_hash
+  key_id, timestamp, source_name, event_name, source_hash, event_hash
 ) VALUES (
-  ?, ?, ?, ?, ?
+  ?, ?, ?, ?, ?, ?
 );
 
 -- name: UpdateLookup :exec
 INSERT OR IGNORE INTO itslog_lookup (
-  key_id, hash, name
+  key_id, timestamp, hash, name
 ) VALUES (
-  ?, ?, ?
+  ?, ?, ?, ?
 );
+
+--------------------------------------------------------
+-- SUMMARY
+--------------------------------------------------------
+-- name: GetAllSummaries :many
+SELECT * FROM itslog_summary;
+
+-- name: InsertSummary :exec
+INSERT OR REPLACE INTO itslog_summary (
+  key_id, date, operation, source_name, event_name, value
+  ) VALUES (
+  ?, ?, ?, ?, ?, ?
+  );
 
 --------------------------------------------------------
 -- METADATA
@@ -100,6 +113,12 @@ WHERE
   name = ?
 ;
 
+
+--------------------------------------------------------
+-- CLEANUP
+--------------------------------------------------------
+-- name: VacuumDatabase :exec
+VACUUM;
 
 --------------------------------------------------------
 -- TEST HELPERS
