@@ -39,19 +39,8 @@ func Combine(c *gin.Context) {
 		return
 	}
 
-	// 	type ItslogSummary struct {
-	// 	ID         int64
-	// 	KeyID      string
-	// 	Date       time.Time
-	// 	Operation  string
-	// 	SourceName sql.NullString
-	// 	EventName  sql.NullString
-	// 	Value      float64
-	// }
-
 	for _, row := range rows {
 		dctx := context.Background()
-		fmt.Printf("%v\n", row)
 		err := destinationStorage.GetQueries().InsertSummary(dctx, models.InsertSummaryParams{
 			KeyID:      row.KeyID,
 			Date:       row.Date,

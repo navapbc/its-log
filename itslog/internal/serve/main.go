@@ -32,7 +32,7 @@ func PourGin(apiKeys config.ApiKeys, ch_evt_out chan<- *itslog.Event) *gin.Engin
 
 	// Logging
 	auth_logV1 := apiV1.Group("/")
-	auth_logV1.Use(AuthMiddleWare([]string{config.KEY_KIND_LOGGING}, apiKeys))
+	auth_logV1.Use(AuthMiddleWare([]string{config.KEY_KIND_LOGGING, config.KEY_KIND_TEST}, apiKeys))
 	auth_logV1.PUT("se/:appID/:eventID", Event("se", ch_evt_out))
 	auth_logV1.PUT("sev/:appID/:eventID/:value", Event("sev", ch_evt_out))
 	auth_logV1.PUT("cse/:cluster/:appID/:eventID", Event("cse", ch_evt_out))
@@ -46,7 +46,7 @@ func PourGin(apiKeys config.ApiKeys, ch_evt_out chan<- *itslog.Event) *gin.Engin
 
 	// ETL
 	auth_adminV1 := apiV1.Group("/")
-	auth_adminV1.Use(AuthMiddleWare([]string{config.KEY_KIND_LOGGING, config.KEY_KIND_ADMIN}, apiKeys))
+	auth_adminV1.Use(AuthMiddleWare([]string{config.KEY_KIND_LOGGING, config.KEY_KIND_ADMIN, config.KEY_KIND_TEST}, apiKeys))
 	// Insert a new ETL step
 	auth_adminV1.POST("etl/:date/:name", ETL)
 	// Run an ETL step
@@ -60,7 +60,7 @@ func PourGin(apiKeys config.ApiKeys, ch_evt_out chan<- *itslog.Event) *gin.Engin
 
 	// Querying the data
 	auth_readV1 := apiV1.Group("/")
-	auth_readV1.Use(AuthMiddleWare([]string{config.KEY_KIND_ADMIN, config.KEY_KIND_LOGGING, config.KEY_KIND_READONLY}, apiKeys))
+	auth_readV1.Use(AuthMiddleWare([]string{config.KEY_KIND_ADMIN, config.KEY_KIND_LOGGING, config.KEY_KIND_READONLY, config.KEY_KIND_TEST}, apiKeys))
 	auth_readV1.GET("select/:date/:operation", Read)
 
 	return router

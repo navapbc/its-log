@@ -108,7 +108,7 @@ INSERT OR REPLACE INTO itslog_summary (
 
 type InsertSummaryParams struct {
 	KeyID      string
-	Date       time.Time
+	Date       string
 	Operation  string
 	SourceName sql.NullString
 	EventName  sql.NullString

@@ -1,8 +1,12 @@
-DELETE FROM itslog_summary WHERE operation = 'distinct.by_day.by_source.values';
+-- DELETE FROM itslog_summary   WHERE 
+--     key_id = 'ITSLOG_KEY_ID' 
+--     AND date = 'ITSLOG_DATE'
+--     AND operation = 'distinct.by_day.by_source.values';
 
 WITH counts AS (
   SELECT DISTINCT source_hash, value_hash, count(value_hash) AS the_count 
-  FROM itslog_events
+  FROM itslog_events ie
+  WHERE ie.key_id = 'ITSLOG_KEY_ID'
   GROUP BY source_hash, value_hash)
 INSERT INTO itslog_summary 
   (key_id, date, operation, source_name, event_name, value)

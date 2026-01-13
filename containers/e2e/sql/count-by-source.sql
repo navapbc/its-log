@@ -1,11 +1,16 @@
 -- Remove previous values for this computation
-DELETE FROM itslog_summary WHERE operation = 'count.by_day.by_source';
+-- DELETE FROM itslog_summary   
+--     WHERE 
+--         key_id = 'ITSLOG_KEY_ID' 
+--         AND date = 'ITSLOG_DATE'
+--         operation = 'count.by_day.by_source';
 
 -- Compute the counts per event source
 WITH 
 counts AS (
   SELECT ie.source_hash, ie.event_hash, count(*) as event_count
   FROM itslog_events ie
+  WHERE ie.key_id = 'ITSLOG_KEY_ID'
   GROUP BY ie.source_hash
   ),
 final AS (

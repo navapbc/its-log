@@ -51,7 +51,7 @@ func Event(root string, ch_evt_out chan<- *itslog.Event) func(c *gin.Context) {
 
 		// This should have been handled by the auth middleware
 		key_id, err := GetKeyId(c)
-		if err != nil {
+		if err != nil || len(key_id) < 2 {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"status":  "error",
 				"message": "no key id in the Gin context",

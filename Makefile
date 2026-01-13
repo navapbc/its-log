@@ -3,9 +3,6 @@
 generate:
 	cd itslog ; make generate
 
-e2e: generate
-	cd containers ; docker compose --profile testing up
-
 container-itslog:
 	cd containers/itslog ; \
 	docker build \
@@ -13,18 +10,17 @@ container-itslog:
 		-t itslog:latest \
 		-f Dockerfile.itslog ../../itslog
 
-container-e2e:
-	cd containers/e2e ; \
-	make docker
+e2e:
+	@echo "e2e - root"
+	cd itslog ; make up & \
+	cd ../containers/e2e ; make e2e
+
 
 amd:
-	cd itslog ; make amd
+	cd itslog ; make build-amd
 
-up: amd
-	cd containers ; make up
-
-up-test: amd
-	cd containers ; make test
+up:
+	cd itslog ; make up
 
 test:
 	go test ./...

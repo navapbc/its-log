@@ -1,21 +1,13 @@
-.PHONY: build clean generate serve docker test
+.PHONY: build-amd generate up test e2e
 
-build: clean generate
-	go build -o its-log .
-
-amd:
+build-amd:
 	GOOS=linux GOARCH=amd64 go build -o its-log . 
-
-clean:
-	rm -f its-log
-	rm -rf internal/sqlite/models
-	rm -f cmd/itslog/schema.sql
 
 generate:
 	cd internal/sqlite ; sqlc generate
 
-serve: generate
-	go run ./... serve
+up: build-amd
+	cd ../containers ; docker compose up
 
 test:
-	go test ./...
+	cd itslog ; go test ./...

@@ -25,19 +25,13 @@ These are described in the [API docs](docs/api.md).
 
 ## to kick the tires
 
-To run the test suite (which is small, but exercises the API and process network supporting it)
+To stand up the API
 
 ```
-make test
+make up
 ```
 
-To build containers
-
-```
-make docker
-```
-
-To run a deterministic E2E suite, which stands up the logger and a "client," which generates authentic data for testing the pipeline front-to-back:
+To stand up the logger and run the E2E suite
 
 ```
 make e2e

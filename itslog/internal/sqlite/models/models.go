@@ -57,7 +57,7 @@ type ItslogMetadatum struct {
 type ItslogSummary struct {
 	ID         int64
 	KeyID      string
-	Date       time.Time
+	Date       string
 	Operation  string
 	SourceName sql.NullString
 	EventName  sql.NullString
