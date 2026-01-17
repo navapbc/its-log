@@ -44,15 +44,15 @@ applications = [
     'WhatMeds'
 ]
 
-testclient = ['EOB', 'Patient', 'Coverage',
-              'DigitalInsuranceCard', 'Profile', 'Metadata', 'OIDC']
-fhir = ['Patient', 'Coverage', 'ExplanationOfBenefit']
+testclient_events = ['EOB', 'Patient', 'Coverage',
+                     'DigitalInsuranceCard', 'Profile', 'Metadata', 'OIDC']
+fhir_events = ['Patient', 'Coverage', 'ExplanationOfBenefit']
 
 sources = {
-    'testclient.v2': testclient,
-    'testclient.v3': testclient,
-    'fhir.v2': fhir,
-    'fhir.v3': fhir,
+    'testclient.v2': testclient_events,
+    'testclient.v3': testclient_events,
+    'fhir.v2': fhir_events,
+    'fhir.v3': fhir_events,
 }
 
 
@@ -84,7 +84,7 @@ def itslog_base_headers(d={}, key='test'):
     return headers
 
 
-def handle_response(res):
+def handle_response(res: requests.Response):
     if res.status_code >= 300:
         print(res.json())
 
@@ -164,6 +164,16 @@ def generate_events(events, date):
         res = requests.put(url, headers=headers)
         handle_response(res)
 
+        responses = [200, 302, 400, 404, 418, 500, 501, 503]
+        weights = [11, 5, 2, 1, 1, 1, 1, 1]
+        response = random.choices(responses, weights=weights)[0]
+        url = itslog_base_url() + \
+            f'/v1/dse/{date}/response.{k}.{source}/{response}'
+        headers = itslog_base_headers({'connection': 'close'})
+        res = requests.put(url, headers=headers)
+        handle_response(res)
+
+
 # make jsonnet ; rm -f ../../its-log/data/itslog/*.sqlite ; ITSLOG_DAYS=365 ITSLOG_EVENTS=40000 docker compose up e2e
 # ITSLOG_DAYS=1 ITSLOG_ACTIONS='combine' docker compose up e2e
 
@@ -183,7 +193,7 @@ def main(actions, events, days):
         actions = os.getenv("ITSLOG_ACTIONS")
     end = days
     print(f"simulating {events} per day for {days} days", flush=True)
-    time.sleep(5)
+    time.sleep(2)
     # 'range' is exclusive of its end value.
     for day_number in range(start, end+1):
         (month, day) = day_number_to_month_day(1975, day_number)
@@ -194,6 +204,7 @@ def main(actions, events, days):
             t1 = time.time()
             delta = t1 - t0
             print(f'{floor(delta)}s ({floor(events/delta)} EPS)', flush=True)
+            # PAY ATTENTION: THIS TIMEOUT IS KEYED TO THE FLUSH TIMEOUT IN THE API
             # we must wait for the buffers to flush before trying to count
             time.sleep(3)
         if 'load' in actions:
@@ -206,4 +217,5 @@ def main(actions, events, days):
 
 
 if __name__ in '__main__':
+
     main()

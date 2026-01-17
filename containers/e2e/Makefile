@@ -12,6 +12,8 @@ docker: jsonnet
 e2e: jsonnet
 	@echo E2E
 	make jsonnet
-	rm -f ../../its-log/data/itslog/*.sqlite 
-	ITSLOG_DAYS=5 ITSLOG_EVENTS=1000 docker compose up e2e 
-	ITSLOG_DAYS=1 ITSLOG_ACTIONS='combine' docker compose up e2e
+	rm -f ../../data/itslog/*.sqlite 
+	docker compose up itslog &
+	ITSLOG_DAYS=14 ITSLOG_EVENTS=500 docker compose up e2e 
+	ITSLOG_EVENTS=1 ITSLOG_DAYS=1 ITSLOG_ACTIONS='combine' docker compose up e2e
+	docker stop containers-itslog-1

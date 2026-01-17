@@ -1,0 +1,10 @@
+ipywidgets
+bqplot
+plotly
+nbconvert[webpdf]
+pyodide_http
+requests
+pandas
+numpy
+nbformat
+plotly[express]

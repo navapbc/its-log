@@ -43,6 +43,16 @@ services:
       itslog:
         condition: service_healthy
 
+  lite:
+    image: jupyterlite:latest
+    command: "python3 -m http.server 9999 --directory /dist"
+    depends_on:
+      itslog:
+        condition: service_healthy
+    ports:
+      - "9999:9999"
+
+
   # e2e-combine:
   #   image: itslog-e2e:latest
   #   platform: linux/amd64

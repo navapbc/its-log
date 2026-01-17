@@ -1,7 +1,7 @@
 .PHONY: build clean generate serve docker prod stress k6 test
 
 generate:
-	cd itslog ; make generate
+	cd api ; make generate
 
 container-itslog:
 	cd containers/itslog ; \
@@ -10,17 +10,29 @@ container-itslog:
 		-t itslog:latest \
 		-f Dockerfile.itslog ../../itslog
 
-e2e:
-	@echo "e2e - root"
-	cd itslog ; make up & \
-	cd ../containers/e2e ; make e2e
+container-jupyterlite:
+	cd containers/jupyterlite ; \
+	docker build \
+		--platform "linux/amd64" \
+		-t jupyterlite:latest \
+		-f Dockerfile.jupyterlite .
 
+
+e2e: amd
+	@echo "e2e - root"
+	cd containers/e2e ; make e2e
 
 amd:
-	cd itslog ; make build-amd
+	cd api ; make amd
 
-up:
-	cd itslog ; make up
+native:
+	cd api ; make native
+
+run: native
+	./local.bash
+
+up: 
+	cd api ; make up
 
 test:
 	go test ./...

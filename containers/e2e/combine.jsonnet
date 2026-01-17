@@ -1,5 +1,5 @@
-local MAX_MONTH = 3;
-local MAX_DAY = 15;
+local MAX_MONTH = 1;
+local MAX_DAY = 14;
 
 local months = std.map(function(n) if n < 10
   then "0" + std.toString(n)

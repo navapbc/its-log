@@ -1,0 +1,8 @@
+FROM python:3.14-trixie
+
+COPY requirements.txt .
+RUN python -m pip install jupyterlite-core
+RUN python -m pip install jupyterlite-pyodide-kernel
+RUN python -m pip install -r requirements.txt
+RUN jupyter lite build --output-dir /dist
+CMD ["python3", "-m http.serve" "9999", "--directory", "/dist"]
