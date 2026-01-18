@@ -4,5 +4,4 @@ cmd/config.yaml
 its-log
 .vscode
 __*
-*.json
 .DS_Store

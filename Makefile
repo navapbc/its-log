@@ -36,3 +36,6 @@ up:
 
 test:
 	go test ./...
+
+swagger:
+	cd api ; swag init -o ./docs

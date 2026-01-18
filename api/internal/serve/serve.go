@@ -10,9 +10,12 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/jadudm/its-log/docs"
 	"github.com/jadudm/its-log/internal/csp"
 	"github.com/jadudm/its-log/internal/itslog"
 	"github.com/spf13/viper"
+	swaggerfiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 var validate *validator.Validate
@@ -63,6 +66,7 @@ func PourGin(ch_evt_out chan<- *itslog.Event) *gin.Engine {
 
 	apiV1 := router.Group("/v1")
 
+	addSwaggerEndpoints(apiV1)
 	addMetadataEndpoints(apiV1)
 	addLoggingEndpoints(apiV1, ch_evt_out)
 	addTestingEndpoints(apiV1, ch_evt_out)
@@ -70,6 +74,12 @@ func PourGin(ch_evt_out chan<- *itslog.Event) *gin.Engine {
 	addQueryEndpoints(apiV1, ch_evt_out)
 
 	return router
+}
+
+func addSwaggerEndpoints(rG *gin.RouterGroup) {
+	docs.SwaggerInfo.BasePath = rG.BasePath()
+	rG.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
+
 }
 
 func addMetadataEndpoints(rG *gin.RouterGroup) {

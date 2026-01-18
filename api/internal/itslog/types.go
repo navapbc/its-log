@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"slices"
 	"time"
+
+	_ "github.com/creasty/defaults"
 )
 
 type EventType int
@@ -72,3 +74,34 @@ type ApiKey struct {
 }
 
 type ApiKeys []ApiKey
+
+// ```
+// {
+//   "status": "success" | "error",
+//   "data": <data>,
+
+//   // Only set if status is "error". The data field may still hold
+//   // additional data.
+//   "errorType": "<string>",
+//   "error": "<string>",
+
+//   // Only set if there were warnings while executing the request.
+//   // There will still be data in the data field.
+//   "warnings": ["<string>"],
+//   // Only set if there were info-level annotations while executing the request.
+//   "infos": ["<string>"]
+// }
+// ```
+
+const OK = "ok"
+const ERROR = "error"
+
+type Success struct {
+	Status string `json:"status"`
+}
+type Error struct {
+	Status    string         `json:"status"`
+	Data      map[string]any `json:"data"`
+	ErrorType string         `json:"error_type"`
+	Error     string         `json:"error"`
+}

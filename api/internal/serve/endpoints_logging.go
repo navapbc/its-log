@@ -25,76 +25,83 @@ func addLoggingEndpoints(rG *gin.RouterGroup, ch_evt_out chan<- *itslog.Event) {
 	auth_logV1.PUT("csev/:cluster/:source/:event/:value", EventCSEV(ch_evt_out))
 }
 
-func getEventType(root string) itslog.EventType {
-	mapping := map[string]itslog.EventType{
-		"se":   itslog.SE,
-		"sev":  itslog.SEV,
-		"cse":  itslog.CSE,
-		"csev": itslog.CSEV,
-	}
-	// As written, this will panic hard if we get a value we're not expecting.
-	// However, these should be our own endpoints/the code in `addLoggingEndpoints`
-	// so the chances of a panic are low.
-	return mapping[root]
-}
-
 // EventSE godoc
-// @Summary ping example
-// @Schemes
-// @Description do ping
-// @Tags example
 // @Accept json
+// @Description logs an event with a source
+// @Failure 500	{object} itslog.Error
+// @Param event path string true "an event category"
+// @Param source path string true "a source category"
+// @Param x-api-key header string true "API key, 32 bytes or more, issued"
 // @Produce json
-// @Success 200 {string} Helloworld
-// @Router /example/helloworld [get]
+// @Router /se/{source}/{event} [put]
+// @Schemes
+// @Success 200 {object} itslog.Success
+// @Summary log a source/event
+// @Tags events
 func EventSE(ch_evt_out chan<- *itslog.Event) func(c *gin.Context) {
-	return Event("se", ch_evt_out)
+	return Event(itslog.SE, ch_evt_out)
 }
 
 // EventSEV godoc
-// @Summary ping example
-// @Schemes
-// @Description do ping
-// @Tags example
 // @Accept json
+// @Description log a source and event with a unique value
+// @Failure 500	{object} itslog.Error
+// @Param event path string true "an event category"
+// @Param source path string true "a source category"
+// @Param value path string true "a unique value associated with this event"
+// @Param x-api-key header string true "API key, 32 bytes or more, issued"
 // @Produce json
-// @Success 200 {string} Helloworld
-// @Router /example/helloworld [get]
+// @Router /sev/{source}/{event}/{value} [put]
+// @Schemes
+// @Success 200 {object} itslog.Success
+// @Summary log a source and event with a unique value
+// @Tags events
 func EventSEV(ch_evt_out chan<- *itslog.Event) func(c *gin.Context) {
-	return Event("sev", ch_evt_out)
+	return Event(itslog.SEV, ch_evt_out)
 }
 
 // EventCSE godoc
-// @Summary ping example
-// @Schemes
-// @Description do ping
-// @Tags example
 // @Accept json
+// @Description log a source and event as part of a cluster
+// @Failure 500	{object} itslog.Error
+// @Param cluster path string true "a UUID representing this cluster"
+// @Param event path string true "an event category"
+// @Param source path string true "a source category"
+// @Param x-api-key header string true "API key, 32 bytes or more, issued"
 // @Produce json
-// @Success 200 {string} Helloworld
-// @Router /example/helloworld [get]
+// @Router /cse/{cluster}/{source}/{event} [put]
+// @Schemes
+// @Success 200 {object} itslog.Success
+// @Summary log a source and event as part of a cluster
+// @Tags events
 func EventCSE(ch_evt_out chan<- *itslog.Event) func(c *gin.Context) {
-	return Event("cse", ch_evt_out)
+	return Event(itslog.CSE, ch_evt_out)
 }
+
+// param name,param type,data type,is mandatory?,comment attribute(optional)
 
 // EventCSEV godoc
-// @Summary ping example
-// @Schemes
-// @Description do ping
-// @Tags example
 // @Accept json
+// @Description log a source and event with a unique value as part of a cluster
+// @Failure 500	{object} itslog.Error
+// @Param cluster path string true "a UUID representing this cluster"
+// @Param event path string true "an event category"
+// @Param source path string true "a source category"
+// @Param value path string true "a unique value associated with this event"
+// @Param x-api-key header string true "API key, 32 bytes or more, issued"
 // @Produce json
-// @Success 200 {string} Helloworld
-// @Router /example/helloworld [get]
+// @Router /csev/{cluster}/{source}/{event}/{value} [put]
+// @Schemes
+// @Success 200 {object} itslog.Success
+// @Summary log a source and event with a unique value as part of a cluster
+// @Tags events
 func EventCSEV(ch_evt_out chan<- *itslog.Event) func(c *gin.Context) {
-	return Event("csev", ch_evt_out)
+	return Event(itslog.CSEV, ch_evt_out)
 }
 
-func Event(root string, ch_evt_out chan<- *itslog.Event) func(c *gin.Context) {
+func Event(eventType itslog.EventType, ch_evt_out chan<- *itslog.Event) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		// https://pkg.go.dev/github.com/go-playground/validator/v10
-
-		eventType := getEventType(root)
 		timestamp := time.Now()
 		cluster := ""
 		source := c.Param("source")
@@ -140,10 +147,12 @@ func Event(root string, ch_evt_out chan<- *itslog.Event) func(c *gin.Context) {
 				}
 			}
 
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"status":  "error",
-				"message": fmt.Sprintf("field validation errors: %s", messages),
+			c.JSON(http.StatusInternalServerError, itslog.Error{
+				Status:    itslog.ERROR,
+				Error:     fmt.Sprintf("%s", messages),
+				ErrorType: "field validation errors",
 			})
+
 			return
 		}
 
@@ -151,9 +160,6 @@ func Event(root string, ch_evt_out chan<- *itslog.Event) func(c *gin.Context) {
 		ch_evt_out <- payload
 
 		// Everything worked.
-		c.JSON(http.StatusOK, gin.H{
-			"status":  "ok",
-			"message": "its logged",
-		})
+		c.JSON(http.StatusOK, itslog.Success{Status: itslog.OK})
 	}
 }

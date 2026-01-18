@@ -2,9 +2,19 @@
 
 # These values would be set in a secrets manager
 # in a deployment context.
-
-export ITSLOG_APIKEY_PHLLC_ADMIN="{\"app_id\": \"pupper_health_llc\", \"key_id\": \"ph_admin\", \"permission\": \"admin\", \"key\": \"abcdefghabcdefghabcdefghabcdefgh\"}"
-export ITSLOG_APIKEY_PHLLC_LOG="{\"app_id\": \"pupper_health_llc\", \"key_id\": \"ph_logging\", \"permission\": \"log\", \"key\": \"12345678901234561234567890123456\"}"
+# https://stackoverflow.com/questions/45469133/create-json-file-using-jq
+export ITSLOG_APIKEY_PHLLC_ADMIN=$(jq -n \
+  --arg app_id "pupper_health_llc" \
+  --arg key_id "ph_admin" \
+  --arg permission "admin" \
+  --arg key "abcdefghabcdefghabcdefghabcdefgh" \
+  '$ARGS.named')
+export ITSLOG_APIKEY_PHLLC_LOG=$(jq -n \
+  --arg app_id "pupper_health_llc" \
+  --arg key_id "ph_logging" \
+  --arg permission "log" \
+  --arg key "12345678901234561234567890123456" \
+  '$ARGS.named')
 
 export ITSLOG_BUFFER_FLUSHWAITSEC=1
 export ITSLOG_BUFFER_LENGTH=2000
