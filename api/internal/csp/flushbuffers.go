@@ -56,17 +56,19 @@ func organizeEvents(eventBuffer EventBuffers) BufferTree {
 
 }
 
-func FlushBuffersOnce(ch_flush_in <-chan EventBuffers) {
+func FlushBuffersOnce(s *fsdb.SqliteStorage, ch_flush_in <-chan EventBuffers) {
 	eventBuffer := <-ch_flush_in
 	org := organizeEvents(eventBuffer)
 
 	for appId, dateMap := range org {
 		for formatted_date, events := range dateMap {
-			s := fsdb.SqliteStorage{
-				Path:     viper.GetString("storage.path"),
-				Filename: formatted_date + ".sqlite",
-				AppId:    appId,
-				Kind:     fsdb.NamedDatabase,
+			if s == nil {
+				s = &fsdb.SqliteStorage{
+					Path:     viper.GetString("storage.path"),
+					Filename: formatted_date + ".sqlite",
+					AppId:    appId,
+					Kind:     fsdb.NamedDatabase,
+				}
 			}
 
 			err := s.Init()
@@ -90,6 +92,6 @@ func FlushBuffersOnce(ch_flush_in <-chan EventBuffers) {
 // For use in infinite contexts
 func FlushBuffers(ch_flush_in <-chan EventBuffers) {
 	for {
-		FlushBuffersOnce(ch_flush_in)
+		FlushBuffersOnce(nil, ch_flush_in)
 	}
 }

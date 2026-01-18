@@ -91,7 +91,7 @@ func addMetadataEndpoints(rG *gin.RouterGroup) {
 	// The status endpoint provides server data, and needs a valid key
 	// https://github.com/appleboy/gin-status-api
 	auth_adminV1 := rG.Group("/")
-	permissions := []itslog.PermissionType{itslog.Admin, itslog.Logging, itslog.ReadOnly, itslog.Test}
+	permissions := []itslog.PermissionType{itslog.Admin, itslog.Log, itslog.ReadOnly, itslog.Test}
 	auth_adminV1.Use(AuthMiddleWare(permissions))
 	rG.GET("/status", status.GinHandler)
 

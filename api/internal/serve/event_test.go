@@ -1,12 +1,16 @@
 package serve
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
+	"os"
 	"testing"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"github.com/jadudm/its-log/internal/csp"
 	"github.com/jadudm/its-log/internal/fsdb"
 	"github.com/jadudm/its-log/internal/itslog"
@@ -33,15 +37,34 @@ func checkEq(t *testing.T, expected *itslog.Event) func(c chan *itslog.Event) {
 	}
 }
 
-func setup(consumer func(chan *itslog.Event)) *gin.Engine {
+func setup(consumer func(chan *itslog.Event)) (*gin.Engine, string) {
+	validate = validator.New(validator.WithRequiredStructEnabled())
 	var ch_evt_out = make(chan *itslog.Event)
-	router := gin.Default()
-	apiV1 := router.Group("/v1")
-	apiV1.PUT("se/:appID/:eventID", Event("se", ch_evt_out))
 	// This drains the channel so we don't have to worry about
 	// it as part of the testing.
 	go consumer(ch_evt_out)
-	return router
+
+	router := gin.Default()
+	apiV1 := router.Group("/v1")
+	permissions := []itslog.PermissionType{itslog.Log, itslog.Test}
+	apiV1.Use(AuthMiddleWare(permissions))
+	apiV1.PUT("se/:source/:event", Event(itslog.SE, ch_evt_out))
+	// Mock the env setup.
+	// This implies we have a JSON structure in an APIKEY variable.
+	key := "12345678901234561234567890123456"
+	m := gin.H{
+		"app_id":     "test",
+		"key_id":     "test",
+		"permission": "log",
+		"key":        key,
+	}
+	keystr, _ := json.Marshal(m)
+	os.Setenv("ITSLOG_APIKEY_TEST", string(keystr))
+	// Read the API keys in, so they can be found by the middleware.
+	itslog.GetApiKeys()
+	log.Printf("found %d keys", len(itslog.LiveKeys))
+	// Return the router and the API key
+	return router, key
 }
 
 /*
@@ -51,10 +74,12 @@ func setup(consumer func(chan *itslog.Event)) *gin.Engine {
  * it will hang forever, waiting for the channel communication to terminate.
  */
 func TestPutMessage(t *testing.T) {
-	router := setup(blackHole)
+	router, key := setup(blackHole)
+
 	apitest.New().
 		Handler(router).
 		Put("/v1/se/us.me.lewiston/forage-bagels").
+		Headers(map[string]string{"x-api-key": key}).
 		Expect(t).
 		Status(http.StatusOK).
 		End()
@@ -70,10 +95,11 @@ func TestPutMessageEq(t *testing.T) {
 	// Check that we read the expected event on the channel
 	source := "us.me.lewiston"
 	event := "forage-bagels"
-	router := setup(checkEq(t, &itslog.Event{Source: source, Event: event}))
+	router, key := setup(checkEq(t, &itslog.Event{Source: source, Event: event}))
 	apitest.New().
 		Handler(router).
 		Put(fmt.Sprintf("/v1/se/%s/%s", source, event)).
+		Headers(map[string]string{"x-api-key": key}).
 		Expect(t).
 		Status(http.StatusOK).
 		End()
@@ -89,25 +115,31 @@ func TestPutMessageEq(t *testing.T) {
 // recreated further down. So, the DB created here, and the DB
 // that data is stored to are different. I think. Need to rethink this.
 func TestPutMessageToDb(t *testing.T) {
-	viper.Set("app.hash_seed", 42)
-	viper.Set("storage.path", ":memory:")
-	s := fsdb.SqliteStorage{
-		Path: ":memory:",
+	viper.Set("hash.seed", 42)
+	s := &fsdb.SqliteStorage{
+		Kind:  fsdb.InMemory,
+		AppId: "test",
 	}
+	err := s.Init()
+	if err != nil {
+		t.Fatalf("error: %s\n", err.Error())
+	}
+
 	// FIXME: add these constants to the configuration
 	consumer := func(ch_evt chan *itslog.Event) {
 		ch_eb := make(chan csp.EventBuffers)
 		go csp.Enqueue(ch_evt, ch_eb, 1, 1)
-		go csp.FlushBuffersOnce(ch_eb)
+		go csp.FlushBuffersOnce(s, ch_eb)
 	}
 
 	// Check that we read the expected event on the channel
 	source := "us.me.lewiston"
 	event := "forage-bagels"
-	router := setup(consumer)
+	router, key := setup(consumer)
 	apitest.New().
 		Handler(router).
 		Put(fmt.Sprintf("/v1/se/%s/%s", source, event)).
+		Headers(map[string]string{"x-api-key": key}).
 		Expect(t).
 		Status(http.StatusOK).
 		End()

@@ -9,6 +9,8 @@ amd: clean generate
 native: clean generate
 	go build -o its-log . 
 
+run: native
+	./local.bash
 
 generate:
 	cd internal/fsdb ; sqlc generate
@@ -17,4 +19,4 @@ up: build-amd
 	cd ../containers ; docker compose up itslog lite
 
 test:
-	cd itslog ; go test ./...
+	go test ./...

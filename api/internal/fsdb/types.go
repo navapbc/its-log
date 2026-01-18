@@ -3,6 +3,7 @@ package fsdb
 import (
 	"database/sql"
 	_ "embed"
+	"fmt"
 	"hash/maphash"
 
 	"github.com/go-playground/validator/v10"
@@ -23,10 +24,27 @@ const (
 	NamedDatabase
 )
 
+func (s SqliteStorage) Validate() error {
+	switch s.Kind {
+	case InMemory:
+		return nil
+	case CurrentDatabase:
+		if len(s.Path) < 1 {
+			return fmt.Errorf("len(Path): %d", len(s.Path))
+		}
+	case NamedDatabase:
+		if len(s.Path) < 1 || len(s.Filename) < 1 {
+			return fmt.Errorf("len(Path): %d, len(Filename): %d", len(s.Path), len(s.Filename))
+		}
+	}
+	return nil
+}
+
+// https://pkg.go.dev/github.com/go-playground/validator/v10
 type SqliteStorage struct {
 	Kind     SqliteType `validate:"required"`
-	Path     string     `validate:"required_if=Kind 3"`
-	Filename string     `validate:"required_unless=Kind 1"`
+	Path     string     `validate:"required_unless=Kind 1"`
+	Filename string     `validate:"required_unless=Kind 1"` // required_unless=Kind 1
 	// Keep separate users separate with this value
 	// It will come in via the environment
 	AppId string `validate:"required"`

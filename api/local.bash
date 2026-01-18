@@ -4,14 +4,14 @@
 # in a deployment context.
 # https://stackoverflow.com/questions/45469133/create-json-file-using-jq
 export ITSLOG_APIKEY_PHLLC_ADMIN=$(jq -n \
-  --arg app_id "pupper_health_llc" \
-  --arg key_id "ph_admin" \
+  --arg app_id "puppers_llc" \
+  --arg key_id "pup_admin" \
   --arg permission "admin" \
   --arg key "abcdefghabcdefghabcdefghabcdefgh" \
   '$ARGS.named')
 export ITSLOG_APIKEY_PHLLC_LOG=$(jq -n \
-  --arg app_id "pupper_health_llc" \
-  --arg key_id "ph_logging" \
+  --arg app_id "puppers_llc" \
+  --arg key_id "pup_logging" \
   --arg permission "log" \
   --arg key "12345678901234561234567890123456" \
   '$ARGS.named')
@@ -25,4 +25,4 @@ export ITSLOG_SERVE_HOST="localhost"
 export ITSLOG_SERVE_PORT="8888"
 export ITSLOG_STORAGE_PATH="${PWD}/data/itslog"
 
-./api/its-log serve
+./its-log serve

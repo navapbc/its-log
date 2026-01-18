@@ -17,7 +17,7 @@ import (
 func addLoggingEndpoints(rG *gin.RouterGroup, ch_evt_out chan<- *itslog.Event) {
 	// Logging
 	auth_logV1 := rG.Group("/")
-	permissions := []itslog.PermissionType{itslog.Logging, itslog.Test}
+	permissions := []itslog.PermissionType{itslog.Log, itslog.Test}
 	auth_logV1.Use(AuthMiddleWare(permissions))
 	auth_logV1.PUT("se/:source/:event", EventSE(ch_evt_out))
 	auth_logV1.PUT("sev/:source/:event/:value", EventSEV(ch_evt_out))
@@ -131,7 +131,6 @@ func Event(eventType itslog.EventType, ch_evt_out chan<- *itslog.Event) func(c *
 			Event:     event,
 			Value:     value,
 		}
-
 		// This uses the struct validator library, which provides
 		// a rich notion of contracts over the fields in the struct
 		err := validate.Struct(payload)

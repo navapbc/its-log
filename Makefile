@@ -28,14 +28,14 @@ amd:
 native:
 	cd api ; make native
 
-run: native
-	./local.bash
+run:
+	cd api ; make run
 
 up: 
 	cd api ; make up
 
 test:
-	go test ./...
+	cd api ; make test
 
 swagger:
 	cd api ; swag init -o ./docs

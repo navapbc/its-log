@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"hash/maphash"
+	"log"
 	"os"
 	"path"
 	"time"
@@ -19,6 +20,7 @@ import (
 
 func (s *SqliteStorage) ValidateSqliteStorage() error {
 	err := validate.Struct(s)
+
 	if err != nil {
 		messages := make([]string, 0)
 		var validationErrors validator.ValidationErrors
@@ -44,19 +46,18 @@ func (s *SqliteStorage) Init() error {
 		validate = validator.New(validator.WithRequiredStructEnabled())
 	}
 
-	err := s.ValidateSqliteStorage()
-	if err != nil {
-		return err
-	}
-
 	switch s.Kind {
 	case InMemory:
+		log.Println("initializing in-memory SQLite database")
+		err := s.ValidateSqliteStorage()
+		if err != nil {
+			return err
+		}
 		return s.initMemory()
 	case CurrentDatabase:
 		// This is a database "for today," e.g. "appid_2026-01-01.sqlite" on 2026/01/01
 		t := time.Now()
 		s.Filename = fmt.Sprintf("%s_%s.sqlite?_time_format=sqlite", s.AppId, t.Format("2006-01-02"))
-		return s.init()
 	case NamedDatabase:
 		// This is a database we choose the name of. For "internal" use only.
 		// First, make sure we have a filepath that is only a filename.
@@ -65,6 +66,11 @@ func (s *SqliteStorage) Init() error {
 			return err
 		}
 		s.Filename = fmt.Sprintf("%s_%s?_time_format=sqlite", s.AppId, cleaned)
+	}
+
+	err := s.ValidateSqliteStorage()
+	if err != nil {
+		return err
 	}
 	return s.init()
 }
@@ -98,6 +104,7 @@ func (s *SqliteStorage) initMemory() error {
 	ctx := context.Background()
 
 	db, err := sql.Open("sqlite", ":memory:")
+
 	if err != nil {
 		return err
 	}
