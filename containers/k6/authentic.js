@@ -137,12 +137,18 @@ const endpoints = {
   "se": (e) => [ e.endpoint, e.source, e.event ].join("/"),
 };
 
+var PORT = "8888"
+
+if (__ENV.ITSLOG_PORT && __ENV.ITSLOG_PORT.length() > 0) {
+  PORT=__ENV.ITSLOG_PORT
+}
+
 // Simulated user behavior
 export default function () {
     generateEvents().forEach(function (e) {       
         http.put(
         // "https://localhost:8443/v1/event/" + e.source + "/" + e.event, 
-        "https://localhost:8443/v1/" + endpoints[e.endpoint](e),
+        "http://localhost:" + PORT + "/v1/" + endpoints[e.endpoint](e),
         null,
         params)  
 });

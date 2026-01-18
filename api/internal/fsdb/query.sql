@@ -5,33 +5,33 @@
 --------------------------------------------------------
 -- name: LogEvent :one
 INSERT INTO itslog_events (
-  key_id, source_hash, event_hash
+  source_hash, event_hash
 ) VALUES (
-  ?, ?, ?
+  ?, ?
 )
 RETURNING id;
 
 -- name: LogEventWithValue :one
 INSERT INTO itslog_events (
-  key_id, source_hash, event_hash, value_hash
+  source_hash, event_hash, value_hash
 ) VALUES (
-  ?, ?, ?, ?
+  ?, ?, ?
 )
 RETURNING id;
 
 -- name: LogClusteredEvent :one
 INSERT INTO itslog_events (
-  key_id, cluster_hash, source_hash, event_hash
+  cluster_hash, source_hash, event_hash
 ) VALUES (
-  ?, ?, ?, ?
+  ?, ?, ?
 )
 RETURNING id;
 
 -- name: LogClusteredEventWithValue :one
 INSERT INTO itslog_events (
-  key_id, timestamp, cluster_hash, source_hash, event_hash, value_hash
+  timestamp, cluster_hash, source_hash, event_hash, value_hash
 ) VALUES (
-  ?, ?, ?, ?, ?, ?
+  ?, ?, ?, ?, ?
 )
 RETURNING id;
 
@@ -40,24 +40,24 @@ RETURNING id;
 -- more explicit about the timestamp of an entry.
 -- name: LogTimestampedEvent :one
 INSERT INTO itslog_events (
-  key_id, timestamp, source_hash, event_hash
+  timestamp, source_hash, event_hash
 ) VALUES (
-  ?, ?, ?, ?
+  ?, ?, ?
 )
 RETURNING id;
 
 -- name: UpdateDictionary :exec
 INSERT OR IGNORE INTO itslog_dictionary (
-  key_id, timestamp, source_name, event_name, source_hash, event_hash
+  timestamp, source_name, event_name, source_hash, event_hash
 ) VALUES (
-  ?, ?, ?, ?, ?, ?
+  ?, ?, ?, ?, ?
 );
 
 -- name: UpdateLookup :exec
 INSERT OR IGNORE INTO itslog_lookup (
-  key_id, timestamp, hash, name
+  timestamp, hash, name
 ) VALUES (
-  ?, ?, ?, ?
+  ?, ?, ?
 );
 
 --------------------------------------------------------
@@ -68,9 +68,9 @@ SELECT * FROM itslog_summary;
 
 -- name: InsertSummary :exec
 INSERT OR REPLACE INTO itslog_summary (
-  key_id, date, operation, source_name, event_name, value
+  date, operation, source_name, event_name, value
   ) VALUES (
-  ?, ?, ?, ?, ?, ?
+  ?, ?, ?, ?, ?
   );
 
 -- name: ReadSummary :many
@@ -82,8 +82,6 @@ SELECT
   value 
 FROM itslog_summary
 WHERE 
-  key_id = ? 
-  AND
   source_name LIKE COALESCE(?, '%')
   AND
   operation LIKE ?
@@ -95,27 +93,26 @@ ORDER BY id
 --------------------------------------------------------
 -- name: UpdateMeta :exec
 INSERT OR REPLACE INTO itslog_metadata (
-  key_id, key, value
+  key, value
 ) VALUES (
-  ?, ?, ?
+  ?, ?
 );
 
 --------------------------------------------------------
 -- ETL
 --------------------------------------------------------
+
 -- name: InsertETL :exec
 INSERT OR REPLACE INTO itslog_etl (
-  key_id, name, sql
+  name, sql
 ) VALUES (
-  ?, ?, ?
+  ?, ?
 );
 
 -- name: GetETL :one
 SELECT sql, last_run
 FROM itslog_etl
 WHERE
-  key_id = ?
-  AND
   name = ?
 LIMIT 1
 ;
@@ -125,8 +122,6 @@ UPDATE itslog_etl
   SET 
     last_run = CURRENT_TIMESTAMP 
 WHERE 
-  key_id = ?
-  AND
   name = ?
 ;
 

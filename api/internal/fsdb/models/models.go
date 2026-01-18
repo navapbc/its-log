@@ -11,7 +11,6 @@ import (
 
 type ItslogDictionary struct {
 	ID         int64
-	KeyID      string
 	Timestamp  time.Time
 	SourceHash int64
 	SourceName string
@@ -21,7 +20,6 @@ type ItslogDictionary struct {
 
 type ItslogEtl struct {
 	ID       int64
-	KeyID    string
 	Inserted time.Time
 	Name     string
 	LastRun  sql.NullTime
@@ -30,7 +28,6 @@ type ItslogEtl struct {
 
 type ItslogEvent struct {
 	ID          int64
-	KeyID       string
 	Timestamp   time.Time
 	ClusterHash sql.NullInt64
 	SourceHash  int64
@@ -40,7 +37,6 @@ type ItslogEvent struct {
 
 type ItslogLookup struct {
 	ID        int64
-	KeyID     string
 	Timestamp time.Time
 	Hash      int64
 	Name      string
@@ -48,7 +44,6 @@ type ItslogLookup struct {
 
 type ItslogMetadatum struct {
 	ID        int64
-	KeyID     string
 	Timestamp time.Time
 	Key       int64
 	Value     string
@@ -56,7 +51,6 @@ type ItslogMetadatum struct {
 
 type ItslogSummary struct {
 	ID         int64
-	KeyID      string
 	Date       string
 	Operation  string
 	SourceName sql.NullString

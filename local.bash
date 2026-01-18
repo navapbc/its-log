@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# These values would be set in a secrets manager
+# in a deployment context.
+
 export ITSLOG_APIKEY_PHLLC_ADMIN="{\"app_id\": \"pupper_health_llc\", \"key_id\": \"ph_admin\", \"permission\": \"admin\", \"key\": \"abcdefghabcdefghabcdefghabcdefgh\"}"
 export ITSLOG_APIKEY_PHLLC_LOG="{\"app_id\": \"pupper_health_llc\", \"key_id\": \"ph_logging\", \"permission\": \"log\", \"key\": \"12345678901234561234567890123456\"}"
 

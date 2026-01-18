@@ -1,4 +1,4 @@
-# 1. Packages used for development
+# Packages used for development
 
 Date: 2025-12-05
 

@@ -38,7 +38,6 @@ func (s *SqliteStorage) ManyEvents(es []*itslog.Event) (int64, error) {
 
 			_, err := qtx.LogClusteredEventWithValue(context.Background(), models.LogClusteredEventWithValueParams{
 				Timestamp:   e.Timestamp,
-				KeyID:       e.KeyId,
 				ClusterHash: sql.NullInt64{Int64: cluster_h, Valid: valid_cluster},
 				SourceHash:  source_h,
 				EventHash:   event_h,
@@ -56,7 +55,6 @@ func (s *SqliteStorage) ManyEvents(es []*itslog.Event) (int64, error) {
 			// when we see a new hash value.
 			err = qtx.UpdateDictionary(ctx, models.UpdateDictionaryParams{
 				Timestamp:  e.Timestamp,
-				KeyID:      e.KeyId,
 				SourceName: e.Source,
 				EventName:  e.Event,
 				SourceHash: source_h,
@@ -70,7 +68,6 @@ func (s *SqliteStorage) ManyEvents(es []*itslog.Event) (int64, error) {
 			if valid_value {
 				err = qtx.UpdateLookup(ctx, models.UpdateLookupParams{
 					Timestamp: e.Timestamp,
-					KeyID:     e.KeyId,
 					Name:      e.Value,
 					Hash:      value_h,
 				})

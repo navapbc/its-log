@@ -128,6 +128,9 @@ func (s *SqliteStorage) init() error {
 	}
 	s.db = db
 
+	s.queries = models.New(db)
+	s.FixedSeed()
+
 	// If we just created the database, we need to init the tables, and
 	// then load the default ETL actions.
 	if !fileExists {
@@ -136,9 +139,6 @@ func (s *SqliteStorage) init() error {
 		}
 		s.LoadDefaultEtlSql()
 	}
-
-	s.queries = models.New(db)
-	s.FixedSeed()
 
 	return nil
 }

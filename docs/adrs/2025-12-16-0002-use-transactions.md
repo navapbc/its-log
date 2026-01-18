@@ -1,4 +1,4 @@
-# 2. Use buffers and bulk writes/transactions
+# Use buffers and bulk writes/transactions
 
 Date: 2025-12-16
 

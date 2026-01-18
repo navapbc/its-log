@@ -8,6 +8,18 @@ import (
 	"github.com/spf13/viper"
 )
 
+// Using a nested set of maps, we end up with a structure
+// that looks roughly like the following:
+// app1
+//
+//	|
+//	| - 2026-01-01 <- [ e1, e2 ]
+//	| - 2026-01-02 <- [ e1, e2, e3 ]
+//
+// app2
+//
+//	\
+//	 2026-01-01 <- [ e1 ]
 type BufferTree map[string]map[string][]*itslog.Event
 
 // We could be getting things from any number of apps at any given time.

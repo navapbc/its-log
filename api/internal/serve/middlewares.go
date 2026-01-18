@@ -32,8 +32,8 @@ func AuthMiddleWare(permissions []itslog.PermissionType) gin.HandlerFunc {
 			doesContain := slices.Contains(permissions, key.Permission)
 			if doesContain && keylen >= 32 {
 				if api_key == key.Key {
-					c.Set("KeyId", key.KeyId)
-					c.Set("AppId", key.AppId)
+					c.Set(itslog.ITSLOG_KEYID, key.KeyId)
+					c.Set(itslog.ITSLOG_APPID, key.AppId)
 					return
 				}
 			}

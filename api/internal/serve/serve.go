@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	status "github.com/appleboy/gin-status-api"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -16,7 +17,8 @@ import (
 
 var validate *validator.Validate
 
-func configureEngine() *gin.Engine {
+func Serve() {
+	validate = validator.New(validator.WithRequiredStructEnabled())
 	buffer_length := viper.GetInt("buffer.length")
 	buffer_flushwaitsec := viper.GetInt("buffer.flushwaitsec")
 	log.Printf("buffer length: %d flushwaitsec: %d\n", buffer_length, buffer_flushwaitsec)
@@ -32,13 +34,6 @@ func configureEngine() *gin.Engine {
 	// This updates *yesterdays* database on minute one of the day
 
 	engine := PourGin(ch_evt)
-
-	return engine
-}
-
-func Serve() {
-	validate = validator.New(validator.WithRequiredStructEnabled())
-	engine := configureEngine()
 
 	host := viper.GetString("serve.host")
 	port := viper.GetString("serve.port")
@@ -68,19 +63,28 @@ func PourGin(ch_evt_out chan<- *itslog.Event) *gin.Engine {
 
 	apiV1 := router.Group("/v1")
 
-	addHealthCheck(apiV1)
+	addMetadataEndpoints(apiV1)
 	addLoggingEndpoints(apiV1, ch_evt_out)
 	addTestingEndpoints(apiV1, ch_evt_out)
-	//addEtlEndpoints(apiV1, ch_evt_out)
+	addEtlEndpoints(apiV1, ch_evt_out)
 	addQueryEndpoints(apiV1, ch_evt_out)
 
 	return router
 }
 
-func addHealthCheck(rG *gin.RouterGroup) {
+func addMetadataEndpoints(rG *gin.RouterGroup) {
+	// The healthcheck is a public endpoint
 	rG.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
+
+	// The status endpoint provides server data, and needs a valid key
+	// https://github.com/appleboy/gin-status-api
+	auth_adminV1 := rG.Group("/")
+	permissions := []itslog.PermissionType{itslog.Admin, itslog.Logging, itslog.ReadOnly, itslog.Test}
+	auth_adminV1.Use(AuthMiddleWare(permissions))
+	rG.GET("/status", status.GinHandler)
+
 }
 
 func addQueryEndpoints(rG *gin.RouterGroup, ch_evt_out chan<- *itslog.Event) {
