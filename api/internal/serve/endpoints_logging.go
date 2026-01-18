@@ -12,15 +12,17 @@ import (
 	"github.com/jadudm/its-log/internal/itslog"
 )
 
+// @BasePath /v1
+
 func addLoggingEndpoints(rG *gin.RouterGroup, ch_evt_out chan<- *itslog.Event) {
 	// Logging
 	auth_logV1 := rG.Group("/")
 	permissions := []itslog.PermissionType{itslog.Logging, itslog.Test}
 	auth_logV1.Use(AuthMiddleWare(permissions))
-	auth_logV1.PUT("se/:source/:event", Event("se", ch_evt_out))
-	auth_logV1.PUT("sev/:source/:event/:value", Event("sev", ch_evt_out))
-	auth_logV1.PUT("cse/:cluster/:source/:event", Event("cse", ch_evt_out))
-	auth_logV1.PUT("csev/:cluster/:source/:event/:value", Event("csev", ch_evt_out))
+	auth_logV1.PUT("se/:source/:event", EventSE(ch_evt_out))
+	auth_logV1.PUT("sev/:source/:event/:value", EventSEV(ch_evt_out))
+	auth_logV1.PUT("cse/:cluster/:source/:event", EventCSE(ch_evt_out))
+	auth_logV1.PUT("csev/:cluster/:source/:event/:value", EventCSEV(ch_evt_out))
 }
 
 func getEventType(root string) itslog.EventType {
@@ -34,6 +36,58 @@ func getEventType(root string) itslog.EventType {
 	// However, these should be our own endpoints/the code in `addLoggingEndpoints`
 	// so the chances of a panic are low.
 	return mapping[root]
+}
+
+// EventSE godoc
+// @Summary ping example
+// @Schemes
+// @Description do ping
+// @Tags example
+// @Accept json
+// @Produce json
+// @Success 200 {string} Helloworld
+// @Router /example/helloworld [get]
+func EventSE(ch_evt_out chan<- *itslog.Event) func(c *gin.Context) {
+	return Event("se", ch_evt_out)
+}
+
+// EventSEV godoc
+// @Summary ping example
+// @Schemes
+// @Description do ping
+// @Tags example
+// @Accept json
+// @Produce json
+// @Success 200 {string} Helloworld
+// @Router /example/helloworld [get]
+func EventSEV(ch_evt_out chan<- *itslog.Event) func(c *gin.Context) {
+	return Event("sev", ch_evt_out)
+}
+
+// EventCSE godoc
+// @Summary ping example
+// @Schemes
+// @Description do ping
+// @Tags example
+// @Accept json
+// @Produce json
+// @Success 200 {string} Helloworld
+// @Router /example/helloworld [get]
+func EventCSE(ch_evt_out chan<- *itslog.Event) func(c *gin.Context) {
+	return Event("cse", ch_evt_out)
+}
+
+// EventCSEV godoc
+// @Summary ping example
+// @Schemes
+// @Description do ping
+// @Tags example
+// @Accept json
+// @Produce json
+// @Success 200 {string} Helloworld
+// @Router /example/helloworld [get]
+func EventCSEV(ch_evt_out chan<- *itslog.Event) func(c *gin.Context) {
+	return Event("csev", ch_evt_out)
 }
 
 func Event(root string, ch_evt_out chan<- *itslog.Event) func(c *gin.Context) {
