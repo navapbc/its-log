@@ -1,15 +1,7 @@
 services:
-  # jupyter:
-  #     image: quay.io/jupyter/datascience-notebook:latest
-  #     ports:
-  #       - "8888:8888"
-  #     volumes:
-  #       - ./data:/home/jovyan/work
-  #     environment:
-  #       - JUPYTER_ENABLE_LAB=yes
-  #     command: "start-notebook.sh --NotebookApp.token=''"
   itslog:
-    image: itslog:latest
+    build:
+      dockerfile: itslog/Dockerfile
     platform: linux/amd64
     command: bash -c "
       /app/its-log serve
@@ -28,7 +20,8 @@ services:
       timeout: 3s
 
   e2e:
-    image: itslog-e2e:latest
+    build:
+      dockerfile: e2e/Dockerfile
     platform: linux/amd64
     command: "python3 /app/e2e/main.py -a generate -a load -a run"
     volumes:
@@ -42,25 +35,3 @@ services:
     depends_on:
       itslog:
         condition: service_healthy
-
-  lite:
-    image: jupyterlite:latest
-    command: "python3 -m http.server 9999 --directory /dist"
-    depends_on:
-      itslog:
-        condition: service_healthy
-    ports:
-      - "9999:9999"
-
-
-  # e2e-combine:
-  #   image: itslog-e2e:latest
-  #   platform: linux/amd64
-  #   command: "python3 /app/e2e/main.py -a combine -d 1"
-  #   volumes:
-  #     - .:/app
-  #   profiles:
-  #     - combine
-  #   depends_on:
-  #     itslog:
-  #       condition: service_healthy

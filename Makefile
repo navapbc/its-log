@@ -8,15 +8,7 @@ container-itslog:
 	docker build \
 		--platform "linux/amd64" \
 		-t itslog:latest \
-		-f Dockerfile.itslog ../../itslog
-
-container-jupyterlite:
-	cd containers/jupyterlite ; \
-	docker build \
-		--platform "linux/amd64" \
-		-t jupyterlite:latest \
-		-f Dockerfile.jupyterlite .
-
+		-f Dockerfile ../..
 
 e2e: amd
 	@echo "e2e - root"

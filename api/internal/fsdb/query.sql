@@ -5,53 +5,24 @@
 --------------------------------------------------------
 -- name: LogEvent :one
 INSERT INTO itslog_events (
-  source_hash, event_hash
-) VALUES (
-  ?, ?
-)
-RETURNING id;
-
--- name: LogEventWithValue :one
-INSERT INTO itslog_events (
-  source_hash, event_hash, value_hash
-) VALUES (
-  ?, ?, ?
-)
-RETURNING id;
-
--- name: LogClusteredEvent :one
-INSERT INTO itslog_events (
-  cluster_hash, source_hash, event_hash
-) VALUES (
-  ?, ?, ?
-)
-RETURNING id;
-
--- name: LogClusteredEventWithValue :one
-INSERT INTO itslog_events (
-  timestamp, cluster_hash, source_hash, event_hash, value_hash
+  timestamp, key_id, cluster_hash, tags_hash, value_hash
 ) VALUES (
   ?, ?, ?, ?, ?
 )
 RETURNING id;
+
 
 -- This is largely for generating fake entries. 
 -- However, there may be times where we want to be 
 -- more explicit about the timestamp of an entry.
 -- name: LogTimestampedEvent :one
 INSERT INTO itslog_events (
-  timestamp, source_hash, event_hash
+  timestamp, key_id, source_hash, event_hash
 ) VALUES (
-  ?, ?, ?
+  ?, ?, ?, ?
 )
 RETURNING id;
 
--- name: UpdateDictionary :exec
-INSERT OR IGNORE INTO itslog_dictionary (
-  timestamp, source_name, event_name, source_hash, event_hash
-) VALUES (
-  ?, ?, ?, ?, ?
-);
 
 -- name: UpdateLookup :exec
 INSERT OR IGNORE INTO itslog_lookup (
@@ -87,16 +58,6 @@ WHERE
   operation LIKE ?
 ORDER BY id
 ;
-
---------------------------------------------------------
--- METADATA
---------------------------------------------------------
--- name: UpdateMeta :exec
-INSERT OR REPLACE INTO itslog_metadata (
-  key, value
-) VALUES (
-  ?, ?
-);
 
 --------------------------------------------------------
 -- ETL
@@ -156,3 +117,21 @@ SELECT EXISTS(
     AND
     event_hash = ?
   );
+
+-- -- name: UpdateDictionary :exec
+-- INSERT OR IGNORE INTO itslog_dictionary (
+--   timestamp, source_name, event_name, source_hash, event_hash
+-- ) VALUES (
+--   ?, ?, ?, ?, ?
+-- );
+
+
+--------------------------------------------------------
+-- METADATA
+--------------------------------------------------------
+-- name: UpdateMeta :exec
+-- INSERT OR REPLACE INTO itslog_metadata (
+--   key, value
+-- ) VALUES (
+--   ?, ?
+-- );
