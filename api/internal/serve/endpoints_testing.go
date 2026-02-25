@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
-	"slices"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -16,22 +15,22 @@ func addTestingEndpoints(rG *gin.RouterGroup, ch_evt_out chan<- *itslog.Event) {
 	auth_testV1 := rG.Group("/")
 	permissions := []itslog.PermissionType{itslog.Test}
 	auth_testV1.Use(AuthMiddleWare(permissions))
-	auth_testV1.PUT("dse/:date/:source/:event", TestEvent(itslog.DSE, ch_evt_out))
-	auth_testV1.PUT("dsev/:date/:source/:event/:value", TestEvent(itslog.DSEV, ch_evt_out))
-	auth_testV1.PUT("dcse/:date/:cluster/:source/:event", TestEvent(itslog.DCSE, ch_evt_out))
-	auth_testV1.PUT("dcsev/:date/:cluster/:source/:event/:value", TestEvent(itslog.DCSEV, ch_evt_out))
+	auth_testV1.POST("log/:date", TestEvent(ch_evt_out))
 }
 
-func TestEvent(eventType itslog.EventType, ch_evt_out chan<- *itslog.Event) func(c *gin.Context) {
+func TestEvent(ch_evt_out chan<- *itslog.Event) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		// https://pkg.go.dev/github.com/go-playground/validator/v10
-		cluster := ""
-		source := c.Param("source")
-		event := c.Param("event")
-		value := ""
+		var evt *itslog.Event
+		// Call ShouldBindJSON to parse the request body into the struct
+		if err := c.ShouldBindJSON(evt); err != nil {
+			// FIXME: follow standard response protocol
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON: " + err.Error()})
+			return
+		}
 
-		appId := itslog.GetOrPanic(c, "AppId")
-		keyId := itslog.GetOrPanic(c, "KeyId")
+		evt.AppId = itslog.GetOrPanic(c, "AppId")
+		evt.KeyId = itslog.GetOrPanic(c, "KeyId")
 
 		// The date in the testing cases comes from the URL.
 		// Hence, we might have parsing errors on what is passed in.
@@ -53,27 +52,9 @@ func TestEvent(eventType itslog.EventType, ch_evt_out chan<- *itslog.Event) func
 			return
 		}
 
-		// Only some event types will require the cluster
-		if slices.Contains([]itslog.EventType{itslog.DCSE, itslog.DCSEV}, eventType) {
-			cluster = c.Param("cluster")
-		}
+		evt.Timestamp = timestamp
 
-		// And only some have a value
-		if slices.Contains([]itslog.EventType{itslog.DSEV, itslog.DCSEV}, eventType) {
-			value = c.Param("value")
-		}
-
-		payload := &itslog.Event{
-			Timestamp: timestamp,
-			KeyId:     keyId,
-			AppId:     appId,
-			Cluster:   cluster,
-			Source:    source,
-			Event:     event,
-			Value:     value,
-		}
-
-		err = validate.Struct(payload)
+		err = validate.Struct(evt)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"status":  "error",
@@ -82,7 +63,7 @@ func TestEvent(eventType itslog.EventType, ch_evt_out chan<- *itslog.Event) func
 		}
 
 		// Send the event to the Enqueue-er
-		ch_evt_out <- payload
+		ch_evt_out <- evt
 		// Everything worked.
 		c.JSON(http.StatusOK, gin.H{
 			"status":  "ok",

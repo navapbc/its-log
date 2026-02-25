@@ -9,18 +9,10 @@ import (
 	"time"
 )
 
-type ItslogDictionary struct {
-	ID         int64
-	Timestamp  time.Time
-	SourceHash int64
-	SourceName string
-	EventName  string
-	EventHash  int64
-}
-
 type ItslogEtl struct {
 	ID       int64
 	Inserted time.Time
+	KeyID    int64
 	Name     string
 	LastRun  sql.NullTime
 	Sql      string
@@ -29,29 +21,24 @@ type ItslogEtl struct {
 type ItslogEvent struct {
 	ID          int64
 	Timestamp   time.Time
+	KeyID       int64
 	ClusterHash sql.NullInt64
-	SourceHash  int64
-	EventHash   int64
+	TagsHash    int64
 	ValueHash   sql.NullInt64
 }
 
 type ItslogLookup struct {
 	ID        int64
 	Timestamp time.Time
+	KeyID     int64
 	Hash      int64
 	Name      string
-}
-
-type ItslogMetadatum struct {
-	ID        int64
-	Timestamp time.Time
-	Key       int64
-	Value     string
 }
 
 type ItslogSummary struct {
 	ID         int64
 	Date       string
+	KeyID      int64
 	Operation  string
 	SourceName sql.NullString
 	EventName  sql.NullString

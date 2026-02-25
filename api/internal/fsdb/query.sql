@@ -11,24 +11,11 @@ INSERT INTO itslog_events (
 )
 RETURNING id;
 
-
--- This is largely for generating fake entries. 
--- However, there may be times where we want to be 
--- more explicit about the timestamp of an entry.
--- name: LogTimestampedEvent :one
-INSERT INTO itslog_events (
-  timestamp, key_id, source_hash, event_hash
-) VALUES (
-  ?, ?, ?, ?
-)
-RETURNING id;
-
-
 -- name: UpdateLookup :exec
 INSERT OR IGNORE INTO itslog_lookup (
-  timestamp, hash, name
+  timestamp, key_id, hash, name
 ) VALUES (
-  ?, ?, ?
+  ?, ?, ?, ?
 );
 
 --------------------------------------------------------
@@ -65,9 +52,9 @@ ORDER BY id
 
 -- name: InsertETL :exec
 INSERT OR REPLACE INTO itslog_etl (
-  name, sql
+  key_id, name, sql
 ) VALUES (
-  ?, ?
+  ?, ?, ?
 );
 
 -- name: GetETL :one
@@ -96,34 +83,7 @@ VACUUM;
 --------------------------------------------------------
 -- TEST HELPERS
 --------------------------------------------------------
--- Used for unit/end-to-end testing.
--- name: TestEventPairExists :one
-SELECT EXISTS(
-  SELECT 1 
-  FROM itslog_events 
-  WHERE 
-    source_hash = ?
-    AND
-    event_hash = ?
-  );
 
-
--- name: TestDictionaryPairExists :one
-SELECT EXISTS(
-  SELECT 1 
-  FROM itslog_dictionary
-  WHERE 
-    source_hash = ?
-    AND
-    event_hash = ?
-  );
-
--- -- name: UpdateDictionary :exec
--- INSERT OR IGNORE INTO itslog_dictionary (
---   timestamp, source_name, event_name, source_hash, event_hash
--- ) VALUES (
---   ?, ?, ?, ?, ?
--- );
 
 
 --------------------------------------------------------

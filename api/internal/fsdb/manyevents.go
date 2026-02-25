@@ -21,10 +21,9 @@ func (s *SqliteStorage) ManyEvents(es []*itslog.Event) (int64, error) {
 	qtx := s.queries.WithTx(tx)
 	for _, e := range es {
 		if e != nil {
-			source_h := hashValue(s.h, e.Source)
-			event_h := hashValue(s.h, e.Event)
-
+			tags_h := hashValue(s.h, e.TagString)
 			cluster_h := hashValue(s.h, e.Cluster)
+
 			valid_cluster := false
 			if cluster_h != 0 {
 				valid_cluster = true
@@ -36,11 +35,13 @@ func (s *SqliteStorage) ManyEvents(es []*itslog.Event) (int64, error) {
 				valid_value = true
 			}
 
-			_, err := qtx.LogClusteredEventWithValue(context.Background(), models.LogClusteredEventWithValueParams{
+			key_h := hashValue(s.h, e.KeyId)
+
+			_, err := qtx.LogEvent(context.Background(), models.LogEventParams{
 				Timestamp:   e.Timestamp,
+				KeyID:       key_h,
 				ClusterHash: sql.NullInt64{Int64: cluster_h, Valid: valid_cluster},
-				SourceHash:  source_h,
-				EventHash:   event_h,
+				TagsHash:    tags_h,
 				ValueHash:   sql.NullInt64{Int64: value_h, Valid: valid_value},
 			})
 
@@ -53,12 +54,11 @@ func (s *SqliteStorage) ManyEvents(es []*itslog.Event) (int64, error) {
 			// in bulk as well. Individual inserts should
 			// quietly ignore conflicts. This could be optimized to only update
 			// when we see a new hash value.
-			err = qtx.UpdateDictionary(ctx, models.UpdateDictionaryParams{
-				Timestamp:  e.Timestamp,
-				SourceName: e.Source,
-				EventName:  e.Event,
-				SourceHash: source_h,
-				EventHash:  event_h,
+			err = qtx.UpdateLookup(ctx, models.UpdateLookupParams{
+				Timestamp: e.Timestamp,
+
+				Hash: tags_h,
+				Name: e.TagString,
 			})
 			if err != nil {
 				log.Println("Error in storing dictionary:" + err.Error())

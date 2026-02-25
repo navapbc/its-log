@@ -12,7 +12,7 @@ import (
 )
 
 const getAllSummaries = `-- name: GetAllSummaries :many
-SELECT id, date, operation, source_name, event_name, value FROM itslog_summary
+SELECT id, date, key_id, operation, source_name, event_name, value FROM itslog_summary
 `
 
 // ------------------------------------------------------
@@ -30,6 +30,7 @@ func (q *Queries) GetAllSummaries(ctx context.Context) ([]ItslogSummary, error) 
 		if err := rows.Scan(
 			&i.ID,
 			&i.Date,
+			&i.KeyID,
 			&i.Operation,
 			&i.SourceName,
 			&i.EventName,
@@ -69,24 +70,27 @@ func (q *Queries) GetETL(ctx context.Context, name string) (GetETLRow, error) {
 }
 
 const insertETL = `-- name: InsertETL :exec
+;
+
 
 INSERT OR REPLACE INTO itslog_etl (
-  name, sql
+  key_id, name, sql
 ) VALUES (
-  ?, ?
+  ?, ?, ?
 )
 `
 
 type InsertETLParams struct {
-	Name string
-	Sql  string
+	KeyID int64
+	Name  string
+	Sql   string
 }
 
 // ------------------------------------------------------
 // ETL
 // ------------------------------------------------------
 func (q *Queries) InsertETL(ctx context.Context, arg InsertETLParams) error {
-	_, err := q.db.ExecContext(ctx, insertETL, arg.Name, arg.Sql)
+	_, err := q.db.ExecContext(ctx, insertETL, arg.KeyID, arg.Name, arg.Sql)
 	return err
 }
 
@@ -117,71 +121,22 @@ func (q *Queries) InsertSummary(ctx context.Context, arg InsertSummaryParams) er
 	return err
 }
 
-const logClusteredEvent = `-- name: LogClusteredEvent :one
+const logEvent = `-- name: LogEvent :one
+
 INSERT INTO itslog_events (
-  cluster_hash, source_hash, event_hash
-) VALUES (
-  ?, ?, ?
-)
-RETURNING id
-`
-
-type LogClusteredEventParams struct {
-	ClusterHash sql.NullInt64
-	SourceHash  int64
-	EventHash   int64
-}
-
-func (q *Queries) LogClusteredEvent(ctx context.Context, arg LogClusteredEventParams) (int64, error) {
-	row := q.db.QueryRowContext(ctx, logClusteredEvent, arg.ClusterHash, arg.SourceHash, arg.EventHash)
-	var id int64
-	err := row.Scan(&id)
-	return id, err
-}
-
-const logClusteredEventWithValue = `-- name: LogClusteredEventWithValue :one
-INSERT INTO itslog_events (
-  timestamp, cluster_hash, source_hash, event_hash, value_hash
+  timestamp, key_id, cluster_hash, tags_hash, value_hash
 ) VALUES (
   ?, ?, ?, ?, ?
 )
 RETURNING id
 `
 
-type LogClusteredEventWithValueParams struct {
-	Timestamp   time.Time
-	ClusterHash sql.NullInt64
-	SourceHash  int64
-	EventHash   int64
-	ValueHash   sql.NullInt64
-}
-
-func (q *Queries) LogClusteredEventWithValue(ctx context.Context, arg LogClusteredEventWithValueParams) (int64, error) {
-	row := q.db.QueryRowContext(ctx, logClusteredEventWithValue,
-		arg.Timestamp,
-		arg.ClusterHash,
-		arg.SourceHash,
-		arg.EventHash,
-		arg.ValueHash,
-	)
-	var id int64
-	err := row.Scan(&id)
-	return id, err
-}
-
-const logEvent = `-- name: LogEvent :one
-
-INSERT INTO itslog_events (
-  source_hash, event_hash
-) VALUES (
-  ?, ?
-)
-RETURNING id
-`
-
 type LogEventParams struct {
-	SourceHash int64
-	EventHash  int64
+	Timestamp   time.Time
+	KeyID       int64
+	ClusterHash sql.NullInt64
+	TagsHash    int64
+	ValueHash   sql.NullInt64
 }
 
 // https://docs.sqlc.dev/en/latest/tutorials/getting-started-sqlite.html
@@ -189,54 +144,13 @@ type LogEventParams struct {
 // LOGGING
 // ------------------------------------------------------
 func (q *Queries) LogEvent(ctx context.Context, arg LogEventParams) (int64, error) {
-	row := q.db.QueryRowContext(ctx, logEvent, arg.SourceHash, arg.EventHash)
-	var id int64
-	err := row.Scan(&id)
-	return id, err
-}
-
-const logEventWithValue = `-- name: LogEventWithValue :one
-INSERT INTO itslog_events (
-  source_hash, event_hash, value_hash
-) VALUES (
-  ?, ?, ?
-)
-RETURNING id
-`
-
-type LogEventWithValueParams struct {
-	SourceHash int64
-	EventHash  int64
-	ValueHash  sql.NullInt64
-}
-
-func (q *Queries) LogEventWithValue(ctx context.Context, arg LogEventWithValueParams) (int64, error) {
-	row := q.db.QueryRowContext(ctx, logEventWithValue, arg.SourceHash, arg.EventHash, arg.ValueHash)
-	var id int64
-	err := row.Scan(&id)
-	return id, err
-}
-
-const logTimestampedEvent = `-- name: LogTimestampedEvent :one
-INSERT INTO itslog_events (
-  timestamp, source_hash, event_hash
-) VALUES (
-  ?, ?, ?
-)
-RETURNING id
-`
-
-type LogTimestampedEventParams struct {
-	Timestamp  time.Time
-	SourceHash int64
-	EventHash  int64
-}
-
-// This is largely for generating fake entries.
-// However, there may be times where we want to be
-// more explicit about the timestamp of an entry.
-func (q *Queries) LogTimestampedEvent(ctx context.Context, arg LogTimestampedEventParams) (int64, error) {
-	row := q.db.QueryRowContext(ctx, logTimestampedEvent, arg.Timestamp, arg.SourceHash, arg.EventHash)
+	row := q.db.QueryRowContext(ctx, logEvent,
+		arg.Timestamp,
+		arg.KeyID,
+		arg.ClusterHash,
+		arg.TagsHash,
+		arg.ValueHash,
+	)
 	var id int64
 	err := row.Scan(&id)
 	return id, err
@@ -299,83 +213,6 @@ func (q *Queries) ReadSummary(ctx context.Context, arg ReadSummaryParams) ([]Rea
 	return items, nil
 }
 
-const testDictionaryPairExists = `-- name: TestDictionaryPairExists :one
-SELECT EXISTS(
-  SELECT 1 
-  FROM itslog_dictionary
-  WHERE 
-    source_hash = ?
-    AND
-    event_hash = ?
-  )
-`
-
-type TestDictionaryPairExistsParams struct {
-	SourceHash int64
-	EventHash  int64
-}
-
-func (q *Queries) TestDictionaryPairExists(ctx context.Context, arg TestDictionaryPairExistsParams) (int64, error) {
-	row := q.db.QueryRowContext(ctx, testDictionaryPairExists, arg.SourceHash, arg.EventHash)
-	var column_1 int64
-	err := row.Scan(&column_1)
-	return column_1, err
-}
-
-const testEventPairExists = `-- name: TestEventPairExists :one
-SELECT EXISTS(
-  SELECT 1 
-  FROM itslog_events 
-  WHERE 
-    source_hash = ?
-    AND
-    event_hash = ?
-  )
-`
-
-type TestEventPairExistsParams struct {
-	SourceHash int64
-	EventHash  int64
-}
-
-// ------------------------------------------------------
-// TEST HELPERS
-// ------------------------------------------------------
-// Used for unit/end-to-end testing.
-func (q *Queries) TestEventPairExists(ctx context.Context, arg TestEventPairExistsParams) (int64, error) {
-	row := q.db.QueryRowContext(ctx, testEventPairExists, arg.SourceHash, arg.EventHash)
-	var column_1 int64
-	err := row.Scan(&column_1)
-	return column_1, err
-}
-
-const updateDictionary = `-- name: UpdateDictionary :exec
-INSERT OR IGNORE INTO itslog_dictionary (
-  timestamp, source_name, event_name, source_hash, event_hash
-) VALUES (
-  ?, ?, ?, ?, ?
-)
-`
-
-type UpdateDictionaryParams struct {
-	Timestamp  time.Time
-	SourceName string
-	EventName  string
-	SourceHash int64
-	EventHash  int64
-}
-
-func (q *Queries) UpdateDictionary(ctx context.Context, arg UpdateDictionaryParams) error {
-	_, err := q.db.ExecContext(ctx, updateDictionary,
-		arg.Timestamp,
-		arg.SourceName,
-		arg.EventName,
-		arg.SourceHash,
-		arg.EventHash,
-	)
-	return err
-}
-
 const updateLastRun = `-- name: UpdateLastRun :exec
 ;
 
@@ -393,42 +230,25 @@ func (q *Queries) UpdateLastRun(ctx context.Context, name string) error {
 
 const updateLookup = `-- name: UpdateLookup :exec
 INSERT OR IGNORE INTO itslog_lookup (
-  timestamp, hash, name
+  timestamp, key_id, hash, name
 ) VALUES (
-  ?, ?, ?
+  ?, ?, ?, ?
 )
 `
 
 type UpdateLookupParams struct {
 	Timestamp time.Time
+	KeyID     int64
 	Hash      int64
 	Name      string
 }
 
 func (q *Queries) UpdateLookup(ctx context.Context, arg UpdateLookupParams) error {
-	_, err := q.db.ExecContext(ctx, updateLookup, arg.Timestamp, arg.Hash, arg.Name)
-	return err
-}
-
-const updateMeta = `-- name: UpdateMeta :exec
-;
-
-INSERT OR REPLACE INTO itslog_metadata (
-  key, value
-) VALUES (
-  ?, ?
-)
-`
-
-type UpdateMetaParams struct {
-	Key   int64
-	Value string
-}
-
-// ------------------------------------------------------
-// METADATA
-// ------------------------------------------------------
-func (q *Queries) UpdateMeta(ctx context.Context, arg UpdateMetaParams) error {
-	_, err := q.db.ExecContext(ctx, updateMeta, arg.Key, arg.Value)
+	_, err := q.db.ExecContext(ctx, updateLookup,
+		arg.Timestamp,
+		arg.KeyID,
+		arg.Hash,
+		arg.Name,
+	)
 	return err
 }
