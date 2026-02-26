@@ -3,14 +3,14 @@ CREATE TABLE IF NOT EXISTS itslog_events (
     -- automatically provided by the SQLite engine
     timestamp   DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     -- so we know what key performed the operation
-    key_id INTEGER NOT NULL,
+    key_id TEXT NOT NULL,
     -- cluster is useful for a related set of events
-    cluster_hash INTEGER,
+    cluster TEXT,
     -- some apps have multiple internal sources
-    tags_hash INTEGER NOT NULL,
+    tags TEXT NOT NULL,
     -- value is useful for when you want a unique value 
     -- associated with this event
-    value_hash INTEGER
+    value TEXT
 );
 
 CREATE TRIGGER IF NOT EXISTS itslog_events_prevent_delete
@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS itslog_lookup (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     key_id INTEGER NOT NULL,
+    kind TEXT NOT NULL,
     hash INTEGER NOT NULL,
     name TEXT NOT NULL
 );

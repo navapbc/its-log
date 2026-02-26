@@ -19,18 +19,19 @@ type ItslogEtl struct {
 }
 
 type ItslogEvent struct {
-	ID          int64
-	Timestamp   time.Time
-	KeyID       int64
-	ClusterHash sql.NullInt64
-	TagsHash    int64
-	ValueHash   sql.NullInt64
+	ID        int64
+	Timestamp time.Time
+	KeyID     string
+	Cluster   sql.NullString
+	Tags      string
+	Value     sql.NullString
 }
 
 type ItslogLookup struct {
 	ID        int64
 	Timestamp time.Time
 	KeyID     int64
+	Kind      string
 	Hash      int64
 	Name      string
 }

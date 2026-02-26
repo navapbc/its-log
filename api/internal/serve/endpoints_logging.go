@@ -14,6 +14,7 @@ import (
 )
 
 // @BasePath /v1
+// Thursday, 2PM?
 
 func addLoggingEndpoints(rG *gin.RouterGroup, ch_evt_out chan<- *itslog.Event) {
 	// Logging

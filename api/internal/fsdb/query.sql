@@ -5,7 +5,7 @@
 --------------------------------------------------------
 -- name: LogEvent :one
 INSERT INTO itslog_events (
-  timestamp, key_id, cluster_hash, tags_hash, value_hash
+  timestamp, key_id, cluster, tags, value
 ) VALUES (
   ?, ?, ?, ?, ?
 )
@@ -13,9 +13,9 @@ RETURNING id;
 
 -- name: UpdateLookup :exec
 INSERT OR IGNORE INTO itslog_lookup (
-  timestamp, key_id, hash, name
+  timestamp, key_id, kind, hash, name
 ) VALUES (
-  ?, ?, ?, ?
+  ?, ?, ?, ?, ?
 );
 
 --------------------------------------------------------

@@ -124,7 +124,7 @@ func (q *Queries) InsertSummary(ctx context.Context, arg InsertSummaryParams) er
 const logEvent = `-- name: LogEvent :one
 
 INSERT INTO itslog_events (
-  timestamp, key_id, cluster_hash, tags_hash, value_hash
+  timestamp, key_id, cluster, tags, value
 ) VALUES (
   ?, ?, ?, ?, ?
 )
@@ -132,11 +132,11 @@ RETURNING id
 `
 
 type LogEventParams struct {
-	Timestamp   time.Time
-	KeyID       int64
-	ClusterHash sql.NullInt64
-	TagsHash    int64
-	ValueHash   sql.NullInt64
+	Timestamp time.Time
+	KeyID     string
+	Cluster   sql.NullString
+	Tags      string
+	Value     sql.NullString
 }
 
 // https://docs.sqlc.dev/en/latest/tutorials/getting-started-sqlite.html
@@ -147,9 +147,9 @@ func (q *Queries) LogEvent(ctx context.Context, arg LogEventParams) (int64, erro
 	row := q.db.QueryRowContext(ctx, logEvent,
 		arg.Timestamp,
 		arg.KeyID,
-		arg.ClusterHash,
-		arg.TagsHash,
-		arg.ValueHash,
+		arg.Cluster,
+		arg.Tags,
+		arg.Value,
 	)
 	var id int64
 	err := row.Scan(&id)
@@ -230,15 +230,16 @@ func (q *Queries) UpdateLastRun(ctx context.Context, name string) error {
 
 const updateLookup = `-- name: UpdateLookup :exec
 INSERT OR IGNORE INTO itslog_lookup (
-  timestamp, key_id, hash, name
+  timestamp, key_id, kind, hash, name
 ) VALUES (
-  ?, ?, ?, ?
+  ?, ?, ?, ?, ?
 )
 `
 
 type UpdateLookupParams struct {
 	Timestamp time.Time
 	KeyID     int64
+	Kind      string
 	Hash      int64
 	Name      string
 }
@@ -247,6 +248,7 @@ func (q *Queries) UpdateLookup(ctx context.Context, arg UpdateLookupParams) erro
 	_, err := q.db.ExecContext(ctx, updateLookup,
 		arg.Timestamp,
 		arg.KeyID,
+		arg.Kind,
 		arg.Hash,
 		arg.Name,
 	)

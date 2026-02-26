@@ -78,9 +78,11 @@ func FlushBuffersOnce(s *fsdb.SqliteStorage, ch_flush_in <-chan EventBuffers) {
 			_, err = s.ManyEvents(events)
 			if err != nil {
 				// FIXME: really, this should percolate up to a 5xx error
-				// going back to the client. But, we don't have a handle, and
+				// going back to the client. But, we don't have a Gin context, and
 				// we're far away from the point where the event was logged.
-				// There's no direct communication back to the client at this point.
+				// There's no direct communication back to the client at this point, because
+				// we buffered the event(s), and then flushed the buffer. This may have
+				// to just be a log that we look for.
 				log.Printf("Failed to write event buffer; lost %d events\n", len(events))
 			}
 			s.Close()
