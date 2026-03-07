@@ -1,10 +1,13 @@
-.PHONY: build-amd generate up test e2e
+.PHONY: amd generate up test e2e
 
 clean:
 	rm -f its-log
 
-amd: clean generate
+linux-amd: clean generate
 	GOOS=linux GOARCH=amd64 go build -o its-log . 
+
+linux-arm: clean generate
+	GOOS=linux GOARCH=arm64 go build -o its-log . 
 
 native: clean generate
 	go build -o its-log . 

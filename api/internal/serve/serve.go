@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	status "github.com/appleboy/gin-status-api"
@@ -53,7 +54,8 @@ func PourGin(ch_evt_out chan<- *itslog.Event) *gin.Engine {
 	}
 
 	// See https://gin-gonic.com/en/docs/deployment/
-	// router.SetTrustedProxies(strings.Split(viper.GetString("proxies.trusted"), ","))
+	router.SetTrustedProxies(strings.Split(viper.GetString("proxies"), ","))
+
 	log.Println("Setting default CORS handling")
 	router.Use(cors.New(cors.Config{
 		AllowMethods:     []string{"PUT", "GET", "POST", "OPTIONS"},

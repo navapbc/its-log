@@ -1,0 +1,18 @@
+services:
+  itslog:
+    build:
+      context: ../..
+      dockerfile: ops/containers/itslog/Dockerfile
+    command: /app/entrypoint.bash
+    ports:
+      - "8888:8888"
+    volumes:
+      - ../../api/its-log:/app/its-log
+      - ./itslog/data/itslog:/data
+      - ./itslog/scripts/internal/entrypoint.bash:/app/entrypoint.bash
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://itslog:8888/v1/health"]
+      interval: 300s
+      retries: 1
+      start_period: 5s
+      timeout: 3s

@@ -3,6 +3,7 @@ package serve
 import (
 	"errors"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"sort"
 	"strings"
@@ -21,7 +22,41 @@ func addLoggingEndpoints(rG *gin.RouterGroup, ch_evt_out chan<- *itslog.Event) {
 	auth_logV1 := rG.Group("/")
 	permissions := []itslog.PermissionType{itslog.Log, itslog.Test}
 	auth_logV1.Use(AuthMiddleWare(permissions))
-	auth_logV1.POST("/log", Event(ch_evt_out))
+	auth_logV1.POST("/log", Event(ch_evt_out, itslog.Log))
+}
+
+func setTimestamp(c *gin.Context, evt *itslog.Event, permission itslog.PermissionType) {
+	switch permission {
+	case itslog.Test:
+		// The date in the testing cases comes from the URL.
+		// Hence, we might have parsing errors on what is passed in.
+		date := c.Param("date")
+		timestamp, err := time.Parse("2006-01-02", date)
+		min := time.Date(timestamp.Year(), timestamp.Month(), timestamp.Day(), 0, 0, 0, 0, time.UTC).Unix()
+		max := time.Date(timestamp.Year(), timestamp.Month(), timestamp.Day(), 23, 59, 59, 0, time.UTC).Unix()
+		delta := max - min
+		sec := rand.Int63n(delta) + min
+		timestamp = time.Unix(sec, 0)
+
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"status":  "error",
+				"message": fmt.Sprintf("date is malformed: %s", date),
+			})
+			return
+		}
+
+		evt.Timestamp = timestamp
+
+	case itslog.Log:
+		evt.Timestamp = time.Now()
+
+	default:
+		// If we manage to get here, make sure we set the timestamp to
+		// the current time as a reasonable default behavior.
+		evt.Timestamp = time.Now()
+	}
+
 }
 
 // Event godoc
@@ -39,7 +74,7 @@ func addLoggingEndpoints(rG *gin.RouterGroup, ch_evt_out chan<- *itslog.Event) {
 // @Success 200 {object} itslog.Success
 // @Summary log a source and event with a unique value as part of a cluster
 // @Tags events
-func Event(ch_evt_out chan<- *itslog.Event) func(c *gin.Context) {
+func Event(ch_evt_out chan<- *itslog.Event, permission itslog.PermissionType) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		// https://pkg.go.dev/github.com/go-playground/validator/v10
 		var evt itslog.Event
@@ -50,10 +85,12 @@ func Event(ch_evt_out chan<- *itslog.Event) func(c *gin.Context) {
 			return
 		}
 
-		evt.Timestamp = time.Now()
-
 		evt.AppId = itslog.GetOrPanic(c, "AppId")
 		evt.KeyId = itslog.GetOrPanic(c, "KeyId")
+
+		// If it is a test event, we mangle a date parameter.
+		// If it is not a test event, we use Now().
+		setTimestamp(c, &evt, permission)
 
 		// The tags field is currently a JSON array. It needs to become
 		// a sorted, dot-separated string.

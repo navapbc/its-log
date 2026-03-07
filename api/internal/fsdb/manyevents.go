@@ -9,24 +9,6 @@ import (
 	"github.com/jadudm/its-log/internal/itslog"
 )
 
-/*
-	tags_h := hashValue(s.h, e.TagString)
-	cluster_h := hashValue(s.h, e.Cluster)
-
-	valid_cluster := false
-	if cluster_h != 0 {
-		valid_cluster = true
-	}
-
-	value_h := hashValue(s.h, e.Value)
-	valid_value := false
-	if value_h != 0 {
-		valid_value = true
-	}
-
-	key_h := hashValue(s.h, e.KeyId)
-*/
-
 func (s *SqliteStorage) ManyEvents(evt_buff []*itslog.Event) (int64, error) {
 	ctx := context.Background()
 	tx, err := s.db.Begin()
@@ -120,33 +102,3 @@ func (s *SqliteStorage) ManyEvents(evt_buff []*itslog.Event) (int64, error) {
 	err = tx.Commit()
 	return counter, nil
 }
-
-// func (s *SqliteStorage) Event(e *itslog.Event) (int64, error) {
-// 	cluster_h := hashValue(s.h, e.Cluster)
-// 	source_h := hashValue(s.h, e.Source)
-// 	event_h := hashValue(s.h, e.Event)
-// 	value_h := hashValue(s.h, e.Value)
-
-// 	valid_cluster := false
-// 	valid_value := false
-// 	if cluster_h != 0 {
-// 		valid_cluster = true
-// 	}
-// 	if value_h != 0 {
-// 		valid_value = true
-// 	}
-
-// 	// This is an unsigned to signed conversion...
-// 	id, err := s.queries.LogClusteredEventWithValue(context.Background(), models.LogClusteredEventWithValueParams{
-// 		ClusterHash: sql.NullInt64{Int64: cluster_h, Valid: valid_cluster},
-// 		SourceHash:  source_h,
-// 		EventHash:   event_h,
-// 		ValueHash:   sql.NullInt64{Int64: value_h, Valid: valid_value},
-// 	})
-
-// 	if err != nil {
-// 		panic(err)
-// 	}
-
-// 	return id, nil
-// }
