@@ -64,10 +64,11 @@ func FlushBuffersOnce(s *fsdb.SqliteStorage, ch_flush_in <-chan EventBuffers) {
 		for formatted_date, events := range dateMap {
 			if s == nil {
 				s = &fsdb.SqliteStorage{
-					Path:     viper.GetString("storage.path"),
-					Filename: formatted_date + ".sqlite",
-					AppId:    appId,
-					Kind:     fsdb.NamedDatabase,
+					Path: viper.GetString("storage.path"),
+					// Filename: formatted_date + ".sqlite",
+					AppId: appId,
+					Date:  formatted_date,
+					Kind:  fsdb.NamedDatabase,
 				}
 			}
 

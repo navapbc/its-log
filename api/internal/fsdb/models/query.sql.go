@@ -12,7 +12,7 @@ import (
 )
 
 const getAllSummaries = `-- name: GetAllSummaries :many
-SELECT id, date, key_id, operation, source_name, event_name, value FROM itslog_summary
+SELECT id, last_run, date, key_id, operation, tags, value, count FROM itslog_summary
 `
 
 // ------------------------------------------------------
@@ -29,12 +29,13 @@ func (q *Queries) GetAllSummaries(ctx context.Context) ([]ItslogSummary, error) 
 		var i ItslogSummary
 		if err := rows.Scan(
 			&i.ID,
+			&i.LastRun,
 			&i.Date,
 			&i.KeyID,
 			&i.Operation,
-			&i.SourceName,
-			&i.EventName,
+			&i.Tags,
 			&i.Value,
+			&i.Count,
 		); err != nil {
 			return nil, err
 		}
@@ -96,26 +97,24 @@ func (q *Queries) InsertETL(ctx context.Context, arg InsertETLParams) error {
 
 const insertSummary = `-- name: InsertSummary :exec
 INSERT OR REPLACE INTO itslog_summary (
-  date, operation, source_name, event_name, value
+  date, operation, tags, value
   ) VALUES (
-  ?, ?, ?, ?, ?
+  ?, ?, ?, ?
   )
 `
 
 type InsertSummaryParams struct {
-	Date       string
-	Operation  string
-	SourceName sql.NullString
-	EventName  sql.NullString
-	Value      float64
+	Date      string
+	Operation string
+	Tags      sql.NullString
+	Value     sql.NullString
 }
 
 func (q *Queries) InsertSummary(ctx context.Context, arg InsertSummaryParams) error {
 	_, err := q.db.ExecContext(ctx, insertSummary,
 		arg.Date,
 		arg.Operation,
-		arg.SourceName,
-		arg.EventName,
+		arg.Tags,
 		arg.Value,
 	)
 	return err
@@ -160,32 +159,30 @@ const readSummary = `-- name: ReadSummary :many
 SELECT 
   date, 
   operation, 
-  COALESCE(source_name, '') as source_name, 
-  COALESCE(event_name, '') as event_name, 
+  COALESCE(tags, '') as tags, 
   value 
 FROM itslog_summary
 WHERE 
-  source_name LIKE COALESCE(?, '%')
+  tags LIKE COALESCE(?, '%')
   AND
   operation LIKE ?
 ORDER BY id
 `
 
 type ReadSummaryParams struct {
-	SourceName sql.NullString
-	Operation  string
+	Tags      sql.NullString
+	Operation string
 }
 
 type ReadSummaryRow struct {
-	Date       string
-	Operation  string
-	SourceName string
-	EventName  string
-	Value      float64
+	Date      string
+	Operation string
+	Tags      string
+	Value     sql.NullString
 }
 
 func (q *Queries) ReadSummary(ctx context.Context, arg ReadSummaryParams) ([]ReadSummaryRow, error) {
-	rows, err := q.db.QueryContext(ctx, readSummary, arg.SourceName, arg.Operation)
+	rows, err := q.db.QueryContext(ctx, readSummary, arg.Tags, arg.Operation)
 	if err != nil {
 		return nil, err
 	}
@@ -196,8 +193,7 @@ func (q *Queries) ReadSummary(ctx context.Context, arg ReadSummaryParams) ([]Rea
 		if err := rows.Scan(
 			&i.Date,
 			&i.Operation,
-			&i.SourceName,
-			&i.EventName,
+			&i.Tags,
 			&i.Value,
 		); err != nil {
 			return nil, err

@@ -7,7 +7,7 @@ RUN apt-get update ; apt-get install -y \
     python3-venv
 RUN python3 -m venv $VENV
 WORKDIR /app
-COPY . .
+COPY . /app
 RUN pip install -r requirements.txt
 
-CMD ["python3", "/app/containers/e2e/deterministic.py"]
+CMD ["python3", "/app/deterministic.py"]

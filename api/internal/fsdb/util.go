@@ -25,8 +25,7 @@ func hashValue(hash maphash.Hash, s string) int64 {
 // The goal is to make sure we have *only* a filename.
 func MakeGoodSqliteFilename(fname string) (string, error) {
 	cleaned := path.Base(fname)
-	// We could end up with "." or "/", so make sure the length is greater
-	// than one, and that it ends in ".sqlite"
+	// We could end up with "." or "/", so make sure the length is greater than one
 	if len(cleaned) > 1 {
 		return cleaned, nil
 	}

@@ -37,11 +37,12 @@ type ItslogLookup struct {
 }
 
 type ItslogSummary struct {
-	ID         int64
-	Date       string
-	KeyID      int64
-	Operation  string
-	SourceName sql.NullString
-	EventName  sql.NullString
-	Value      float64
+	ID        int64
+	LastRun   time.Time
+	Date      string
+	KeyID     int64
+	Operation string
+	Tags      sql.NullString
+	Value     sql.NullString
+	Count     float64
 }

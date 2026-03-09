@@ -32,14 +32,15 @@ CREATE UNIQUE INDEX IF NOT EXISTS lookup_hashes_ndx ON itslog_lookup (hash);
 
 CREATE TABLE IF NOT EXISTS itslog_summary (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    last_run DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     date TEXT DEFAULT CURRENT_DATE NOT NULL,
     key_id INTEGER NOT NULL,
     operation TEXT NOT NULL,
-    source_name TEXT,
-    event_name TEXT,
-    value REAL NOT NULL
+    tags TEXT,
+    value TEXT,
+    count REAL NOT NULL
 );
-CREATE UNIQUE INDEX IF NOT EXISTS summary_ndx ON itslog_summary (date, operation, source_name, event_name);
+CREATE UNIQUE INDEX IF NOT EXISTS summary_ndx ON itslog_summary (date, operation, tags, value);
 
 CREATE TABLE IF NOT EXISTS itslog_etl (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

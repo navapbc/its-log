@@ -58,14 +58,12 @@ func (s *SqliteStorage) Init() error {
 		// This is a database "for today," e.g. "appid_2026-01-01.sqlite" on 2026/01/01
 		t := time.Now()
 		s.Filename = fmt.Sprintf("%s_%s.sqlite?_time_format=sqlite", s.AppId, t.Format("2006-01-02"))
+		s.Basename = fmt.Sprintf("%s_%s.sqlite", s.AppId, t.Format("2006-01-02"))
 	case NamedDatabase:
 		// This is a database we choose the name of. For "internal" use only.
-		// First, make sure we have a filepath that is only a filename.
-		cleaned, err := MakeGoodSqliteFilename(s.Filename)
-		if err != nil {
-			return err
-		}
-		s.Filename = fmt.Sprintf("%s_%s?_time_format=sqlite", s.AppId, cleaned)
+		// Always construct the DB name from the key values
+		s.Filename = fmt.Sprintf("%s_%s.sqlite?_time_format=sqlite", s.AppId, s.Date)
+		s.Basename = fmt.Sprintf("%s_%s.sqlite", s.AppId, s.Date)
 	}
 
 	err := s.ValidateSqliteStorage()
@@ -126,7 +124,7 @@ func exists(path string) bool {
 }
 
 func (s *SqliteStorage) init() error {
-	db_path := path.Join(s.Path, s.Filename)
+	db_path := path.Join(s.Path, s.Basename)
 	fileExists := exists(db_path)
 
 	db, err := sql.Open("sqlite", db_path)
@@ -141,6 +139,7 @@ func (s *SqliteStorage) init() error {
 	// If we just created the database, we need to init the tables, and
 	// then load the default ETL actions.
 	if !fileExists {
+		log.Println("Loading default ETL values")
 		if _, err := db.ExecContext(context.Background(), ddl); err != nil {
 			return err
 		}

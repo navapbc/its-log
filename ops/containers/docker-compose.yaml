@@ -8,7 +8,7 @@ services:
       - "8888:8888"
     volumes:
       - ../../api/its-log:/app/its-log
-      - ./itslog/data/itslog:/data
+      - ./itslog/data:/data
       - ./itslog/scripts/internal/entrypoint.bash:/app/entrypoint.bash
     healthcheck:
       test: ["CMD", "curl", "-f", "http://itslog:8888/v1/health"]

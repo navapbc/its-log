@@ -1,10 +1,13 @@
 package serve
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"log"
 	"net/http"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -19,7 +22,7 @@ type ETLParams struct {
 	Name string
 }
 
-func addEtlEndpoints(rG *gin.RouterGroup, ch_evt_out chan<- *itslog.Event) {
+func addEtlEndpoints(rG *gin.RouterGroup) {
 	auth_adminV1 := rG.Group("/")
 	permissions := []itslog.PermissionType{itslog.Admin, itslog.Test}
 	auth_adminV1.Use(AuthMiddleWare(permissions))
@@ -36,7 +39,11 @@ func addEtlEndpoints(rG *gin.RouterGroup, ch_evt_out chan<- *itslog.Event) {
 }
 
 func (e *ETLParams) formatDateTimeOnly() string {
-	return fmt.Sprintf("%s.sqlite", e.Date.Format(time.DateOnly))
+	return fmt.Sprintf("%s-NEVERUSETHISREMOVEREMOVEREMOVE.sqlite", e.Date.Format(time.DateOnly))
+}
+
+func (e *ETLParams) formatDateOnly() string {
+	return fmt.Sprintf("%s", e.Date.Format(time.DateOnly))
 }
 
 func ETL(c *gin.Context) {
@@ -101,10 +108,11 @@ func post(c *gin.Context, params ETLParams) {
 
 	appId := itslog.GetOrPanic(c, "app_id")
 	storage := &fsdb.SqliteStorage{
-		Path:     viper.GetString("storage.path"),
-		Filename: params.formatDateTimeOnly(),
-		AppId:    appId,
+		Path:  viper.GetString("storage.path"),
+		Date:  params.formatDateOnly(),
+		AppId: appId,
 	}
+
 	storage.Init()
 	defer storage.Close()
 
@@ -136,9 +144,9 @@ func get(c *gin.Context, params ETLParams) {
 	appId := itslog.GetOrPanic(c, itslog.ITSLOG_APPID)
 
 	storage := &fsdb.SqliteStorage{
-		Path:     viper.GetString("storage.path"),
-		Filename: params.formatDateTimeOnly(),
-		AppId:    appId,
+		Path:  viper.GetString("storage.path"),
+		Date:  params.formatDateOnly(),
+		AppId: appId,
 	}
 	storage.Init()
 	defer storage.Close()
@@ -170,15 +178,48 @@ func get(c *gin.Context, params ETLParams) {
 	})
 }
 
+func getRequestedParamKeys(sql string) []string {
+	// Insert params
+	// Valid params include
+	// -- params: key_id app_id
+	results := make([]string, 0)
+
+	scanner := bufio.NewScanner(strings.NewReader(sql))
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		is_comment := strings.Contains(line, "--")
+		is_params := strings.Contains(line, "params")
+		pattern := regexp.MustCompile(`\S+(.*?)`)
+		if is_comment && is_params {
+			results = pattern.FindAllString(line, -1)
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
+
+	dropped_leading_parts := results[2:]
+
+	return dropped_leading_parts
+}
+
 // Run an ETL step
 func put(c *gin.Context, params ETLParams) {
 	// Copypasta from above... :/
+	keyId := itslog.GetOrPanic(c, itslog.ITSLOG_KEYID)
 	appId := itslog.GetOrPanic(c, itslog.ITSLOG_APPID)
 
+	// Path:     viper.GetString("storage.path"),
+	// Filename: formatted_date + ".sqlite",
+	// AppId:    appId,
+	// Kind:     fsdb.NamedDatabase,
+
 	storage := &fsdb.SqliteStorage{
-		Path:     viper.GetString("storage.path"),
-		Filename: params.formatDateTimeOnly(),
-		AppId:    appId,
+		Path:  viper.GetString("storage.path"),
+		Date:  params.formatDateOnly(),
+		AppId: appId,
+		Kind:  fsdb.NamedDatabase,
 	}
 	storage.Init()
 	defer storage.Close()
@@ -217,8 +258,26 @@ func put(c *gin.Context, params ETLParams) {
 		return
 	}
 
+	// We allow queries to specity a list of parameters of the form
+	// -- params: a b c
+	// where a, b, c must be in the set defined by the map below
+	keys := getRequestedParamKeys(row.Sql)
+	mapped_params := make(map[string]string, 0)
+	mapped_params["key_id"] = keyId
+	mapped_params["app_id"] = storage.AppId
+	mapped_params["date"] = storage.Date
+	mapped := make([]any, 0)
+	for _, p := range keys {
+		if v, ok := mapped_params[p]; ok {
+			mapped = append(mapped, v)
+		}
+	}
+
+	log.Println(mapped_params)
+	log.Println(keys)
+
 	// Run the query
-	_, err = tx.ExecContext(ctx, row.Sql)
+	_, err = tx.ExecContext(ctx, row.Sql, mapped...)
 	if err != nil {
 		msg := "could not exec sql of ETL step"
 		log.Println(msg)

@@ -26,21 +26,20 @@ SELECT * FROM itslog_summary;
 
 -- name: InsertSummary :exec
 INSERT OR REPLACE INTO itslog_summary (
-  date, operation, source_name, event_name, value
+  date, operation, tags, value
   ) VALUES (
-  ?, ?, ?, ?, ?
+  ?, ?, ?, ?
   );
 
 -- name: ReadSummary :many
 SELECT 
   date, 
   operation, 
-  COALESCE(source_name, '') as source_name, 
-  COALESCE(event_name, '') as event_name, 
+  COALESCE(tags, '') as tags, 
   value 
 FROM itslog_summary
 WHERE 
-  source_name LIKE COALESCE(?, '%')
+  tags LIKE COALESCE(?, '%')
   AND
   operation LIKE ?
 ORDER BY id

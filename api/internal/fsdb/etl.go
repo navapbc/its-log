@@ -2,6 +2,7 @@ package fsdb
 
 import (
 	"context"
+	"database/sql"
 	"embed"
 	"io/fs"
 	"log"
@@ -13,6 +14,10 @@ import (
 
 //go:embed sql
 var defaultSql embed.FS
+
+func (s *SqliteStorage) GetDB() *sql.DB {
+	return s.db
+}
 
 func fileNameWithoutExtension(fileName string) string {
 	return strings.TrimSuffix(fileName, filepath.Ext(fileName))
