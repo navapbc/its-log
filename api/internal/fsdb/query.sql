@@ -79,6 +79,7 @@ INSERT OR REPLACE INTO itslog_sequences (
   ?, ?, ?
 );
 
+-- name: GetSequence :one
 SELECT steps
 FROM itslog_sequences
 WHERE name = ?
