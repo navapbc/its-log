@@ -70,20 +70,6 @@ func (q *Queries) GetETL(ctx context.Context, name string) (GetETLRow, error) {
 	return i, err
 }
 
-const getSequence = `-- name: GetSequence :one
-SELECT steps
-FROM itslog_sequences
-WHERE name = ?
-LIMIT 1
-`
-
-func (q *Queries) GetSequence(ctx context.Context, name string) (string, error) {
-	row := q.db.QueryRowContext(ctx, getSequence, name)
-	var steps string
-	err := row.Scan(&steps)
-	return steps, err
-}
-
 const insertETL = `-- name: InsertETL :exec
 ;
 
