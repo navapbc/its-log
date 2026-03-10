@@ -40,7 +40,7 @@ func (s *SqliteStorage) LoadDefaultEtlSql() {
 		sqlAsString := string(sqlAsBytes)
 		sqlName := fileNameWithoutExtension(entry.Name())
 		err = s.queries.InsertETL(context.Background(), models.InsertETLParams{
-			KeyID: 0, // Use a default key ID of 0 for the automatically inserted values
+			KeyID: "its-log", // Use a default key ID of 0 for the automatically inserted values
 			Name:  sqlName,
 			Sql:   sqlAsString,
 		})

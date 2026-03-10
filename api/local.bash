@@ -2,6 +2,7 @@
 
 # These values would be set in a secrets manager
 # in a deployment context.
+
 # https://stackoverflow.com/questions/45469133/create-json-file-using-jq
 export ITSLOG_APIKEY_PHLLC_ADMIN=$(jq -n \
   --arg app_id "pupper" \

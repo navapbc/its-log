@@ -119,8 +119,8 @@ func (s *SqliteStorage) initMemory() error {
 }
 
 func exists(path string) bool {
-	_, err := os.Stat(path)
-	return !errors.Is(err, os.ErrNotExist)
+	fileInfo, err := os.Stat(path)
+	return !errors.Is(err, os.ErrNotExist) && fileInfo.Size() > 100
 }
 
 func (s *SqliteStorage) init() error {
@@ -136,14 +136,22 @@ func (s *SqliteStorage) init() error {
 	s.queries = models.New(db)
 	s.FixedSeed()
 
-	// If we just created the database, we need to init the tables, and
-	// then load the default ETL actions.
 	if !fileExists {
-		log.Println("Loading default ETL values")
+		// Create the tables.
 		if _, err := db.ExecContext(context.Background(), ddl); err != nil {
 			return err
 		}
-		s.LoadDefaultEtlSql()
+		// If the file exists, check that there's something in the ETL.
+		summaries, err := s.queries.GetAllSummaries(context.Background())
+		if err != nil {
+			return err
+		}
+		if !(len(summaries) > 0) {
+			// If we can't find the table, it isn't initialized.
+			log.Println("Loading default ETL values")
+
+			s.LoadDefaultEtlSql()
+		}
 	}
 
 	return nil

@@ -11,3 +11,6 @@ run:
 
 swagger:
 	cd api ; swag init -o ./docs
+
+generate:
+	cd api ; make generate

@@ -23,7 +23,7 @@ END;
 CREATE TABLE IF NOT EXISTS itslog_lookup (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    key_id INTEGER NOT NULL,
+    key_id TEXT NOT NULL,
     kind TEXT NOT NULL,
     hash INTEGER NOT NULL,
     name TEXT NOT NULL
@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS itslog_summary (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     last_run DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     date TEXT DEFAULT CURRENT_DATE NOT NULL,
-    key_id INTEGER NOT NULL,
+    key_id TEXT NOT NULL,
     operation TEXT NOT NULL,
     tags TEXT,
     value TEXT,
@@ -45,13 +45,21 @@ CREATE UNIQUE INDEX IF NOT EXISTS summary_ndx ON itslog_summary (date, operation
 CREATE TABLE IF NOT EXISTS itslog_etl (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     inserted DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    key_id INTEGER NOT NULL,
+    key_id TEXT NOT NULL,
     name TEXT NOT NULL,
     last_run DATETIME,
     sql TEXT NOT NULL
 );
-CREATE UNIQUE INDEX IF NOT EXISTS step_name_hashes_ndx ON itslog_etl (name);
+CREATE UNIQUE INDEX IF NOT EXISTS step_name_ndx ON itslog_etl (name);
 
+CREATE TABLE IF NOT EXISTS itslog_sequences (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    inserted DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    key_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    steps TEXT NOT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS sequence_name_ndx ON itslog_sequences (name);
 
 -- CREATE TABLE IF NOT EXISTS itslog_dictionary (
 --     id INTEGER PRIMARY KEY AUTOINCREMENT,

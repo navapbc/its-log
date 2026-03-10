@@ -73,6 +73,7 @@ func PourGin(ch_evt_out chan<- *itslog.Event) *gin.Engine {
 	addLoggingEndpoints(apiV1, ch_evt_out)
 	addTestingEndpoints(apiV1, ch_evt_out)
 	addEtlEndpoints(apiV1)
+	addSequenceEndpoints(apiV1)
 	addQueryEndpoints(apiV1)
 
 	return router

@@ -72,6 +72,22 @@ WHERE
   name = ?
 ;
 
+-- name: InsertSequence :exec
+INSERT OR REPLACE INTO itslog_sequences (
+  key_id, name, steps
+) VALUES (
+  ?, ?, ?
+);
+
+SELECT steps
+FROM itslog_sequences
+WHERE name = ?
+LIMIT 1
+;
+
+-- name: RemoveSequence :exec
+DELETE FROM itslog_sequences
+WHERE name = ?;
 
 --------------------------------------------------------
 -- CLEANUP

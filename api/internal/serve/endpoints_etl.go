@@ -3,6 +3,7 @@ package serve
 import (
 	"bufio"
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -26,6 +27,7 @@ func addEtlEndpoints(rG *gin.RouterGroup) {
 	auth_adminV1 := rG.Group("/")
 	permissions := []itslog.PermissionType{itslog.Admin, itslog.Test}
 	auth_adminV1.Use(AuthMiddleWare(permissions))
+
 	// Insert a new ETL step
 	auth_adminV1.POST("etl/:date/:name", ETL)
 	// Run an ETL step
@@ -36,16 +38,16 @@ func addEtlEndpoints(rG *gin.RouterGroup) {
 	auth_adminV1.DELETE("etl/:date/:name", ETL)
 	// Combine a table from one DB into another DB
 	// auth_adminV1.PUT("combine/:source/:destination/:table", Combine)
-}
 
-func (e *ETLParams) formatDateTimeOnly() string {
-	return fmt.Sprintf("%s-NEVERUSETHISREMOVEREMOVEREMOVE.sqlite", e.Date.Format(time.DateOnly))
 }
 
 func (e *ETLParams) formatDateOnly() string {
 	return fmt.Sprintf("%s", e.Date.Format(time.DateOnly))
 }
 
+// ------------------------------------------------------------------------
+// ETL
+// ------------------------------------------------------------------------
 func ETL(c *gin.Context) {
 	date := c.Param("date")
 	name := c.Param("name")
@@ -106,11 +108,12 @@ func post(c *gin.Context, params ETLParams) {
 		return
 	}
 
-	appId := itslog.GetOrPanic(c, "app_id")
+	appId := itslog.GetOrPanic(c, itslog.ITSLOG_APPID)
 	storage := &fsdb.SqliteStorage{
-		Path:  viper.GetString("storage.path"),
-		Date:  params.formatDateOnly(),
 		AppId: appId,
+		Date:  params.formatDateOnly(),
+		Kind:  fsdb.NamedDatabase,
+		Path:  viper.GetString("storage.path"),
 	}
 
 	storage.Init()
@@ -144,9 +147,10 @@ func get(c *gin.Context, params ETLParams) {
 	appId := itslog.GetOrPanic(c, itslog.ITSLOG_APPID)
 
 	storage := &fsdb.SqliteStorage{
-		Path:  viper.GetString("storage.path"),
-		Date:  params.formatDateOnly(),
 		AppId: appId,
+		Date:  params.formatDateOnly(),
+		Kind:  fsdb.NamedDatabase,
+		Path:  viper.GetString("storage.path"),
 	}
 	storage.Init()
 	defer storage.Close()
@@ -186,6 +190,8 @@ func getRequestedParamKeys(sql string) []string {
 
 	scanner := bufio.NewScanner(strings.NewReader(sql))
 
+	var dropped_leading_parts []string
+
 	for scanner.Scan() {
 		line := scanner.Text()
 		is_comment := strings.Contains(line, "--")
@@ -193,22 +199,25 @@ func getRequestedParamKeys(sql string) []string {
 		pattern := regexp.MustCompile(`\S+(.*?)`)
 		if is_comment && is_params {
 			results = pattern.FindAllString(line, -1)
+			dropped_leading_parts = results[2:]
 		}
 	}
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
 
-	dropped_leading_parts := results[2:]
-
 	return dropped_leading_parts
 }
 
 // Run an ETL step
-func put(c *gin.Context, params ETLParams) {
+// This returns an error because it gets used to run sequences of steps, too.
+// In that context, the gin response is used, *and* the error.
+func put(c *gin.Context, params ETLParams) error {
 	// Copypasta from above... :/
 	keyId := itslog.GetOrPanic(c, itslog.ITSLOG_KEYID)
 	appId := itslog.GetOrPanic(c, itslog.ITSLOG_APPID)
+	isSequence, _ := c.Get("isSequence")
+	useContext := !isSequence.(bool)
 
 	// Path:     viper.GetString("storage.path"),
 	// Filename: formatted_date + ".sqlite",
@@ -216,10 +225,10 @@ func put(c *gin.Context, params ETLParams) {
 	// Kind:     fsdb.NamedDatabase,
 
 	storage := &fsdb.SqliteStorage{
-		Path:  viper.GetString("storage.path"),
-		Date:  params.formatDateOnly(),
 		AppId: appId,
+		Date:  params.formatDateOnly(),
 		Kind:  fsdb.NamedDatabase,
+		Path:  viper.GetString("storage.path"),
 	}
 	storage.Init()
 	defer storage.Close()
@@ -228,15 +237,19 @@ func put(c *gin.Context, params ETLParams) {
 	ctx := context.Background()
 	tx, err := storage.GetDB().BeginTx(ctx, nil)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"status":  "error",
-			"method":  c.Request.Method,
-			"message": "could not open transaction",
-			"error":   err.Error(),
-			"date":    params.Date,
-			"name":    params.Name,
-		})
-		return
+		msg := "could not open transaction"
+		log.Println(msg)
+		if useContext {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"status":  "error",
+				"method":  c.Request.Method,
+				"message": msg,
+				"error":   err.Error(),
+				"date":    params.Date,
+				"name":    params.Name,
+			})
+		}
+		return fmt.Errorf("%s: %s", msg, http.StatusText(http.StatusInternalServerError))
 	}
 	// Defer a rollback in case anything fails.
 	defer tx.Rollback()
@@ -248,14 +261,16 @@ func put(c *gin.Context, params ETLParams) {
 	if err != nil {
 		msg := "could not find ETL step"
 		log.Println(msg)
-		c.JSON(http.StatusNotFound, gin.H{
-			"status":  "error",
-			"method":  c.Request.Method,
-			"message": msg,
-			"date":    params.Date,
-			"name":    params.Name,
-		})
-		return
+		if useContext {
+			c.JSON(http.StatusNotFound, gin.H{
+				"status":  "error",
+				"method":  c.Request.Method,
+				"message": msg,
+				"date":    params.Date,
+				"name":    params.Name,
+			})
+		}
+		return fmt.Errorf("%s: %s", msg, http.StatusText(http.StatusNotFound))
 	}
 
 	// We allow queries to specity a list of parameters of the form
@@ -273,58 +288,65 @@ func put(c *gin.Context, params ETLParams) {
 		}
 	}
 
-	log.Println(mapped_params)
-	log.Println(keys)
-
 	// Run the query
 	_, err = tx.ExecContext(ctx, row.Sql, mapped...)
 	if err != nil {
 		msg := "could not exec sql of ETL step"
 		log.Println(msg)
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"status":  "error",
-			"method":  c.Request.Method,
-			"message": msg,
-			"detail":  err.Error(),
-			"date":    params.Date,
-			"name":    params.Name,
-		})
-		return
+		if useContext {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"status":  "error",
+				"method":  c.Request.Method,
+				"message": msg,
+				"detail":  err.Error(),
+				"date":    params.Date,
+				"name":    params.Name,
+			})
+		}
+		return fmt.Errorf("%s: %s", msg, http.StatusText(http.StatusInternalServerError))
 	}
 
 	if err = qtx.UpdateLastRun(ctx, params.Name); err != nil {
 		msg := "could not update ETL metadata"
 		log.Println(msg)
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"status":  "error",
-			"method":  c.Request.Method,
-			"message": msg,
-			"date":    params.Date,
-			"name":    params.Name,
-		})
-		return
+		if useContext {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"status":  "error",
+				"method":  c.Request.Method,
+				"message": msg,
+				"date":    params.Date,
+				"name":    params.Name,
+			})
+		}
+		return errors.New(http.StatusText(http.StatusInternalServerError))
 	}
 
 	// Commit the transaction.
 	if err = tx.Commit(); err != nil {
 		msg := "could not commit transaction"
 		log.Println(msg)
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"status":  "error",
-			"method":  c.Request.Method,
-			"message": msg,
-			"date":    params.Date,
-			"name":    params.Name,
-		})
-		return
+		if useContext {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"status":  "error",
+				"method":  c.Request.Method,
+				"message": msg,
+				"date":    params.Date,
+				"name":    params.Name,
+			})
+		}
+		return fmt.Errorf("%s: %s", msg, http.StatusText(http.StatusInternalServerError))
 	}
 
-	c.JSON(http.StatusCreated, gin.H{
-		"status": "ok",
-		"method": c.Request.Method,
-		"date":   params.Date,
-		"name":   params.Name,
-	})
+	if useContext {
+		c.JSON(http.StatusCreated, gin.H{
+			"status": "ok",
+			"method": c.Request.Method,
+			"date":   params.Date,
+			"name":   params.Name,
+		})
+	}
+
+	return nil
 }
 
 // FIXME: not implemented yet

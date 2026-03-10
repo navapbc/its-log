@@ -74,6 +74,7 @@ func FlushBuffersOnce(s *fsdb.SqliteStorage, ch_flush_in <-chan EventBuffers) {
 
 			err := s.Init()
 			if err != nil {
+				log.Println(err.Error())
 				panic(err)
 			}
 			_, err = s.ManyEvents(events)

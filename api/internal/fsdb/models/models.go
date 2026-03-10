@@ -12,7 +12,7 @@ import (
 type ItslogEtl struct {
 	ID       int64
 	Inserted time.Time
-	KeyID    int64
+	KeyID    string
 	Name     string
 	LastRun  sql.NullTime
 	Sql      string
@@ -30,17 +30,25 @@ type ItslogEvent struct {
 type ItslogLookup struct {
 	ID        int64
 	Timestamp time.Time
-	KeyID     int64
+	KeyID     string
 	Kind      string
 	Hash      int64
 	Name      string
+}
+
+type ItslogSequence struct {
+	ID       int64
+	Inserted time.Time
+	KeyID    string
+	Name     string
+	Steps    string
 }
 
 type ItslogSummary struct {
 	ID        int64
 	LastRun   time.Time
 	Date      string
-	KeyID     int64
+	KeyID     string
 	Operation string
 	Tags      sql.NullString
 	Value     sql.NullString

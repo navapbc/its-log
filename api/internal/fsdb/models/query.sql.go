@@ -70,6 +70,20 @@ func (q *Queries) GetETL(ctx context.Context, name string) (GetETLRow, error) {
 	return i, err
 }
 
+const getSequence = `-- name: GetSequence :one
+SELECT steps
+FROM itslog_sequences
+WHERE name = ?
+LIMIT 1
+`
+
+func (q *Queries) GetSequence(ctx context.Context, name string) (string, error) {
+	row := q.db.QueryRowContext(ctx, getSequence, name)
+	var steps string
+	err := row.Scan(&steps)
+	return steps, err
+}
+
 const insertETL = `-- name: InsertETL :exec
 ;
 
@@ -82,7 +96,7 @@ INSERT OR REPLACE INTO itslog_etl (
 `
 
 type InsertETLParams struct {
-	KeyID int64
+	KeyID string
 	Name  string
 	Sql   string
 }
@@ -92,6 +106,27 @@ type InsertETLParams struct {
 // ------------------------------------------------------
 func (q *Queries) InsertETL(ctx context.Context, arg InsertETLParams) error {
 	_, err := q.db.ExecContext(ctx, insertETL, arg.KeyID, arg.Name, arg.Sql)
+	return err
+}
+
+const insertSequence = `-- name: InsertSequence :exec
+;
+
+INSERT OR REPLACE INTO itslog_sequences (
+  key_id, name, steps
+) VALUES (
+  ?, ?, ?
+)
+`
+
+type InsertSequenceParams struct {
+	KeyID string
+	Name  string
+	Steps string
+}
+
+func (q *Queries) InsertSequence(ctx context.Context, arg InsertSequenceParams) error {
+	_, err := q.db.ExecContext(ctx, insertSequence, arg.KeyID, arg.Name, arg.Steps)
 	return err
 }
 
@@ -209,6 +244,18 @@ func (q *Queries) ReadSummary(ctx context.Context, arg ReadSummaryParams) ([]Rea
 	return items, nil
 }
 
+const removeSequence = `-- name: RemoveSequence :exec
+;
+
+DELETE FROM itslog_sequences
+WHERE name = ?
+`
+
+func (q *Queries) RemoveSequence(ctx context.Context, name string) error {
+	_, err := q.db.ExecContext(ctx, removeSequence, name)
+	return err
+}
+
 const updateLastRun = `-- name: UpdateLastRun :exec
 ;
 
@@ -234,7 +281,7 @@ INSERT OR IGNORE INTO itslog_lookup (
 
 type UpdateLookupParams struct {
 	Timestamp time.Time
-	KeyID     int64
+	KeyID     string
 	Kind      string
 	Hash      int64
 	Name      string

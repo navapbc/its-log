@@ -85,8 +85,8 @@ func Event(ch_evt_out chan<- *itslog.Event, permission itslog.PermissionType) fu
 			return
 		}
 
-		evt.AppId = itslog.GetOrPanic(c, "AppId")
-		evt.KeyId = itslog.GetOrPanic(c, "KeyId")
+		evt.AppId = itslog.GetOrPanic(c, itslog.ITSLOG_APPID)
+		evt.KeyId = itslog.GetOrPanic(c, itslog.ITSLOG_KEYID)
 
 		// If it is a test event, we mangle a date parameter.
 		// If it is not a test event, we use Now().
