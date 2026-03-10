@@ -12,7 +12,7 @@ import (
 )
 
 const getAllSummaries = `-- name: GetAllSummaries :many
-SELECT id, date, operation, source_name, event_name, value FROM itslog_summary
+SELECT id, last_run, date, key_id, operation, tags, value, count FROM itslog_summary
 `
 
 // ------------------------------------------------------
@@ -29,11 +29,13 @@ func (q *Queries) GetAllSummaries(ctx context.Context) ([]ItslogSummary, error) 
 		var i ItslogSummary
 		if err := rows.Scan(
 			&i.ID,
+			&i.LastRun,
 			&i.Date,
+			&i.KeyID,
 			&i.Operation,
-			&i.SourceName,
-			&i.EventName,
+			&i.Tags,
 			&i.Value,
+			&i.Count,
 		); err != nil {
 			return nil, err
 		}
@@ -68,120 +70,107 @@ func (q *Queries) GetETL(ctx context.Context, name string) (GetETLRow, error) {
 	return i, err
 }
 
+const getSequence = `-- name: GetSequence :one
+SELECT steps
+FROM itslog_sequences
+WHERE name = ?
+LIMIT 1
+`
+
+func (q *Queries) GetSequence(ctx context.Context, name string) (string, error) {
+	row := q.db.QueryRowContext(ctx, getSequence, name)
+	var steps string
+	err := row.Scan(&steps)
+	return steps, err
+}
+
 const insertETL = `-- name: InsertETL :exec
+;
+
 
 INSERT OR REPLACE INTO itslog_etl (
-  name, sql
+  key_id, name, sql
 ) VALUES (
-  ?, ?
+  ?, ?, ?
 )
 `
 
 type InsertETLParams struct {
-	Name string
-	Sql  string
+	KeyID string
+	Name  string
+	Sql   string
 }
 
 // ------------------------------------------------------
 // ETL
 // ------------------------------------------------------
 func (q *Queries) InsertETL(ctx context.Context, arg InsertETLParams) error {
-	_, err := q.db.ExecContext(ctx, insertETL, arg.Name, arg.Sql)
+	_, err := q.db.ExecContext(ctx, insertETL, arg.KeyID, arg.Name, arg.Sql)
+	return err
+}
+
+const insertSequence = `-- name: InsertSequence :exec
+;
+
+INSERT OR REPLACE INTO itslog_sequences (
+  key_id, name, steps
+) VALUES (
+  ?, ?, ?
+)
+`
+
+type InsertSequenceParams struct {
+	KeyID string
+	Name  string
+	Steps string
+}
+
+func (q *Queries) InsertSequence(ctx context.Context, arg InsertSequenceParams) error {
+	_, err := q.db.ExecContext(ctx, insertSequence, arg.KeyID, arg.Name, arg.Steps)
 	return err
 }
 
 const insertSummary = `-- name: InsertSummary :exec
 INSERT OR REPLACE INTO itslog_summary (
-  date, operation, source_name, event_name, value
+  date, operation, tags, value
   ) VALUES (
-  ?, ?, ?, ?, ?
+  ?, ?, ?, ?
   )
 `
 
 type InsertSummaryParams struct {
-	Date       string
-	Operation  string
-	SourceName sql.NullString
-	EventName  sql.NullString
-	Value      float64
+	Date      string
+	Operation string
+	Tags      sql.NullString
+	Value     sql.NullString
 }
 
 func (q *Queries) InsertSummary(ctx context.Context, arg InsertSummaryParams) error {
 	_, err := q.db.ExecContext(ctx, insertSummary,
 		arg.Date,
 		arg.Operation,
-		arg.SourceName,
-		arg.EventName,
+		arg.Tags,
 		arg.Value,
 	)
 	return err
 }
 
-const logClusteredEvent = `-- name: LogClusteredEvent :one
+const logEvent = `-- name: LogEvent :one
+
 INSERT INTO itslog_events (
-  cluster_hash, source_hash, event_hash
-) VALUES (
-  ?, ?, ?
-)
-RETURNING id
-`
-
-type LogClusteredEventParams struct {
-	ClusterHash sql.NullInt64
-	SourceHash  int64
-	EventHash   int64
-}
-
-func (q *Queries) LogClusteredEvent(ctx context.Context, arg LogClusteredEventParams) (int64, error) {
-	row := q.db.QueryRowContext(ctx, logClusteredEvent, arg.ClusterHash, arg.SourceHash, arg.EventHash)
-	var id int64
-	err := row.Scan(&id)
-	return id, err
-}
-
-const logClusteredEventWithValue = `-- name: LogClusteredEventWithValue :one
-INSERT INTO itslog_events (
-  timestamp, cluster_hash, source_hash, event_hash, value_hash
+  timestamp, key_id, cluster, tags, value
 ) VALUES (
   ?, ?, ?, ?, ?
 )
 RETURNING id
 `
 
-type LogClusteredEventWithValueParams struct {
-	Timestamp   time.Time
-	ClusterHash sql.NullInt64
-	SourceHash  int64
-	EventHash   int64
-	ValueHash   sql.NullInt64
-}
-
-func (q *Queries) LogClusteredEventWithValue(ctx context.Context, arg LogClusteredEventWithValueParams) (int64, error) {
-	row := q.db.QueryRowContext(ctx, logClusteredEventWithValue,
-		arg.Timestamp,
-		arg.ClusterHash,
-		arg.SourceHash,
-		arg.EventHash,
-		arg.ValueHash,
-	)
-	var id int64
-	err := row.Scan(&id)
-	return id, err
-}
-
-const logEvent = `-- name: LogEvent :one
-
-INSERT INTO itslog_events (
-  source_hash, event_hash
-) VALUES (
-  ?, ?
-)
-RETURNING id
-`
-
 type LogEventParams struct {
-	SourceHash int64
-	EventHash  int64
+	Timestamp time.Time
+	KeyID     string
+	Cluster   sql.NullString
+	Tags      string
+	Value     sql.NullString
 }
 
 // https://docs.sqlc.dev/en/latest/tutorials/getting-started-sqlite.html
@@ -189,54 +178,13 @@ type LogEventParams struct {
 // LOGGING
 // ------------------------------------------------------
 func (q *Queries) LogEvent(ctx context.Context, arg LogEventParams) (int64, error) {
-	row := q.db.QueryRowContext(ctx, logEvent, arg.SourceHash, arg.EventHash)
-	var id int64
-	err := row.Scan(&id)
-	return id, err
-}
-
-const logEventWithValue = `-- name: LogEventWithValue :one
-INSERT INTO itslog_events (
-  source_hash, event_hash, value_hash
-) VALUES (
-  ?, ?, ?
-)
-RETURNING id
-`
-
-type LogEventWithValueParams struct {
-	SourceHash int64
-	EventHash  int64
-	ValueHash  sql.NullInt64
-}
-
-func (q *Queries) LogEventWithValue(ctx context.Context, arg LogEventWithValueParams) (int64, error) {
-	row := q.db.QueryRowContext(ctx, logEventWithValue, arg.SourceHash, arg.EventHash, arg.ValueHash)
-	var id int64
-	err := row.Scan(&id)
-	return id, err
-}
-
-const logTimestampedEvent = `-- name: LogTimestampedEvent :one
-INSERT INTO itslog_events (
-  timestamp, source_hash, event_hash
-) VALUES (
-  ?, ?, ?
-)
-RETURNING id
-`
-
-type LogTimestampedEventParams struct {
-	Timestamp  time.Time
-	SourceHash int64
-	EventHash  int64
-}
-
-// This is largely for generating fake entries.
-// However, there may be times where we want to be
-// more explicit about the timestamp of an entry.
-func (q *Queries) LogTimestampedEvent(ctx context.Context, arg LogTimestampedEventParams) (int64, error) {
-	row := q.db.QueryRowContext(ctx, logTimestampedEvent, arg.Timestamp, arg.SourceHash, arg.EventHash)
+	row := q.db.QueryRowContext(ctx, logEvent,
+		arg.Timestamp,
+		arg.KeyID,
+		arg.Cluster,
+		arg.Tags,
+		arg.Value,
+	)
 	var id int64
 	err := row.Scan(&id)
 	return id, err
@@ -246,32 +194,30 @@ const readSummary = `-- name: ReadSummary :many
 SELECT 
   date, 
   operation, 
-  COALESCE(source_name, '') as source_name, 
-  COALESCE(event_name, '') as event_name, 
+  COALESCE(tags, '') as tags, 
   value 
 FROM itslog_summary
 WHERE 
-  source_name LIKE COALESCE(?, '%')
+  tags LIKE COALESCE(?, '%')
   AND
   operation LIKE ?
 ORDER BY id
 `
 
 type ReadSummaryParams struct {
-	SourceName sql.NullString
-	Operation  string
+	Tags      sql.NullString
+	Operation string
 }
 
 type ReadSummaryRow struct {
-	Date       string
-	Operation  string
-	SourceName string
-	EventName  string
-	Value      float64
+	Date      string
+	Operation string
+	Tags      string
+	Value     sql.NullString
 }
 
 func (q *Queries) ReadSummary(ctx context.Context, arg ReadSummaryParams) ([]ReadSummaryRow, error) {
-	rows, err := q.db.QueryContext(ctx, readSummary, arg.SourceName, arg.Operation)
+	rows, err := q.db.QueryContext(ctx, readSummary, arg.Tags, arg.Operation)
 	if err != nil {
 		return nil, err
 	}
@@ -282,8 +228,7 @@ func (q *Queries) ReadSummary(ctx context.Context, arg ReadSummaryParams) ([]Rea
 		if err := rows.Scan(
 			&i.Date,
 			&i.Operation,
-			&i.SourceName,
-			&i.EventName,
+			&i.Tags,
 			&i.Value,
 		); err != nil {
 			return nil, err
@@ -299,80 +244,15 @@ func (q *Queries) ReadSummary(ctx context.Context, arg ReadSummaryParams) ([]Rea
 	return items, nil
 }
 
-const testDictionaryPairExists = `-- name: TestDictionaryPairExists :one
-SELECT EXISTS(
-  SELECT 1 
-  FROM itslog_dictionary
-  WHERE 
-    source_hash = ?
-    AND
-    event_hash = ?
-  )
+const removeSequence = `-- name: RemoveSequence :exec
+;
+
+DELETE FROM itslog_sequences
+WHERE name = ?
 `
 
-type TestDictionaryPairExistsParams struct {
-	SourceHash int64
-	EventHash  int64
-}
-
-func (q *Queries) TestDictionaryPairExists(ctx context.Context, arg TestDictionaryPairExistsParams) (int64, error) {
-	row := q.db.QueryRowContext(ctx, testDictionaryPairExists, arg.SourceHash, arg.EventHash)
-	var column_1 int64
-	err := row.Scan(&column_1)
-	return column_1, err
-}
-
-const testEventPairExists = `-- name: TestEventPairExists :one
-SELECT EXISTS(
-  SELECT 1 
-  FROM itslog_events 
-  WHERE 
-    source_hash = ?
-    AND
-    event_hash = ?
-  )
-`
-
-type TestEventPairExistsParams struct {
-	SourceHash int64
-	EventHash  int64
-}
-
-// ------------------------------------------------------
-// TEST HELPERS
-// ------------------------------------------------------
-// Used for unit/end-to-end testing.
-func (q *Queries) TestEventPairExists(ctx context.Context, arg TestEventPairExistsParams) (int64, error) {
-	row := q.db.QueryRowContext(ctx, testEventPairExists, arg.SourceHash, arg.EventHash)
-	var column_1 int64
-	err := row.Scan(&column_1)
-	return column_1, err
-}
-
-const updateDictionary = `-- name: UpdateDictionary :exec
-INSERT OR IGNORE INTO itslog_dictionary (
-  timestamp, source_name, event_name, source_hash, event_hash
-) VALUES (
-  ?, ?, ?, ?, ?
-)
-`
-
-type UpdateDictionaryParams struct {
-	Timestamp  time.Time
-	SourceName string
-	EventName  string
-	SourceHash int64
-	EventHash  int64
-}
-
-func (q *Queries) UpdateDictionary(ctx context.Context, arg UpdateDictionaryParams) error {
-	_, err := q.db.ExecContext(ctx, updateDictionary,
-		arg.Timestamp,
-		arg.SourceName,
-		arg.EventName,
-		arg.SourceHash,
-		arg.EventHash,
-	)
+func (q *Queries) RemoveSequence(ctx context.Context, name string) error {
+	_, err := q.db.ExecContext(ctx, removeSequence, name)
 	return err
 }
 
@@ -393,42 +273,27 @@ func (q *Queries) UpdateLastRun(ctx context.Context, name string) error {
 
 const updateLookup = `-- name: UpdateLookup :exec
 INSERT OR IGNORE INTO itslog_lookup (
-  timestamp, hash, name
+  timestamp, key_id, kind, hash, name
 ) VALUES (
-  ?, ?, ?
+  ?, ?, ?, ?, ?
 )
 `
 
 type UpdateLookupParams struct {
 	Timestamp time.Time
+	KeyID     string
+	Kind      string
 	Hash      int64
 	Name      string
 }
 
 func (q *Queries) UpdateLookup(ctx context.Context, arg UpdateLookupParams) error {
-	_, err := q.db.ExecContext(ctx, updateLookup, arg.Timestamp, arg.Hash, arg.Name)
-	return err
-}
-
-const updateMeta = `-- name: UpdateMeta :exec
-;
-
-INSERT OR REPLACE INTO itslog_metadata (
-  key, value
-) VALUES (
-  ?, ?
-)
-`
-
-type UpdateMetaParams struct {
-	Key   int64
-	Value string
-}
-
-// ------------------------------------------------------
-// METADATA
-// ------------------------------------------------------
-func (q *Queries) UpdateMeta(ctx context.Context, arg UpdateMetaParams) error {
-	_, err := q.db.ExecContext(ctx, updateMeta, arg.Key, arg.Value)
+	_, err := q.db.ExecContext(ctx, updateLookup,
+		arg.Timestamp,
+		arg.KeyID,
+		arg.Kind,
+		arg.Hash,
+		arg.Name,
+	)
 	return err
 }

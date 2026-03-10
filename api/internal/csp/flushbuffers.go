@@ -64,23 +64,27 @@ func FlushBuffersOnce(s *fsdb.SqliteStorage, ch_flush_in <-chan EventBuffers) {
 		for formatted_date, events := range dateMap {
 			if s == nil {
 				s = &fsdb.SqliteStorage{
-					Path:     viper.GetString("storage.path"),
-					Filename: formatted_date + ".sqlite",
-					AppId:    appId,
-					Kind:     fsdb.NamedDatabase,
+					Path: viper.GetString("storage.path"),
+					// Filename: formatted_date + ".sqlite",
+					AppId: appId,
+					Date:  formatted_date,
+					Kind:  fsdb.NamedDatabase,
 				}
 			}
 
 			err := s.Init()
 			if err != nil {
+				log.Println(err.Error())
 				panic(err)
 			}
 			_, err = s.ManyEvents(events)
 			if err != nil {
 				// FIXME: really, this should percolate up to a 5xx error
-				// going back to the client. But, we don't have a handle, and
+				// going back to the client. But, we don't have a Gin context, and
 				// we're far away from the point where the event was logged.
-				// There's no direct communication back to the client at this point.
+				// There's no direct communication back to the client at this point, because
+				// we buffered the event(s), and then flushed the buffer. This may have
+				// to just be a log that we look for.
 				log.Printf("Failed to write event buffer; lost %d events\n", len(events))
 			}
 			s.Close()

@@ -55,7 +55,7 @@ func (eb *EventBuffers) AddEvent(e *itslog.Event) bool {
 	return eb.nextEventPtr >= eb.eventBufferLength
 }
 
-func Enqueue(ch_e_in <-chan *itslog.Event, ch_flush_out chan<- EventBuffers, buffer_length int, timeout int) {
+func Enqueue(ch_evt_in <-chan *itslog.Event, ch_flush_out chan<- EventBuffers, buffer_length int, timeout int) {
 	event_buffers := NewEventBuffers(buffer_length)
 	timeout_duration := time.Duration(timeout) * time.Second
 	timer := time.NewTimer(timeout_duration)
@@ -63,7 +63,7 @@ func Enqueue(ch_e_in <-chan *itslog.Event, ch_flush_out chan<- EventBuffers, buf
 
 	for {
 		select {
-		case e := <-ch_e_in:
+		case e := <-ch_evt_in:
 			is_full := event_buffers.AddEvent(e)
 			timer.Reset(timeout_duration)
 			if is_full {

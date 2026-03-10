@@ -9,51 +9,48 @@ import (
 	"time"
 )
 
-type ItslogDictionary struct {
-	ID         int64
-	Timestamp  time.Time
-	SourceHash int64
-	SourceName string
-	EventName  string
-	EventHash  int64
-}
-
 type ItslogEtl struct {
 	ID       int64
 	Inserted time.Time
+	KeyID    string
 	Name     string
 	LastRun  sql.NullTime
 	Sql      string
 }
 
 type ItslogEvent struct {
-	ID          int64
-	Timestamp   time.Time
-	ClusterHash sql.NullInt64
-	SourceHash  int64
-	EventHash   int64
-	ValueHash   sql.NullInt64
+	ID        int64
+	Timestamp time.Time
+	KeyID     string
+	Cluster   sql.NullString
+	Tags      string
+	Value     sql.NullString
 }
 
 type ItslogLookup struct {
 	ID        int64
 	Timestamp time.Time
+	KeyID     string
+	Kind      string
 	Hash      int64
 	Name      string
 }
 
-type ItslogMetadatum struct {
-	ID        int64
-	Timestamp time.Time
-	Key       int64
-	Value     string
+type ItslogSequence struct {
+	ID       int64
+	Inserted time.Time
+	KeyID    string
+	Name     string
+	Steps    string
 }
 
 type ItslogSummary struct {
-	ID         int64
-	Date       string
-	Operation  string
-	SourceName sql.NullString
-	EventName  sql.NullString
-	Value      float64
+	ID        int64
+	LastRun   time.Time
+	Date      string
+	KeyID     string
+	Operation string
+	Tags      sql.NullString
+	Value     sql.NullString
+	Count     float64
 }

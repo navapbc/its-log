@@ -1,45 +1,19 @@
 package itslog
 
 import (
-	"fmt"
-	"slices"
 	"time"
 
 	_ "github.com/creasty/defaults"
 )
 
-type EventType int
-
-// Starting a 1 because the validation library
-// treats zero integer values as missing.
-const (
-	SE = iota + 1
-	SEV
-	CSE
-	CSEV
-	DSE
-	DSEV
-	DCSE
-	DCSEV
-)
-
-func (e EventType) Validate() error {
-	valid := []EventType{SE, SEV, CSE, CSEV, DSE, DSEV, DCSE, DCSEV}
-	if slices.Contains(valid, e) {
-		return nil
-	}
-	return fmt.Errorf("%v unknown EventType", e)
-}
-
 type Event struct {
 	Timestamp time.Time `validate:"required"`
 	AppId     string    `validate:"required"`
 	KeyId     string    `validate:"required"`
-	EventType EventType `validate:"required,validateFn"`
-	Cluster   string    `validate:"max=256"` // required_if=EventType CSEV|required_if=EventType DCSEV,
-	Source    string    `validate:"required,max=256"`
-	Event     string    `validate:"required,max=256"`
-	Value     string    `validate:"max=256"` // required_if=EventType SEV|required_if=EventType CSEV,
+	Cluster   string    `json:"cluster" validate:"max=256"` // required_if=EventType CSEV|required_if=EventType DCSEV,
+	Tags      []string  `json:"tags" validate:"required"`
+	TagString string
+	Value     string `json:"value" validate:"max=256"` // required_if=EventType SEV|required_if=EventType CSEV,
 }
 
 type PermissionType int

@@ -44,7 +44,9 @@ func (s SqliteStorage) Validate() error {
 type SqliteStorage struct {
 	Kind     SqliteType `validate:"required"`
 	Path     string     `validate:"required_unless=Kind 1"`
-	Filename string     `validate:"required_unless=Kind 1"` // required_unless=Kind 1
+	Filename string     `validate:"required_unless=Kind 1"`
+	Basename string
+	Date     string `validate:"required"`
 	// Keep separate users separate with this value
 	// It will come in via the environment
 	AppId string `validate:"required"`

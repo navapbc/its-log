@@ -1,9 +1,8 @@
-WITH final AS
-    (
-        SELECT 'ITSLOG_KEY_ID' as key_id, 'ITSLOG_DATE' as date, 'count.total' as operation, NULL as source_name, NULL as event_name, count(*) as value
-        FROM itslog_events
-        WHERE key_id = 'ITSLOG_KEY_ID'
-	)
-INSERT INTO itslog_summary 
-    (key_id, date, operation, source_name, event_name, value)
-SELECT * from final;
+-- params: key_id
+WITH total_count (TC) AS (
+    SELECT count(*) from itslog_events
+)
+INSERT OR REPLACE INTO itslog_summary
+    (key_id, operation, tags, count)
+VALUES
+    (?, 'count.total', NULL, (select TC from total_count))

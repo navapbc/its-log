@@ -2,20 +2,35 @@
 
 *It's better than bad, it's good!*
 
-`its-log` is a tiny event logger.
+`its-log` is a lightweight event logger and ETL environment for resource-constrained, compliance-burdened environments.
 
 On a Mac M4, `its-log` can sustain logging 30K events/second to a local SQLite database.
 
-`its-log` is an event logger with opinions.
 
-1. Applications generate events
-2. Every application must have its own database
-3. Every log **could** belong to a *cluster* of logs
-4. Every log **must** have a source *category*
-5. Every log **should** have an event *category*
-6. Every log **could** have a *unique* value
+## model
 
-By being opinionated, `its-log` can provide standardized ETL actions that operate over clusters, categories, and values. Users can then develop more specialized ETL actions as needed.
+`its-log` is opinionated, and espouses ways of thinking about logging and subsequent ETL/analysis pipelines.
+
+### runtime events
+
+Applications generate events which are logged. Any given event:
+
+1. **could** belong to a *cluster* of logs
+2. **must** be *categorically tagged*
+3. **could** have an associated *unique* value
+
+Some events are logged in real-time, and others might be logged via periodic (hourly/daily/weekly) analysis of internal databases.
+
+### ETL
+
+An explicit goal of `its-log` is to move analysis "left" in the pipeline, and reduce the number of moving parts (e.g. GitHub Actions, AWS Lambdas, etc.) involved in transforming raw events into end-user facing information and visualization. To this end, `its-log` encapsulates a light, SQLite-based ETL pipeline infrastructure, allowing data to be processed within the database and, in doing so:
+
+1. Simplify processing at the end of the pipeline (e.g. in Metabase, Superset, QuickSuite, or similar.)
+2. Keeping analytical code (and its results) with the data for archived compliance
+
+### infastructure as code
+
+`its-log` can be deployed in a containerized "sidecar" configuration with most applications, is configured entirely through environment variables, and all critical functions are exposed via API for configuration via Tofu or post deployment as needed.
 
 ## the API
 
@@ -29,44 +44,33 @@ The documentation can be accessed at http://localhost:8888/v1/swagger/index.html
 
 The logging endpoints are
 
-| HTTP   | Endpoint                                    | Desc                                     |
-| ------ | ------------------------------------------- | ---------------------------------------- |
-| PUT    | /v1/se/{source}/{event}                     | Log a source, event                      |
-| PUT    | /v1/sev/{source}/{event}/{value}            | Log a source, event, and value           |
-| PUT    | /v1/cse/{cluster}/{source}/{event}          | Log a source and event with a cluster ID |
-| PUT    | /v1/csev/{cluster}/{source}/{event}/{value} | ...                                      |
+| HTTP | Endpoint       | Desc                                                         |
+| ---- | -------------- | ------------------------------------------------------------ |
+| POST | /v1/log        | Log an event with cluster (optional), tags, value (optional) |
+| POST | /v1/log/{date} | Log an event with a date (for testing only)                  |
 
 The ETL and analysis endpoints are
 
-| HTTP   | Endpoint                                    | Desc                                     |
-| ------ | ------------------------------------------- | ---------------------------------------- |
-| GET    | /v1/etl/{date}/{name}                       | Download the contents of an ETL action   |
-| POST   | /v1/etl/{date}/{name}                       | Upload an ETL action                     |
-| PUT    | /v1/etl/{date}/{name}                       | Run an ETL action                        |
-| DELETE | /v1/etl/{date}/{name}                       | Remove an ETL action                     |
-| PUT    | /v1/summarize                               | Consolidate summary tables               |
-| GET    | /v1/summary/{name}                          | Fetch the value of the named summary     |
+| HTTP   | Endpoint              | Desc                                   |
+| ------ | --------------------- | -------------------------------------- |
+| GET    | /v1/etl/{date}/{name} | Download the contents of an ETL action |
+| POST   | /v1/etl/{date}/{name} | Upload an ETL action                   |
+| PUT    | /v1/etl/{date}/{name} | Run an ETL action                      |
+| DELETE | /v1/etl/{date}/{name} | Remove an ETL action                   |
+| PUT    | /v1/summarize         | Consolidate summary tables             |
+| GET    | /v1/summary/{name}    | Fetch the value of the named summary   |
+
+Administrative endpoints include
 
 
-## to kick the tires
+| HTTP | Endpoint   | Desc                            |
+| ---- | ---------- | ------------------------------- |
+| GET  | /v1/health | A standard healthcheck endpoint |
 
-To run unit tests
 
-```
-make test
-```
+## running its-log
 
-To stand up the API
 
-```
-make run
-```
-
-To stand up the logger and run the E2E suite
-
-```
-make e2e
-```
 
 ## Star History
 

@@ -58,14 +58,12 @@ func (s *SqliteStorage) Init() error {
 		// This is a database "for today," e.g. "appid_2026-01-01.sqlite" on 2026/01/01
 		t := time.Now()
 		s.Filename = fmt.Sprintf("%s_%s.sqlite?_time_format=sqlite", s.AppId, t.Format("2006-01-02"))
+		s.Basename = fmt.Sprintf("%s_%s.sqlite", s.AppId, t.Format("2006-01-02"))
 	case NamedDatabase:
 		// This is a database we choose the name of. For "internal" use only.
-		// First, make sure we have a filepath that is only a filename.
-		cleaned, err := MakeGoodSqliteFilename(s.Filename)
-		if err != nil {
-			return err
-		}
-		s.Filename = fmt.Sprintf("%s_%s?_time_format=sqlite", s.AppId, cleaned)
+		// Always construct the DB name from the key values
+		s.Filename = fmt.Sprintf("%s_%s.sqlite?_time_format=sqlite", s.AppId, s.Date)
+		s.Basename = fmt.Sprintf("%s_%s.sqlite", s.AppId, s.Date)
 	}
 
 	err := s.ValidateSqliteStorage()
@@ -121,12 +119,12 @@ func (s *SqliteStorage) initMemory() error {
 }
 
 func exists(path string) bool {
-	_, err := os.Stat(path)
-	return !errors.Is(err, os.ErrNotExist)
+	fileInfo, err := os.Stat(path)
+	return !errors.Is(err, os.ErrNotExist) && fileInfo.Size() > 100
 }
 
 func (s *SqliteStorage) init() error {
-	db_path := path.Join(s.Path, s.Filename)
+	db_path := path.Join(s.Path, s.Basename)
 	fileExists := exists(db_path)
 
 	db, err := sql.Open("sqlite", db_path)
@@ -138,13 +136,22 @@ func (s *SqliteStorage) init() error {
 	s.queries = models.New(db)
 	s.FixedSeed()
 
-	// If we just created the database, we need to init the tables, and
-	// then load the default ETL actions.
 	if !fileExists {
+		// Create the tables.
 		if _, err := db.ExecContext(context.Background(), ddl); err != nil {
 			return err
 		}
-		s.LoadDefaultEtlSql()
+		// If the file exists, check that there's something in the ETL.
+		summaries, err := s.queries.GetAllSummaries(context.Background())
+		if err != nil {
+			return err
+		}
+		if !(len(summaries) > 0) {
+			// If we can't find the table, it isn't initialized.
+			log.Println("Loading default ETL values")
+
+			s.LoadDefaultEtlSql()
+		}
 	}
 
 	return nil

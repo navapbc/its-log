@@ -3,8 +3,10 @@ package serve
 import (
 	"errors"
 	"fmt"
+	"math/rand"
 	"net/http"
-	"slices"
+	"sort"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -13,74 +15,51 @@ import (
 )
 
 // @BasePath /v1
+// Thursday, 2PM?
 
 func addLoggingEndpoints(rG *gin.RouterGroup, ch_evt_out chan<- *itslog.Event) {
 	// Logging
 	auth_logV1 := rG.Group("/")
 	permissions := []itslog.PermissionType{itslog.Log, itslog.Test}
 	auth_logV1.Use(AuthMiddleWare(permissions))
-	auth_logV1.PUT("se/:source/:event", EventSE(ch_evt_out))
-	auth_logV1.PUT("sev/:source/:event/:value", EventSEV(ch_evt_out))
-	auth_logV1.PUT("cse/:cluster/:source/:event", EventCSE(ch_evt_out))
-	auth_logV1.PUT("csev/:cluster/:source/:event/:value", EventCSEV(ch_evt_out))
+	auth_logV1.POST("/log", Event(ch_evt_out, itslog.Log))
 }
 
-// EventSE godoc
-// @Accept json
-// @Description logs an event with a source
-// @Failure 500	{object} itslog.Error
-// @Param event path string true "an event category"
-// @Param source path string true "a source category"
-// @Param x-api-key header string true "API key, 32 bytes or more, issued"
-// @Produce json
-// @Router /se/{source}/{event} [put]
-// @Schemes
-// @Success 200 {object} itslog.Success
-// @Summary log a source/event
-// @Tags events
-func EventSE(ch_evt_out chan<- *itslog.Event) func(c *gin.Context) {
-	return Event(itslog.SE, ch_evt_out)
+func setTimestamp(c *gin.Context, evt *itslog.Event, permission itslog.PermissionType) {
+	switch permission {
+	case itslog.Test:
+		// The date in the testing cases comes from the URL.
+		// Hence, we might have parsing errors on what is passed in.
+		date := c.Param("date")
+		timestamp, err := time.Parse("2006-01-02", date)
+		min := time.Date(timestamp.Year(), timestamp.Month(), timestamp.Day(), 0, 0, 0, 0, time.UTC).Unix()
+		max := time.Date(timestamp.Year(), timestamp.Month(), timestamp.Day(), 23, 59, 59, 0, time.UTC).Unix()
+		delta := max - min
+		sec := rand.Int63n(delta) + min
+		timestamp = time.Unix(sec, 0)
+
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"status":  "error",
+				"message": fmt.Sprintf("date is malformed: %s", date),
+			})
+			return
+		}
+
+		evt.Timestamp = timestamp
+
+	case itslog.Log:
+		evt.Timestamp = time.Now()
+
+	default:
+		// If we manage to get here, make sure we set the timestamp to
+		// the current time as a reasonable default behavior.
+		evt.Timestamp = time.Now()
+	}
+
 }
 
-// EventSEV godoc
-// @Accept json
-// @Description log a source and event with a unique value
-// @Failure 500	{object} itslog.Error
-// @Param event path string true "an event category"
-// @Param source path string true "a source category"
-// @Param value path string true "a unique value associated with this event"
-// @Param x-api-key header string true "API key, 32 bytes or more, issued"
-// @Produce json
-// @Router /sev/{source}/{event}/{value} [put]
-// @Schemes
-// @Success 200 {object} itslog.Success
-// @Summary log a source and event with a unique value
-// @Tags events
-func EventSEV(ch_evt_out chan<- *itslog.Event) func(c *gin.Context) {
-	return Event(itslog.SEV, ch_evt_out)
-}
-
-// EventCSE godoc
-// @Accept json
-// @Description log a source and event as part of a cluster
-// @Failure 500	{object} itslog.Error
-// @Param cluster path string true "a UUID representing this cluster"
-// @Param event path string true "an event category"
-// @Param source path string true "a source category"
-// @Param x-api-key header string true "API key, 32 bytes or more, issued"
-// @Produce json
-// @Router /cse/{cluster}/{source}/{event} [put]
-// @Schemes
-// @Success 200 {object} itslog.Success
-// @Summary log a source and event as part of a cluster
-// @Tags events
-func EventCSE(ch_evt_out chan<- *itslog.Event) func(c *gin.Context) {
-	return Event(itslog.CSE, ch_evt_out)
-}
-
-// param name,param type,data type,is mandatory?,comment attribute(optional)
-
-// EventCSEV godoc
+// Event godoc
 // @Accept json
 // @Description log a source and event with a unique value as part of a cluster
 // @Failure 500	{object} itslog.Error
@@ -95,45 +74,32 @@ func EventCSE(ch_evt_out chan<- *itslog.Event) func(c *gin.Context) {
 // @Success 200 {object} itslog.Success
 // @Summary log a source and event with a unique value as part of a cluster
 // @Tags events
-func EventCSEV(ch_evt_out chan<- *itslog.Event) func(c *gin.Context) {
-	return Event(itslog.CSEV, ch_evt_out)
-}
-
-func Event(eventType itslog.EventType, ch_evt_out chan<- *itslog.Event) func(c *gin.Context) {
+func Event(ch_evt_out chan<- *itslog.Event, permission itslog.PermissionType) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		// https://pkg.go.dev/github.com/go-playground/validator/v10
-		timestamp := time.Now()
-		cluster := ""
-		source := c.Param("source")
-		event := c.Param("event")
-		value := ""
-
-		appId := itslog.GetOrPanic(c, "AppId")
-		keyId := itslog.GetOrPanic(c, "KeyId")
-
-		// Only some event types will require the cluster
-		if slices.Contains([]itslog.EventType{itslog.CSE, itslog.CSEV}, eventType) {
-			cluster = c.Param("cluster")
+		var evt itslog.Event
+		// Call ShouldBindJSON to parse the request body into the struct
+		if err := c.ShouldBindJSON(&evt); err != nil {
+			// FIXME: follow standard response protocol
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON: " + err.Error()})
+			return
 		}
 
-		// And only some have a value
-		if slices.Contains([]itslog.EventType{itslog.SEV, itslog.CSEV}, eventType) {
-			value = c.Param("value")
-		}
+		evt.AppId = itslog.GetOrPanic(c, itslog.ITSLOG_APPID)
+		evt.KeyId = itslog.GetOrPanic(c, itslog.ITSLOG_KEYID)
 
-		payload := &itslog.Event{
-			Timestamp: timestamp,
-			EventType: eventType,
-			KeyId:     keyId,
-			AppId:     appId,
-			Cluster:   cluster,
-			Source:    source,
-			Event:     event,
-			Value:     value,
-		}
+		// If it is a test event, we mangle a date parameter.
+		// If it is not a test event, we use Now().
+		setTimestamp(c, &evt, permission)
+
+		// The tags field is currently a JSON array. It needs to become
+		// a sorted, dot-separated string.
+		sort.Strings(evt.Tags)
+		evt.TagString = strings.Join(evt.Tags, ".")
+
 		// This uses the struct validator library, which provides
 		// a rich notion of contracts over the fields in the struct
-		err := validate.Struct(payload)
+		err := validate.Struct(evt)
 		if err != nil {
 			messages := make([]string, 0)
 			var validationErrors validator.ValidationErrors
@@ -156,7 +122,7 @@ func Event(eventType itslog.EventType, ch_evt_out chan<- *itslog.Event) func(c *
 		}
 
 		// Send the event to the Enqueue-er
-		ch_evt_out <- payload
+		ch_evt_out <- &evt
 
 		// Everything worked.
 		c.JSON(http.StatusOK, itslog.Success{Status: itslog.OK})

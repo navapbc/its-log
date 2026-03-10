@@ -2,6 +2,7 @@ package fsdb
 
 import (
 	"context"
+	"database/sql"
 	"embed"
 	"io/fs"
 	"log"
@@ -13,6 +14,10 @@ import (
 
 //go:embed sql
 var defaultSql embed.FS
+
+func (s *SqliteStorage) GetDB() *sql.DB {
+	return s.db
+}
 
 func fileNameWithoutExtension(fileName string) string {
 	return strings.TrimSuffix(fileName, filepath.Ext(fileName))
@@ -35,11 +40,13 @@ func (s *SqliteStorage) LoadDefaultEtlSql() {
 		sqlAsString := string(sqlAsBytes)
 		sqlName := fileNameWithoutExtension(entry.Name())
 		err = s.queries.InsertETL(context.Background(), models.InsertETLParams{
-			Name: sqlName,
-			Sql:  sqlAsString,
+			KeyID: "its-log", // Use a default key ID of 0 for the automatically inserted values
+			Name:  sqlName,
+			Sql:   sqlAsString,
 		})
 		if err != nil {
 			log.Printf("could not store SQL in ETL table: %s, %s\n", s.AppId, sqlName)
+			log.Printf("err: %s", err.Error())
 		}
 	}
 }

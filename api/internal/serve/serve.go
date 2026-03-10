@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	status "github.com/appleboy/gin-status-api"
@@ -53,7 +54,8 @@ func PourGin(ch_evt_out chan<- *itslog.Event) *gin.Engine {
 	}
 
 	// See https://gin-gonic.com/en/docs/deployment/
-	// router.SetTrustedProxies(strings.Split(viper.GetString("proxies.trusted"), ","))
+	router.SetTrustedProxies(strings.Split(viper.GetString("proxies"), ","))
+
 	log.Println("Setting default CORS handling")
 	router.Use(cors.New(cors.Config{
 		AllowMethods:     []string{"PUT", "GET", "POST", "OPTIONS"},
@@ -70,8 +72,9 @@ func PourGin(ch_evt_out chan<- *itslog.Event) *gin.Engine {
 	addMetadataEndpoints(apiV1)
 	addLoggingEndpoints(apiV1, ch_evt_out)
 	addTestingEndpoints(apiV1, ch_evt_out)
-	addEtlEndpoints(apiV1, ch_evt_out)
-	addQueryEndpoints(apiV1, ch_evt_out)
+	addEtlEndpoints(apiV1)
+	addSequenceEndpoints(apiV1)
+	addQueryEndpoints(apiV1)
 
 	return router
 }
@@ -97,7 +100,7 @@ func addMetadataEndpoints(rG *gin.RouterGroup) {
 
 }
 
-func addQueryEndpoints(rG *gin.RouterGroup, ch_evt_out chan<- *itslog.Event) {
+func addQueryEndpoints(rG *gin.RouterGroup) {
 	// Fixme: rethink querying
 	// Querying the data
 	// auth_readV1 := rG.Group("/")

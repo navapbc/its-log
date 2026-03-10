@@ -1,0 +1,18 @@
+include:
+  - path: ./docker-compose.yaml
+services:
+  e2e:
+    build:
+      context: e2e
+      dockerfile: Dockerfile
+    command: python3 /app/deterministic.py
+    volumes:
+      - ./e2e/deterministic.py:/app/deterministic.py
+    environment:
+      ITSLOG_HOST: itslog
+      ITSLOG_PORT: 8888
+      ITSLOG_APIKEY: "12345678901234561234567890123456"
+      ITSLOG_ADMIN_APIKEY: "abcdefghabcdefghabcdefghabcdefgh"
+    depends_on:
+      itslog:
+        condition: service_healthy
