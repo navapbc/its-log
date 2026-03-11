@@ -19,46 +19,6 @@ definitions:
 info:
   contact: {}
 paths:
-  /cse/{cluster}/{source}/{event}:
-    put:
-      consumes:
-      - application/json
-      description: log a source and event as part of a cluster
-      parameters:
-      - description: a UUID representing this cluster
-        in: path
-        name: cluster
-        required: true
-        type: string
-      - description: an event category
-        in: path
-        name: event
-        required: true
-        type: string
-      - description: a source category
-        in: path
-        name: source
-        required: true
-        type: string
-      - description: API key, 32 bytes or more, issued
-        in: header
-        name: x-api-key
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/itslog.Success'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/itslog.Error'
-      summary: log a source and event as part of a cluster
-      tags:
-      - events
   /csev/{cluster}/{source}/{event}/{value}:
     put:
       consumes:
@@ -102,81 +62,6 @@ paths:
           schema:
             $ref: '#/definitions/itslog.Error'
       summary: log a source and event with a unique value as part of a cluster
-      tags:
-      - events
-  /se/{source}/{event}:
-    put:
-      consumes:
-      - application/json
-      description: logs an event with a source
-      parameters:
-      - description: an event category
-        in: path
-        name: event
-        required: true
-        type: string
-      - description: a source category
-        in: path
-        name: source
-        required: true
-        type: string
-      - description: API key, 32 bytes or more, issued
-        in: header
-        name: x-api-key
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/itslog.Success'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/itslog.Error'
-      summary: log a source/event
-      tags:
-      - events
-  /sev/{source}/{event}/{value}:
-    put:
-      consumes:
-      - application/json
-      description: log a source and event with a unique value
-      parameters:
-      - description: an event category
-        in: path
-        name: event
-        required: true
-        type: string
-      - description: a source category
-        in: path
-        name: source
-        required: true
-        type: string
-      - description: a unique value associated with this event
-        in: path
-        name: value
-        required: true
-        type: string
-      - description: API key, 32 bytes or more, issued
-        in: header
-        name: x-api-key
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/itslog.Success'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/itslog.Error'
-      summary: log a source and event with a unique value
       tags:
       - events
 swagger: "2.0"

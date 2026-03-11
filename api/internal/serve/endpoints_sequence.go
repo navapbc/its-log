@@ -23,8 +23,6 @@ func addSequenceEndpoints(rG *gin.RouterGroup) {
 	auth_adminV1.POST("sequence", Sequence)
 	// Run a sequence
 	auth_adminV1.GET("sequence/:date/:name", Sequence)
-	// Delete a sequence
-	auth_adminV1.DELETE("sequence", Sequence)
 
 }
 
@@ -183,8 +181,4 @@ func seq_get(c *gin.Context) {
 		})
 		return
 	}
-}
-
-func seq_delete(c *gin.Context, seqPostbody SequencePostBody) {
-
 }
