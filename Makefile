@@ -1,13 +1,22 @@
 .PHONY: amd native
 
-amd:
-	cd api ; make amd
-
 native:
 	cd api ; make native
 
-run:
-	cd api ; make run
+e2e:
+	cd ops/containers ; make e2e
+
+k6-arm:
+	cd ops/containers ; make k6-arm
+
+k6-amd:
+	cd ops/containers ; make k6-amd
+
+itslog-arm:
+	cd ops/containers ; make itslog-arm
+
+itslog-amd:
+	cmd ops/containers ; make itslog-amd
 
 swagger:
 	cd api ; swag init -o ./docs

@@ -6,7 +6,6 @@
 
 On a Mac M4, `its-log` can sustain logging 30K events/second to a local SQLite database.
 
-
 ## model
 
 `its-log` is opinionated, and espouses ways of thinking about logging and subsequent ETL/analysis pipelines.
@@ -34,12 +33,6 @@ An explicit goal of `its-log` is to move analysis "left" in the pipeline, and re
 
 ## the API
 
-`its-log` provides interactive Swagger documentation. When run locally with
-
-```
-make run
-```
-
 The documentation can be accessed at http://localhost:8888/v1/swagger/index.html.
 
 The logging endpoints are
@@ -51,26 +44,40 @@ The logging endpoints are
 
 The ETL and analysis endpoints are
 
-| HTTP   | Endpoint              | Desc                                   |
-| ------ | --------------------- | -------------------------------------- |
-| GET    | /v1/etl/{date}/{name} | Download the contents of an ETL action |
-| POST   | /v1/etl/{date}/{name} | Upload an ETL action                   |
-| PUT    | /v1/etl/{date}/{name} | Run an ETL action                      |
-| DELETE | /v1/etl/{date}/{name} | Remove an ETL action                   |
-| PUT    | /v1/summarize         | Consolidate summary tables             |
-| GET    | /v1/summary/{name}    | Fetch the value of the named summary   |
+| HTTP   | Endpoint                   | Desc                                   |
+| ------ | -------------------------- | -------------------------------------- |
+| GET    | /v1/etl/{date}/{name}      | Download the contents of an ETL action |
+| POST   | /v1/etl/{date}/{name}      | Upload an ETL action                   |
+| PUT    | /v1/etl/{date}/{name}      | Run an ETL action                      |
+| DELETE | /v1/etl/{date}/{name}      | Remove an ETL action                   |
+| POST   | /v1/sequence               | Create an ETL sequence                 |
+| GET    | /v1/sequence/{date}/{name} | Run a sequence for a given date        |
+| PUT    | /v1/summarize              | Consolidate summary tables             |
+| GET    | /v1/summary/{name}         | Fetch the value of the named summary   |
 
 Administrative endpoints include
 
 
-| HTTP | Endpoint   | Desc                            |
-| ---- | ---------- | ------------------------------- |
-| GET  | /v1/health | A standard healthcheck endpoint |
-
+| HTTP | Endpoint   | Desc                             |
+| ---- | ---------- | -------------------------------- |
+| GET  | /v1/health | A standard healthcheck endpoint  |
+| GET  | /v1/status | Get server stats (RAM, GC, etc.) |
 
 ## running its-log
 
+`its-log` is compiled for multiple architectures.
 
+To run on a ARM processors (Mac):
+
+```
+make itslog-arm
+```
+
+To run on Intel:
+
+```
+make itslog-amd
+```
 
 ## Star History
 

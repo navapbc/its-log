@@ -1,4 +1,10 @@
-.PHONY: k6 e2e itslog arm amd
+.PHONY: e2e amd arm k6 kd-arm k6-amd itslog itslog-arm itslog-amd 
+
+e2e:
+	docker compose \
+	-f docker-compose-e2e.yaml \
+	up \
+	--abort-on-container-exit
 
 amd:
 	cd ../../api ; make linux-amd
@@ -8,12 +14,6 @@ arm:
 k6:
 	docker compose \
 	-f docker-compose-k6.yaml \
-	up \
-	--abort-on-container-exit
-
-e2e:
-	docker compose \
-	-f docker-compose-e2e.yaml \
 	up \
 	--abort-on-container-exit
 
@@ -27,3 +27,5 @@ itslog:
 	up
 
 itslog-arm: arm itslog
+
+itslog-amd: amd itslog
