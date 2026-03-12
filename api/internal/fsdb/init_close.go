@@ -15,6 +15,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/jadudm/its-log/internal/fsdb/models"
 	"github.com/spf13/viper"
+
 	_ "modernc.org/sqlite"
 )
 

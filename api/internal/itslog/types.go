@@ -1,10 +1,6 @@
 package itslog
 
-import (
-	"time"
-
-	_ "github.com/creasty/defaults"
-)
+import "time"
 
 type Event struct {
 	Timestamp time.Time `validate:"required"`

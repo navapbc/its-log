@@ -2,6 +2,6 @@ cmd/config.yaml
 /data/*
 **.sqlite
 its-log
-.vscode
+.vscode/settings.json
 __*
 .DS_Store

@@ -8,10 +8,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jadudm/its-log/internal/fsdb"
 	"github.com/jadudm/its-log/internal/fsdb/models"
 	"github.com/jadudm/its-log/internal/itslog"
-	"github.com/spf13/viper"
 )
 
 func addSequenceEndpoints(rG *gin.RouterGroup) {
@@ -38,31 +36,18 @@ type SequencePostBody struct {
 
 func Sequence(c *gin.Context) {
 	// Bundle up params and call the correct method
+	sctx, err := NewServeCtx(c)
+	if err != nil {
+		return
+	}
+	defer sctx.Close()
 
 	switch c.Request.Method {
 	case http.MethodPost:
-		var body SequencePostBody
-		// Call ShouldBindJSON to bind the incoming JSON to the newItem struct
-		if err := c.ShouldBindJSON(&body); err != nil {
-			// If an error occurs (e.g., invalid JSON, missing required fields),
-			// return a 400 Bad Request error
-			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": fmt.Sprintf("should bind: %s", err.Error())})
-			return
-		}
-
-		// If things are malformed, return errors
-		_, err := time.Parse(time.DateOnly, body.Date)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"method":  c.Request.Method,
-				"message": fmt.Sprintf("%s is not YYYY-MM-DD", body.Date),
-			})
-			return
-		}
-		seq_post(c, body)
+		seq_post(sctx)
 		return
 	case http.MethodGet:
-		seq_get(c)
+		seq_get(sctx)
 		return
 	case http.MethodDelete:
 		// Bundle up params and call the correct method
@@ -79,74 +64,61 @@ func Sequence(c *gin.Context) {
 	}
 }
 
-func seq_post(c *gin.Context, seqPostbody SequencePostBody) {
-
-	appId := itslog.GetOrPanic(c, itslog.ITSLOG_APPID)
-	keyId := itslog.GetOrPanic(c, itslog.ITSLOG_KEYID)
-
-	storage := &fsdb.SqliteStorage{
-		AppId: appId,
-		Date:  seqPostbody.Date,
-		Kind:  fsdb.NamedDatabase,
-		Path:  viper.GetString("storage.path"),
+func seq_post(sctx *ServeCtx) {
+	var body SequencePostBody
+	// Call ShouldBindJSON to bind the incoming JSON to the newItem struct
+	if err := sctx.GinCtx.ShouldBindJSON(&body); err != nil {
+		// If an error occurs (e.g., invalid JSON, missing required fields),
+		// return a 400 Bad Request error
+		sctx.GinCtx.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": fmt.Sprintf("should bind: %s", err.Error())})
+		return
 	}
 
-	storage.Init()
-	defer storage.Close()
-
-	if err := storage.GetQueries().InsertSequence(context.Background(), models.InsertSequenceParams{
-		KeyID: keyId,
-		Name:  seqPostbody.Name,
-		Steps: strings.Join(seqPostbody.Steps, ","),
-	}); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"status":  "error",
-			"method":  c.Request.Method,
-			"message": "could not save ETL step",
-			"date":    seqPostbody.Date,
-			"name":    seqPostbody.Name,
+	// If things are malformed, return errors
+	_, err := time.Parse(time.DateOnly, body.Date)
+	if err != nil {
+		sctx.GinCtx.JSON(http.StatusBadRequest, gin.H{
+			"method":  sctx.RequestMethod,
+			"message": fmt.Sprintf("%s is not YYYY-MM-DD", body.Date),
 		})
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{
+	if err := sctx.Storage.GetQueries().InsertSequence(context.Background(), models.InsertSequenceParams{
+		KeyID: sctx.KeyId,
+		Name:  body.Name,
+		Steps: strings.Join(body.Steps, ","),
+	}); err != nil {
+		sctx.GinCtx.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "error",
+			"method":  sctx.RequestMethod,
+			"message": "could not save ETL step",
+			"date":    body.Date,
+			"name":    body.Name,
+		})
+		return
+	}
+
+	sctx.GinCtx.JSON(http.StatusCreated, gin.H{
 		"status": "ok",
-		"method": c.Request.Method,
-		"date":   seqPostbody.Date,
-		"name":   seqPostbody.Name,
+		"method": sctx.RequestMethod,
+		"date":   body.Date,
+		"name":   body.Name,
 	})
 
 }
 
 // Run a sequence immediately, synchronously.
-func seq_get(c *gin.Context) {
-	name := c.Param("name")
-	date := c.Param("date")
-
-	dateVal, _ := time.Parse(time.DateOnly, date)
-	var err error = nil
+func seq_get(sctx *ServeCtx) {
 	errStep := ""
-
-	appId := itslog.GetOrPanic(c, itslog.ITSLOG_APPID)
-
-	storage := &fsdb.SqliteStorage{
-		AppId: appId,
-		Date:  date,
-		Kind:  fsdb.NamedDatabase,
-		Path:  viper.GetString("storage.path"),
-	}
-
-	storage.Init()
-	defer storage.Close()
-
-	seq, err := storage.GetQueries().GetSequence(context.Background(), name)
+	seq, err := sctx.Storage.GetQueries().GetSequence(context.Background(), sctx.Name)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
+		sctx.GinCtx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
-			"method":  c.Request.Method,
+			"method":  sctx.RequestMethod,
 			"message": "could not find sequence",
-			"date":    date,
-			"name":    name,
+			"date":    sctx.YYYYMMDD(),
+			"name":    sctx.Name,
 		})
 		return
 	}
@@ -154,30 +126,23 @@ func seq_get(c *gin.Context) {
 	steps := strings.Split(seq, ",")
 
 	for _, step := range steps {
-		// Bundle up params and call the correct method
-		params := ETLParams{
-			// FIXME. This doesn't work.
-			// We need to run this... every day on *yesterday*.
-			Date: dateVal,
-			Name: step,
-		}
 		// If anything fails, we exit the sequence
 		// Pass nil so we don't write to the context in the loop
-		c.Set("isSequence", true)
-		err = put(c, params)
+		sctx.GinCtx.Set("isSequence", true)
+		err = put(sctx)
 		if err != nil {
 			errStep = step
 			break
 		}
 	}
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
+		sctx.GinCtx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
-			"method":  c.Request.Method,
+			"method":  sctx.RequestMethod,
 			"message": fmt.Sprintf("error in sequence execution: %s", errStep),
 			"detail":  err.Error(),
-			"date":    date,
-			"name":    name,
+			"date":    sctx.YYYYMMDD(),
+			"name":    sctx.Name,
 		})
 		return
 	}
