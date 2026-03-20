@@ -51,63 +51,25 @@ ORDER BY id
 
 -- name: InsertETL :exec
 INSERT OR REPLACE INTO itslog_etl (
-  key_id, name, sql
+  key_id, name, kind, body
 ) VALUES (
-  ?, ?, ?
+  ?, ?, ?, ?
 );
 
 -- name: GetETL :one
-SELECT sql, last_run
+SELECT name, kind, body, last_run
 FROM itslog_etl
 WHERE
   name = ?
-LIMIT 1
-;
+LIMIT 1;
 
 -- name: UpdateLastRun :exec
 UPDATE itslog_etl
   SET 
     last_run = CURRENT_TIMESTAMP 
 WHERE 
-  name = ?
-;
+  name = ?;
 
--- name: InsertSequence :exec
-INSERT OR REPLACE INTO itslog_sequences (
-  key_id, name, steps
-) VALUES (
-  ?, ?, ?
-);
-
--- name: GetSequence :one
-SELECT steps
-FROM itslog_sequences
-WHERE name = ?
-LIMIT 1
-;
-
--- name: RemoveSequence :exec
-DELETE FROM itslog_sequences
-WHERE name = ?;
-
---------------------------------------------------------
--- CLEANUP
---------------------------------------------------------
--- name: VacuumDatabase :exec
-VACUUM;
-
---------------------------------------------------------
--- TEST HELPERS
---------------------------------------------------------
-
-
-
---------------------------------------------------------
--- METADATA
---------------------------------------------------------
--- name: UpdateMeta :exec
--- INSERT OR REPLACE INTO itslog_metadata (
---   key, value
--- ) VALUES (
---   ?, ?
--- );
+-- name: GetDistinctTags :many
+SELECT DISTINCT tags
+FROM itslog_events;

@@ -12,8 +12,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/jadudm/its-log/docs"
+	"github.com/jadudm/its-log/internal/base"
 	"github.com/jadudm/its-log/internal/csp"
-	"github.com/jadudm/its-log/internal/itslog"
 	"github.com/spf13/viper"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -30,7 +30,7 @@ func Serve() {
 	// Build the process network for buffering and
 	// saving events that come in via the API
 	ch_eb := make(chan csp.EventBuffers)
-	ch_evt := make(chan *itslog.Event)
+	ch_evt := make(chan *base.Event)
 
 	// FIXME: add these constants to the configuration
 	go csp.Enqueue(ch_evt, ch_eb, buffer_length, buffer_flushwaitsec)
@@ -44,7 +44,7 @@ func Serve() {
 	_ = engine.Run(fmt.Sprintf("%s:%s", host, port))
 }
 
-func PourGin(ch_evt_out chan<- *itslog.Event) *gin.Engine {
+func PourGin(ch_evt_out chan<- *base.Event) *gin.Engine {
 	router := gin.Default()
 
 	// We may want production mode.
@@ -94,7 +94,7 @@ func addMetadataEndpoints(rG *gin.RouterGroup) {
 	// The status endpoint provides server data, and needs a valid key
 	// https://github.com/appleboy/gin-status-api
 	auth_adminV1 := rG.Group("/")
-	permissions := []itslog.PermissionType{itslog.Admin, itslog.Log, itslog.ReadOnly, itslog.Test}
+	permissions := []base.PermissionType{base.Admin, base.Log, base.ReadOnly, base.Test}
 	auth_adminV1.Use(AuthMiddleWare(permissions))
 	rG.GET("/status", status.GinHandler)
 
@@ -104,7 +104,7 @@ func addQueryEndpoints(rG *gin.RouterGroup) {
 	// Fixme: rethink querying
 	// Querying the data
 	// auth_readV1 := rG.Group("/")
-	// permissions := []itslog.PermissionType{}
+	// permissions := []types.PermissionType{}
 	// auth_readV1.Use(AuthMiddleWare(permissions, apiKeys))
 	// auth_readV1.GET("select/:date/:operation/:source_name", Read)
 

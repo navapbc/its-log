@@ -5,6 +5,7 @@ import (
 	"slices"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jadudm/its-log/internal/base"
 	"github.com/jadudm/its-log/internal/itslog"
 )
 
@@ -24,7 +25,7 @@ import (
 //
 // This middleware sets the AppId for use downstream
 
-func AuthMiddleWare(permissions []itslog.PermissionType) gin.HandlerFunc {
+func AuthMiddleWare(permissions []base.PermissionType) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		api_key := c.GetHeader("x-api-key")
 		for _, key := range itslog.LiveKeys {
@@ -32,8 +33,8 @@ func AuthMiddleWare(permissions []itslog.PermissionType) gin.HandlerFunc {
 			doesContain := slices.Contains(permissions, key.Permission)
 			if doesContain && keylen >= 32 {
 				if api_key == key.Key {
-					c.Set(itslog.ITSLOG_KEYID, key.KeyId)
-					c.Set(itslog.ITSLOG_APPID, key.AppId)
+					c.Set(base.ITSLOG_KEYID, key.KeyId)
+					c.Set(base.ITSLOG_APPID, key.AppId)
 					return
 				}
 			}

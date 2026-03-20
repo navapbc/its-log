@@ -5,22 +5,24 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jadudm/its-log/internal/fsdb/models"
-	"github.com/jadudm/its-log/internal/itslog"
+	"github.com/jadudm/its-log/internal/base"
 )
 
 func addSequenceEndpoints(rG *gin.RouterGroup) {
 	auth_adminV1 := rG.Group("/")
-	permissions := []itslog.PermissionType{itslog.Admin, itslog.Test}
+	permissions := []base.PermissionType{base.Admin, base.Test}
 	auth_adminV1.Use(AuthMiddleWare(permissions))
 
-	// Add a sequence
-	auth_adminV1.POST("sequence", Sequence)
+	// Insert a sequence
+	// It's actually just inserting an entry into the
+	// ETL table with the correct values. We give it a 'sequence'
+	// endpoint, but it is interchangeable.
+	auth_adminV1.POST("sequence/:date", ETL)
+
 	// Run a sequence
-	auth_adminV1.GET("sequence/:date/:name", Sequence)
+	auth_adminV1.GET("sequence/:date/:name", RunSequence)
 
 }
 
@@ -28,90 +30,16 @@ func addSequenceEndpoints(rG *gin.RouterGroup) {
 // Sequence
 // ------------------------------------------------------------------------
 
-type SequencePostBody struct {
-	Name  string   `json:"name" binding:"required"`
-	Date  string   `json:"date" binding:"required"`
-	Steps []string `json:"steps" binding:"required"`
-}
-
-func Sequence(c *gin.Context) {
-	// Bundle up params and call the correct method
-	sctx, err := NewServeCtx(c)
+// Run a sequence immediately, synchronously.
+func RunSequence(c *gin.Context) {
+	sctx, err := base.NewServeCtx(c)
 	if err != nil {
 		return
 	}
 	defer sctx.Close()
 
-	switch c.Request.Method {
-	case http.MethodPost:
-		seq_post(sctx)
-		return
-	case http.MethodGet:
-		seq_get(sctx)
-		return
-	case http.MethodDelete:
-		// Bundle up params and call the correct method
-		// seq_delete(c)
-		return
-	default:
-		// It might not be possible to get here; Gin seems to
-		// intercept unknown/underfined methods and return a 404.
-		c.JSON(http.StatusBadRequest, gin.H{
-			"method":  c.Request.Method,
-			"message": "method not supported",
-		})
-		return
-	}
-}
-
-func seq_post(sctx *ServeCtx) {
-	var body SequencePostBody
-	// Call ShouldBindJSON to bind the incoming JSON to the newItem struct
-	if err := sctx.GinCtx.ShouldBindJSON(&body); err != nil {
-		// If an error occurs (e.g., invalid JSON, missing required fields),
-		// return a 400 Bad Request error
-		sctx.GinCtx.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": fmt.Sprintf("should bind: %s", err.Error())})
-		return
-	}
-
-	// If things are malformed, return errors
-	_, err := time.Parse(time.DateOnly, body.Date)
-	if err != nil {
-		sctx.GinCtx.JSON(http.StatusBadRequest, gin.H{
-			"method":  sctx.RequestMethod,
-			"message": fmt.Sprintf("%s is not YYYY-MM-DD", body.Date),
-		})
-		return
-	}
-
-	if err := sctx.Storage.GetQueries().InsertSequence(context.Background(), models.InsertSequenceParams{
-		KeyID: sctx.KeyId,
-		Name:  body.Name,
-		Steps: strings.Join(body.Steps, ","),
-	}); err != nil {
-		sctx.GinCtx.JSON(http.StatusInternalServerError, gin.H{
-			"status":  "error",
-			"method":  sctx.RequestMethod,
-			"message": "could not save ETL step",
-			"date":    body.Date,
-			"name":    body.Name,
-		})
-		return
-	}
-
-	sctx.GinCtx.JSON(http.StatusCreated, gin.H{
-		"status": "ok",
-		"method": sctx.RequestMethod,
-		"date":   body.Date,
-		"name":   body.Name,
-	})
-
-}
-
-// Run a sequence immediately, synchronously.
-func seq_get(sctx *ServeCtx) {
 	errStep := ""
-	seq, err := sctx.Storage.GetQueries().GetSequence(context.Background(), sctx.Name)
+	seq, err := sctx.Storage.GetQueries().GetETL(context.Background(), sctx.Name)
 	if err != nil {
 		sctx.GinCtx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -123,12 +51,21 @@ func seq_get(sctx *ServeCtx) {
 		return
 	}
 
-	steps := strings.Split(seq, ",")
+	// Split on commas if they are present; otherwise
+	// split on newlines.
+	trimmed := strings.TrimSpace(seq.Body.String)
+	var steps []string
+	if strings.Contains(trimmed, ",") {
+		steps = strings.Split(trimmed, ",")
+	} else {
+		steps = strings.Split(trimmed, "\n")
+	}
 
 	for _, step := range steps {
 		// If anything fails, we exit the sequence
 		// Pass nil so we don't write to the context in the loop
 		sctx.GinCtx.Set("isSequence", true)
+		sctx.Name = step
 		err = put(sctx)
 		if err != nil {
 			errStep = step

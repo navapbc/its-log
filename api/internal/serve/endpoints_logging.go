@@ -11,23 +11,23 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	"github.com/jadudm/its-log/internal/itslog"
+	"github.com/jadudm/its-log/internal/base"
 )
 
 // @BasePath /v1
 // Thursday, 2PM?
 
-func addLoggingEndpoints(rG *gin.RouterGroup, ch_evt_out chan<- *itslog.Event) {
+func addLoggingEndpoints(rG *gin.RouterGroup, ch_evt_out chan<- *base.Event) {
 	// Logging
 	auth_logV1 := rG.Group("/")
-	permissions := []itslog.PermissionType{itslog.Log, itslog.Test}
+	permissions := []base.PermissionType{base.Log, base.Test}
 	auth_logV1.Use(AuthMiddleWare(permissions))
-	auth_logV1.POST("/log", Event(ch_evt_out, itslog.Log))
+	auth_logV1.POST("/log", Event(ch_evt_out, base.Log))
 }
 
-func setTimestamp(c *gin.Context, evt *itslog.Event, permission itslog.PermissionType) {
+func setTimestamp(c *gin.Context, evt *base.Event, permission base.PermissionType) {
 	switch permission {
-	case itslog.Test:
+	case base.Test:
 		// The date in the testing cases comes from the URL.
 		// Hence, we might have parsing errors on what is passed in.
 		date := c.Param("date")
@@ -48,7 +48,7 @@ func setTimestamp(c *gin.Context, evt *itslog.Event, permission itslog.Permissio
 
 		evt.Timestamp = timestamp
 
-	case itslog.Log:
+	case base.Log:
 		evt.Timestamp = time.Now()
 
 	default:
@@ -62,7 +62,7 @@ func setTimestamp(c *gin.Context, evt *itslog.Event, permission itslog.Permissio
 // Event godoc
 // @Accept json
 // @Description log a source and event with a unique value as part of a cluster
-// @Failure 500	{object} itslog.Error
+// @Failure 500	{object} base.Error
 // @Param cluster path string true "a UUID representing this cluster"
 // @Param event path string true "an event category"
 // @Param source path string true "a source category"
@@ -71,13 +71,13 @@ func setTimestamp(c *gin.Context, evt *itslog.Event, permission itslog.Permissio
 // @Produce json
 // @Router /csev/{cluster}/{source}/{event}/{value} [put]
 // @Schemes
-// @Success 200 {object} itslog.Success
+// @Success 200 {object} base.Success
 // @Summary log a source and event with a unique value as part of a cluster
 // @Tags events
-func Event(ch_evt_out chan<- *itslog.Event, permission itslog.PermissionType) func(c *gin.Context) {
+func Event(ch_evt_out chan<- *base.Event, permission base.PermissionType) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		// https://pkg.go.dev/github.com/go-playground/validator/v10
-		var evt itslog.Event
+		var evt base.Event
 		// Call ShouldBindJSON to parse the request body into the struct
 		if err := c.ShouldBindJSON(&evt); err != nil {
 			// FIXME: follow standard response protocol
@@ -85,8 +85,8 @@ func Event(ch_evt_out chan<- *itslog.Event, permission itslog.PermissionType) fu
 			return
 		}
 
-		evt.AppId = itslog.GetOrPanic(c, itslog.ITSLOG_APPID)
-		evt.KeyId = itslog.GetOrPanic(c, itslog.ITSLOG_KEYID)
+		evt.AppId = base.GetOrPanic(c, base.ITSLOG_APPID)
+		evt.KeyId = base.GetOrPanic(c, base.ITSLOG_KEYID)
 
 		// If it is a test event, we mangle a date parameter.
 		// If it is not a test event, we use Now().
@@ -112,8 +112,8 @@ func Event(ch_evt_out chan<- *itslog.Event, permission itslog.PermissionType) fu
 				}
 			}
 
-			c.JSON(http.StatusInternalServerError, itslog.Error{
-				Status:    itslog.ERROR,
+			c.JSON(http.StatusInternalServerError, base.Error{
+				Status:    base.ERROR,
 				Error:     fmt.Sprintf("%s", messages),
 				ErrorType: "field validation errors",
 			})
@@ -125,6 +125,6 @@ func Event(ch_evt_out chan<- *itslog.Event, permission itslog.PermissionType) fu
 		ch_evt_out <- &evt
 
 		// Everything worked.
-		c.JSON(http.StatusOK, itslog.Success{Status: itslog.OK})
+		c.JSON(http.StatusOK, base.Success{Status: base.OK})
 	}
 }

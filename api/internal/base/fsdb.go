@@ -1,20 +1,12 @@
-package fsdb
+package base
 
 import (
 	"database/sql"
-	_ "embed"
 	"fmt"
 	"hash/maphash"
 
-	"github.com/go-playground/validator/v10"
-	"github.com/jadudm/its-log/internal/fsdb/models"
+	"github.com/jadudm/its-log/internal/base/models"
 )
-
-// https://pkg.go.dev/github.com/go-playground/validator/v10
-var validate *validator.Validate
-
-//go:embed schema.sql
-var ddl string
 
 type SqliteType int
 

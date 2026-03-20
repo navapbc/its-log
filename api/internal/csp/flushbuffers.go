@@ -3,8 +3,7 @@ package csp
 import (
 	"log"
 
-	"github.com/jadudm/its-log/internal/fsdb"
-	"github.com/jadudm/its-log/internal/itslog"
+	"github.com/jadudm/its-log/internal/base"
 	"github.com/spf13/viper"
 )
 
@@ -20,7 +19,7 @@ import (
 //
 //	\
 //	 2026-01-01 <- [ e1 ]
-type BufferTree map[string]map[string][]*itslog.Event
+type BufferTree map[string]map[string][]*base.Event
 
 // We could be getting things from any number of apps at any given time.
 // Therefore, the buffer needs to be organized for writing.
@@ -39,12 +38,12 @@ func organizeEvents(eventBuffer EventBuffers) BufferTree {
 
 			if _, ok := org[evt.AppId]; !ok {
 				// If we have not seen this app before, we have to initialize it
-				org[evt.AppId] = make(map[string][]*itslog.Event)
+				org[evt.AppId] = make(map[string][]*base.Event)
 			}
 
 			// Now, have we seen this date before from that app?
 			if _, ok := org[evt.AppId]; !ok {
-				org[evt.AppId][formatted_date] = make([]*itslog.Event, 0)
+				org[evt.AppId][formatted_date] = make([]*base.Event, 0)
 			}
 
 			// We're ready; append the event
@@ -56,19 +55,19 @@ func organizeEvents(eventBuffer EventBuffers) BufferTree {
 
 }
 
-func FlushBuffersOnce(s *fsdb.SqliteStorage, ch_flush_in <-chan EventBuffers) {
+func FlushBuffersOnce(s *base.SqliteStorage, ch_flush_in <-chan EventBuffers) {
 	eventBuffer := <-ch_flush_in
 	org := organizeEvents(eventBuffer)
 
 	for appId, dateMap := range org {
 		for formatted_date, events := range dateMap {
 			if s == nil {
-				s = &fsdb.SqliteStorage{
+				s = &base.SqliteStorage{
 					Path: viper.GetString("storage.path"),
 					// Filename: formatted_date + ".sqlite",
 					AppId: appId,
 					Date:  formatted_date,
-					Kind:  fsdb.NamedDatabase,
+					Kind:  base.NamedDatabase,
 				}
 			}
 

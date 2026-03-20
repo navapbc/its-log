@@ -40,26 +40,30 @@ CREATE TABLE IF NOT EXISTS itslog_summary (
     value TEXT,
     count REAL NOT NULL
 );
-CREATE UNIQUE INDEX IF NOT EXISTS summary_ndx ON itslog_summary (date, operation, tags, value);
+
+-- See https://stackoverflow.com/questions/22699409/sqlite-null-and-unique
+-- We want NULL values to count towards uniqueness here.
+CREATE UNIQUE INDEX IF NOT EXISTS summary_ndx ON itslog_summary (date, operation, IFNULL(tags, 0), IFNULL(value, 0));
 
 CREATE TABLE IF NOT EXISTS itslog_etl (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     inserted DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    last_run DATETIME,
     key_id TEXT NOT NULL,
     name TEXT NOT NULL,
-    last_run DATETIME,
-    sql TEXT NOT NULL
+    kind TEXT NOT NULL,
+    body TEXT
 );
 CREATE UNIQUE INDEX IF NOT EXISTS step_name_ndx ON itslog_etl (name);
 
-CREATE TABLE IF NOT EXISTS itslog_sequences (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    inserted DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    key_id TEXT NOT NULL,
-    name TEXT NOT NULL,
-    steps TEXT NOT NULL
-);
-CREATE UNIQUE INDEX IF NOT EXISTS sequence_name_ndx ON itslog_sequences (name);
+-- CREATE TABLE IF NOT EXISTS itslog_sequences (
+--     id INTEGER PRIMARY KEY AUTOINCREMENT,
+--     inserted DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+--     key_id TEXT NOT NULL,
+--     name TEXT NOT NULL,
+--     steps TEXT NOT NULL
+-- );
+-- CREATE UNIQUE INDEX IF NOT EXISTS sequence_name_ndx ON itslog_sequences (name);
 
 -- CREATE TABLE IF NOT EXISTS itslog_dictionary (
 --     id INTEGER PRIMARY KEY AUTOINCREMENT,

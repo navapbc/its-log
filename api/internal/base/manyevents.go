@@ -1,15 +1,14 @@
-package fsdb
+package base
 
 import (
 	"context"
 	"database/sql"
 	"log"
 
-	"github.com/jadudm/its-log/internal/fsdb/models"
-	"github.com/jadudm/its-log/internal/itslog"
+	"github.com/jadudm/its-log/internal/base/models"
 )
 
-func (s *SqliteStorage) ManyEvents(evt_buff []*itslog.Event) (int64, error) {
+func (s *SqliteStorage) ManyEvents(evt_buff []*Event) (int64, error) {
 	ctx := context.Background()
 	tx, err := s.db.Begin()
 	if err != nil {

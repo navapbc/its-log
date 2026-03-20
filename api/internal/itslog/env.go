@@ -8,9 +8,11 @@ import (
 	"os"
 	"slices"
 	"strings"
+
+	"github.com/jadudm/its-log/internal/base"
 )
 
-var LiveKeys ApiKeys
+var LiveKeys base.ApiKeys
 
 var minimum = []string{
 	"ITSLOG_BUFFER_FLUSHWAITSEC",
@@ -69,11 +71,11 @@ func ConfirmApiKeyMapKeys(envvar string, m map[string]string) error {
 // API keys take the form
 // ITSLOG_APIKEY_<appId>='{"app_id": "the_app", "key_id": "uniq", "permission": "log", "key": "32-byte-string"}'
 func GetApiKeys() error {
-	LiveKeys = make([]ApiKey, 0)
+	LiveKeys = make([]base.ApiKey, 0)
 
 	allvars := os.Environ()
 	for _, e := range allvars {
-		key := ApiKey{}
+		key := base.ApiKey{}
 		pair := strings.SplitN(e, "=", 2)
 
 		if strings.HasPrefix(pair[0], "ITSLOG_APIKEY_") {

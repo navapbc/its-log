@@ -23,11 +23,11 @@ import (
 	"log"
 	"time"
 
-	"github.com/jadudm/its-log/internal/itslog"
+	"github.com/jadudm/its-log/internal/base"
 )
 
 type EventBuffers struct {
-	Events            []*itslog.Event
+	Events            []*base.Event
 	eventBufferLength int
 	nextEventPtr      int
 	Timeout           int
@@ -38,7 +38,7 @@ type EventBuffers struct {
 // races on the pointered structure.
 func NewEventBuffers(buffer_length int) EventBuffers {
 	eb := EventBuffers{
-		Events: make([]*itslog.Event, buffer_length),
+		Events: make([]*base.Event, buffer_length),
 	}
 	eb.nextEventPtr = 0
 	eb.eventBufferLength = buffer_length
@@ -46,7 +46,7 @@ func NewEventBuffers(buffer_length int) EventBuffers {
 	return eb
 }
 
-func (eb *EventBuffers) AddEvent(e *itslog.Event) bool {
+func (eb *EventBuffers) AddEvent(e *base.Event) bool {
 	// Warning: this must be strictly sequential; this is
 	// not a parallel-safe pointer update.
 	eb.Events[eb.nextEventPtr] = e
@@ -55,7 +55,7 @@ func (eb *EventBuffers) AddEvent(e *itslog.Event) bool {
 	return eb.nextEventPtr >= eb.eventBufferLength
 }
 
-func Enqueue(ch_evt_in <-chan *itslog.Event, ch_flush_out chan<- EventBuffers, buffer_length int, timeout int) {
+func Enqueue(ch_evt_in <-chan *base.Event, ch_flush_out chan<- EventBuffers, buffer_length int, timeout int) {
 	event_buffers := NewEventBuffers(buffer_length)
 	timeout_duration := time.Duration(timeout) * time.Second
 	timer := time.NewTimer(timeout_duration)

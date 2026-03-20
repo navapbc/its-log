@@ -1,5 +1,5 @@
 definitions:
-  itslog.Error:
+  types.Error:
     properties:
       data:
         additionalProperties: {}
@@ -11,7 +11,7 @@ definitions:
       status:
         type: string
     type: object
-  itslog.Success:
+  types.Success:
     properties:
       status:
         type: string
@@ -56,11 +56,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/itslog.Success'
+            $ref: '#/definitions/types.Success'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/itslog.Error'
+            $ref: '#/definitions/types.Error'
       summary: log a source and event with a unique value as part of a cluster
       tags:
       - events

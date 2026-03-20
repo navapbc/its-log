@@ -1,4 +1,4 @@
-package fsdb
+package base
 
 import (
 	"context"
@@ -13,7 +13,7 @@ import (
 	"unsafe"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/jadudm/its-log/internal/fsdb/models"
+	"github.com/jadudm/its-log/internal/base/models"
 	"github.com/spf13/viper"
 
 	_ "modernc.org/sqlite"
@@ -110,7 +110,7 @@ func (s *SqliteStorage) initMemory() error {
 	s.db = db
 
 	// create tables
-	if _, err := db.ExecContext(ctx, ddl); err != nil {
+	if _, err := db.ExecContext(ctx, DDL); err != nil {
 		return err
 	}
 
@@ -139,7 +139,7 @@ func (s *SqliteStorage) init() error {
 
 	if !fileExists {
 		// Create the tables.
-		if _, err := db.ExecContext(context.Background(), ddl); err != nil {
+		if _, err := db.ExecContext(context.Background(), DDL); err != nil {
 			return err
 		}
 		// If the file exists, check that there's something in the ETL.
@@ -151,7 +151,7 @@ func (s *SqliteStorage) init() error {
 			// If we can't find the table, it isn't initialized.
 			log.Println("Loading default ETL values")
 
-			s.LoadDefaultEtlSql()
+			s.LoadDefaultEtlFiles()
 		}
 	}
 

@@ -18,12 +18,12 @@ package serve
 // 	"github.com/steinfletcher/apitest"
 // )
 
-// func blackHole(c chan *itslog.Event) {
+// func blackHole(c chan *types.Event) {
 // 	<-c
 // }
 
-// func checkEq(t *testing.T, expected *itslog.Event) func(c chan *itslog.Event) {
-// 	return func(c chan *itslog.Event) {
+// func checkEq(t *testing.T, expected *types.Event) func(c chan *types.Event) {
+// 	return func(c chan *types.Event) {
 // 		go func() {
 // 			select {
 // 			case v := <-c:
@@ -37,18 +37,18 @@ package serve
 // 	}
 // }
 
-// func setup(consumer func(chan *itslog.Event)) (*gin.Engine, string) {
+// func setup(consumer func(chan *types.Event)) (*gin.Engine, string) {
 // 	validate = validator.New(validator.WithRequiredStructEnabled())
-// 	var ch_evt_out = make(chan *itslog.Event)
+// 	var ch_evt_out = make(chan *types.Event)
 // 	// This drains the channel so we don't have to worry about
 // 	// it as part of the testing.
 // 	go consumer(ch_evt_out)
 
 // 	router := gin.Default()
 // 	apiV1 := router.Group("/v1")
-// 	permissions := []itslog.PermissionType{itslog.Log, itslog.Test}
+// 	permissions := []types.PermissionType{types.Log, types.Test}
 // 	apiV1.Use(AuthMiddleWare(permissions))
-// 	apiV1.PUT("se/:source/:event", Event(itslog.SE, ch_evt_out))
+// 	apiV1.PUT("se/:source/:event", Event(types.SE, ch_evt_out))
 // 	// Mock the env setup.
 // 	// This implies we have a JSON structure in an APIKEY variable.
 // 	key := "12345678901234561234567890123456"
@@ -61,8 +61,8 @@ package serve
 // 	keystr, _ := json.Marshal(m)
 // 	os.Setenv("ITSLOG_APIKEY_TEST", string(keystr))
 // 	// Read the API keys in, so they can be found by the middleware.
-// 	itslog.GetApiKeys()
-// 	log.Printf("found %d keys", len(itslog.LiveKeys))
+// 	types.GetApiKeys()
+// 	log.Printf("found %d keys", len(types.LiveKeys))
 // 	// Return the router and the API key
 // 	return router, key
 // }
@@ -95,7 +95,7 @@ package serve
 // 	// Check that we read the expected event on the channel
 // 	// source := "us.me.lewiston"
 // 	// event := "forage-bagels"
-// 	// router, key := setup(checkEq(t, &itslog.Event{Source: source, Event: event}))
+// 	// router, key := setup(checkEq(t, &types.Event{Source: source, Event: event}))
 // 	// apitest.New().
 // 	// 	Handler(router).
 // 	// 	Put(fmt.Sprintf("/v1/se/%s/%s", source, event)).
@@ -126,7 +126,7 @@ package serve
 // 	}
 
 // 	// FIXME: add these constants to the configuration
-// 	consumer := func(ch_evt chan *itslog.Event) {
+// 	consumer := func(ch_evt chan *types.Event) {
 // 		ch_eb := make(chan csp.EventBuffers)
 // 		go csp.Enqueue(ch_evt, ch_eb, 1, 1)
 // 		go csp.FlushBuffersOnce(s, ch_eb)

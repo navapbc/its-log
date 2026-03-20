@@ -69,13 +69,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/itslog.Success"
+                            "$ref": "#/definitions/types.Success"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/itslog.Error"
+                            "$ref": "#/definitions/types.Error"
                         }
                     }
                 }
@@ -83,7 +83,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "itslog.Error": {
+        "types.Error": {
             "type": "object",
             "properties": {
                 "data": {
@@ -101,7 +101,7 @@ const docTemplate = `{
                 }
             }
         },
-        "itslog.Success": {
+        "types.Success": {
             "type": "object",
             "properties": {
                 "status": {

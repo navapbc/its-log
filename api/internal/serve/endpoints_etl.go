@@ -1,7 +1,6 @@
 package serve
 
 import (
-	"bufio"
 	"context"
 
 	"database/sql"
@@ -9,21 +8,20 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"regexp"
-	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jadudm/its-log/internal/fsdb/models"
-	"github.com/jadudm/its-log/internal/itslog"
+	"github.com/jadudm/its-log/internal/base"
+	etl "github.com/jadudm/its-log/internal/base/etl/golang"
+	"github.com/jadudm/its-log/internal/base/models"
 )
 
 func addEtlEndpoints(rG *gin.RouterGroup) {
 	auth_adminV1 := rG.Group("/")
-	permissions := []itslog.PermissionType{itslog.Admin, itslog.Test}
+	permissions := []base.PermissionType{base.Admin, base.Test}
 	auth_adminV1.Use(AuthMiddleWare(permissions))
 
 	// Insert a new ETL step
-	auth_adminV1.POST("etl/:date/:name", ETL)
+	auth_adminV1.POST("etl/:date", ETL)
 	// Run an ETL step
 	auth_adminV1.PUT("etl/:date/:name", ETL)
 	// Retrieve the contents of a step, including the last run and run status
@@ -37,7 +35,7 @@ func addEtlEndpoints(rG *gin.RouterGroup) {
 // ETL
 // ------------------------------------------------------------------------
 func ETL(c *gin.Context) {
-	sctx, err := NewServeCtx(c)
+	sctx, err := base.NewServeCtx(c)
 	if err != nil {
 		return
 	}
@@ -65,24 +63,26 @@ func ETL(c *gin.Context) {
 }
 
 type ETLPostBody struct {
-	SQL string `json:"sql" binding:"required"`
+	Name string `json:"name"`
+	Kind string `json:"kind" binding:"required"`
+	Body string `json:"body" binding:"required"`
 }
 
 // Insert a new ETL step
 // Event godoc
 // @Accept json
 // @Description insert SQL for use as an ETL step
-// @Failure 500	{object} itslog.Error
+// @Failure 500	{object} base.Error
 // @Param date YYYY-MM-DD formatted date for where to insert the step
 // @Param name name of the ETL step (recommended: no spaces)
 // @Param x-api-key header string true "API key, 32 bytes or more, issued"
 // @Produce json
 // @Router /etl/{date}/{name} [post]
 // @Schemes
-// @Success 200 {object} itslog.Success
+// @Success 200 {object} base.Success
 // @Summary insert SQL for use as an ETL step
 // @Tags events
-func post(sctx *ServeCtx) {
+func post(sctx *base.ServeCtx) {
 
 	var body ETLPostBody
 	// Call ShouldBindJSON to bind the incoming JSON to the newItem struct
@@ -95,7 +95,8 @@ func post(sctx *ServeCtx) {
 
 	if err := sctx.Storage.GetQueries().InsertETL(context.Background(), models.InsertETLParams{
 		Name: sctx.Name,
-		Sql:  body.SQL,
+		Kind: body.Kind,
+		Body: sql.NullString{String: body.Body, Valid: true},
 	}); err != nil {
 		sctx.GinCtx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -118,17 +119,17 @@ func post(sctx *ServeCtx) {
 // Event godoc
 // @Accept json
 // @Description retrieve the contents of a step, including the last run and run status
-// @Failure 500	{object} itslog.Error
+// @Failure 500	{object} base.Error
 // @Param date YYYY-MM-DD formatted date for where to insert the step
 // @Param name name of the ETL step (recommended: no spaces)
 // @Param x-api-key header string true "API key, 32 bytes or more, issued"
 // @Produce json
 // @Router /etl/{date}/{name} [get]
 // @Schemes
-// @Success 200 {object} itslog.Success
+// @Success 200 {object} base.Success
 // @Summary retrieve the contents of a step, including the last run and run status
 // @Tags events
-func get(sctx *ServeCtx) {
+func get(sctx *base.ServeCtx) {
 	err := reloadDefaultEtl(sctx)
 	if err != nil {
 		return
@@ -145,54 +146,84 @@ func get(sctx *ServeCtx) {
 		"method":   sctx.RequestMethod,
 		"date":     sctx.YYYYMMDD(),
 		"name":     sctx.Name,
-		"sql":      row.Sql,
+		"sql":      row.Body,
 		"last_run": last_run,
 	})
 }
 
-func getRequestedParamKeys(sql string) ([]string, bool) {
-	// Insert params
-	// Valid params include
-	// -- params: key_id app_id
-	results := make([]string, 0)
-	has_params := false
+func etlRunSql(sctx *base.ServeCtx, row models.GetETLRow, tx *sql.Tx) error {
+	useContext, _ := sctx.GinCtx.Get("useContext")
 
-	scanner := bufio.NewScanner(strings.NewReader(sql))
+	named := make([]sql.NamedArg, 0)
+	named = append(named, sql.Named("key_id", sctx.KeyId))
+	named = append(named, sql.Named("app_id", sctx.AppId))
+	named = append(named, sql.Named("date", sctx.YYYYMMDD()))
 
-	var dropped_leading_parts []string
-
-	for scanner.Scan() {
-		line := scanner.Text()
-		// Make sure the line starts with -- params:
-		is_params := strings.HasPrefix(line, "-- params:")
-		pattern := regexp.MustCompile(`\S+(.*?)`)
-		if is_params {
-			results = pattern.FindAllString(line, -1)
-			has_params = true
-			dropped_leading_parts = results[2:]
+	// Run the query
+	if !row.Body.Valid {
+		msg := "sql is null for ETL step"
+		log.Println(msg)
+		if useContext.(bool) {
+			sctx.GinCtx.JSON(http.StatusInternalServerError, gin.H{
+				"status":  "error",
+				"method":  sctx.RequestMethod,
+				"message": msg,
+				"detail":  msg,
+				"date":    sctx.YYYYMMDD(),
+				"name":    sctx.Name,
+			})
 		}
-	}
-	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
+		return fmt.Errorf("%s: %s", msg, http.StatusText(http.StatusInternalServerError))
 	}
 
-	return dropped_leading_parts, has_params
+	// Expect all ETLs to return 0 or 1.
+	etlRow := tx.QueryRowContext(context.Background(), row.Body.String,
+		sql.Named("key_id", sctx.KeyId),
+		sql.Named("app_id", sctx.AppId),
+		sql.Named("date", sctx.YYYYMMDD()))
+
+	var success int64
+	switch err := etlRow.Scan(&success); err {
+	case sql.ErrNoRows:
+		log.Println("No rows were returned!")
+	case nil:
+		if success == 1 {
+			return nil
+		} else {
+			return fmt.Errorf("expected 1; %s returned %v", row.Name, success)
+		}
+	default:
+		panic(err)
+	}
+
+	return nil
+}
+
+func etlRunGolang(sctx *base.ServeCtx, row models.GetETLRow, tx *sql.Tx) error {
+	functionName := row.Name
+	if function, ok := etl.GolangETLMap[functionName]; ok {
+		function(sctx, tx)
+	} else {
+		fmt.Printf("Function %s not found\n", functionName)
+	}
+
+	return nil
 }
 
 // Event godoc
 // @Accept json
 // @Description run an ETL step
-// @Failure 500	{object} itslog.Error
+// @Failure 500	{object} base.Error
 // @Param date YYYY-MM-DD formatted date for where to insert the step
 // @Param name name of the ETL step (recommended: no spaces)
 // @Param x-api-key header string true "API key, 32 bytes or more, issued"
 // @Produce json
 // @Router /etl/{date}/{name} [get]
 // @Schemes
-// @Success 200 {object} itslog.Success
+// @Success 200 {object} base.Success
 // @Summary run an ETL step
 // @Tags events
-func put(sctx *ServeCtx) error {
+func put(sctx *base.ServeCtx) error {
 	// This returns an error because it gets used to run sequences of steps, too.
 	// In that context, the gin response is used, *and* the error.
 
@@ -201,6 +232,7 @@ func put(sctx *ServeCtx) error {
 	if isSequence != nil {
 		useContext = !isSequence.(bool)
 	}
+	sctx.GinCtx.Set("useContext", useContext)
 
 	// Get a Tx for making transaction requests.
 	ctx := context.Background()
@@ -242,53 +274,35 @@ func put(sctx *ServeCtx) error {
 		return fmt.Errorf("%s: %s", msg, http.StatusText(http.StatusNotFound))
 	}
 
-	// We allow queries to specity a list of parameters of the form
-	// -- params: a b c
-	// where a, b, c must be in the set defined by the map below
-	// keys, has_params := getRequestedParamKeys(row.Sql)
-	// mapped_params := make(map[string]string, 0)
-	// mapped := make([]any, 0)
-	// if has_params {
-	// 	mapped_params["key_id"] = sctx.KeyId
-	// 	mapped_params["app_id"] = sctx.AppId
-	// 	mapped_params["date"] = sctx.YYYYMMDD()
-	// 	for _, p := range keys {
-	// 		if v, ok := mapped_params[p]; ok {
-	// 			mapped = append(mapped, v)
-	// 		}
-	// 	}
-	// }
+	switch row.Kind {
+	case "sql":
+		err := etlRunSql(sctx, row, tx)
+		if err != nil {
+			return err
+		}
+	case "golang":
+		err := etlRunGolang(sctx, row, tx)
+		if err != nil {
+			return err
+		}
+	case "sequence":
+		// The name of the step will have been loaded into the context.
 
-	named := make([]sql.NamedArg, 0)
-	named = append(named, sql.Named("key_id", sctx.KeyId))
-	named = append(named, sql.Named("app_id", sctx.AppId))
-	named = append(named, sql.Named("date", sctx.YYYYMMDD()))
-	// Run the query
-
-	_, err = tx.ExecContext(ctx, row.Sql,
-		sql.Named("key_id", sctx.KeyId),
-		sql.Named("app_id", sctx.AppId),
-		sql.Named("date", sctx.YYYYMMDD()))
-
-	if err != nil {
-		msg := "could not exec sql of ETL step"
-		log.Println(msg)
+	default:
 		if useContext {
 			sctx.GinCtx.JSON(http.StatusInternalServerError, gin.H{
 				"status":  "error",
 				"method":  sctx.RequestMethod,
-				"message": msg,
-				"detail":  err.Error(),
+				"message": "unknown kind of etl: " + row.Kind,
 				"date":    sctx.YYYYMMDD(),
 				"name":    sctx.Name,
 			})
 		}
-		return fmt.Errorf("%s: %s", msg, http.StatusText(http.StatusInternalServerError))
+		return errors.New(http.StatusText(http.StatusInternalServerError))
 	}
 
 	if err = qtx.UpdateLastRun(ctx, sctx.Name); err != nil {
 		msg := "could not update ETL metadata"
-		log.Println(msg)
 		if useContext {
 			sctx.GinCtx.JSON(http.StatusInternalServerError, gin.H{
 				"status":  "error",
@@ -330,7 +344,7 @@ func put(sctx *ServeCtx) error {
 }
 
 func ReloadEtl(c *gin.Context) {
-	sctx, err := NewServeCtx(c)
+	sctx, err := base.NewServeCtx(c)
 	if err != nil {
 		return
 	}
@@ -338,7 +352,7 @@ func ReloadEtl(c *gin.Context) {
 	reloadDefaultEtl(sctx)
 }
 
-func possiblyFetchEtlRows(sctx *ServeCtx) (*models.GetETLRow, bool) {
+func possiblyFetchEtlRows(sctx *base.ServeCtx) (*models.GetETLRow, bool) {
 	row, err := sctx.Storage.GetQueries().GetETL(context.Background(), "sentinel")
 	if err != nil {
 		return nil, false
@@ -346,14 +360,14 @@ func possiblyFetchEtlRows(sctx *ServeCtx) (*models.GetETLRow, bool) {
 	return &row, true
 }
 
-func reloadDefaultEtl(sctx *ServeCtx) error {
+func reloadDefaultEtl(sctx *base.ServeCtx) error {
 	// This is funky. It also happens on the first attempt to init() the DB.
 	// But, that happens on buffer flush.
 	// And, we don't know when someone is logging for (e.g. it could be in the past, if this
 	// is for testing.) So, we check here to make sure the ETL has been loaded.
 	_, exist := possiblyFetchEtlRows(sctx)
 	if !exist {
-		sctx.Storage.LoadDefaultEtlSql()
+		sctx.Storage.LoadDefaultEtlFiles()
 		_, exist = possiblyFetchEtlRows(sctx)
 	}
 	if !exist {

@@ -1,11 +1,11 @@
-package fsdb
+package base
 
 import (
 	"fmt"
 	"hash/maphash"
 	"path"
 
-	"github.com/jadudm/its-log/internal/fsdb/models"
+	"github.com/jadudm/its-log/internal/base/models"
 )
 
 func (s *SqliteStorage) GetQueries() *models.Queries {
