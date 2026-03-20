@@ -1,40 +1,53 @@
 # The `its-log` API
 
-There are two endpoints:
+## logging events
 
-* PUT /event/&lt;app-id>/&lt;event><br/>
-    Log a timestamped event 
+There is one logging endpoint
 
-### PUT /event/&lt;app-id>/&lt;event>
-
-Events should be keyed with unique labels.
-
-An event is a string. Internally, `its-log` will map strings to integers (for storage efficiency). Therefore, events should be *consistent*. Good events might look like:
+* POST /v1/log
+  
+This takes a JSON object of the following shape:
 
 ```
-PUT //its-log/gov.agency.app/api.patient.v3
-PUT //its-log/gov.agency.app/api.patient.v2
-PUT //its-log/gov.agency.app/app.start
-PUT //its-log/gov.agency.another_app/api.search_v2
-PUT //its-log/gov.agency.another_app/app.start
+type Event struct {
+	Cluster   string    `json:"cluster" validate:"max=256"`
+	Tags      []string  `json:"tags" validate:"required"`
+	Value     string `json:"value" validate:"max=256"`
+}
 ```
 
-Each of these events will map internally to a unique value.
-
-Bad events have dynamic elements; this will lead to data that ultimately cannot be analyzed.
-
-For example, here are three event keys that have an time embedded in them.
+Or, by way of example, a minimal event would look like:
 
 ```
-PUT //its-log/gov.agency.app/api.called.2025-12-15-11:34:23
-PUT //its-log/gov.agency.app/api.called.2025-12-15-11:34:24
-PUT //its-log/gov.agency.app/api.called.2025-12-15-11:34:25
+{
+    "tags": [ "v1", "chocolate" ]
+}
+
+while an event leveraging all possible features might look like:
+
+```
+{
+    "cluster": "E56828A0-FEC5-4549-A523-DC762658D6C0",
+    "tags": [ "v3", "chocolate", "ramen", "nachos" ],
+    "value": "thursday-lunch"
+}
 ```
 
-These events embed a timestamp, and therefore each would be logged as a separate event. Internally, `its-log` timestamps all data; if the goal is to analyze how many times the API is called, and possibly the time between calls, the correct approach in this case would be to repeatbly log the same event; for example:
+`its-log` takes responsibility for authentication, as well as attaching a timestamp, the `key_id` of the API key making the request.
 
-```
-PUT //its-log/gov.agency.app/api.called
-PUT //its-log/gov.agency.app/api.called
-PUT //its-log/gov.agency.app/api.called
-```
+## working with the ETL
+
+ETL steps can be added via POST
+
+
+
+	// Insert a new ETL step
+	auth_adminV1.POST("etl/:date", ETL)
+	// Run an ETL step
+	auth_adminV1.PUT("etl/:date/:name", ETL)
+	// Retrieve the contents of a step, including the last run and run status
+	auth_adminV1.GET("etl/:date/:name", ETL)
+	// Combine a table from one DB into another DB
+	// auth_adminV1.PUT("combine/:source/:destination/:table", Combine)
+	auth_adminV1.GET("etl/reload/:date", ReloadEtl)
+

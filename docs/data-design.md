@@ -6,21 +6,21 @@ The `its-log` data design is opinionated and intentional.
 
 The design is imagined against a backdrop of compliance-burdened systems that are run on limited budgets. 
 
-* **High throughput**. Ideally, a single `its-log` instance serves many applications. It should be possible for a single `its-log` instance to handle tens of thousands of events *per second*.
-* **Low resource requirements**. A single instance should be able to run comfortably on a small host; at most, several hundred megabytes of RAM and megabytes of local disk.
+* **High throughput**. Ideally, a single `its-log` instance serves many applications. It should be possible for a single `its-log` instance to handle hundreds of events per second, or tens of thousands of events per minute.
+* **Low resource requirements**. A single instance should be able to run comfortably on a small host; at most, several hundred megabytes of RAM and low gigabytes of local disk.
 * **No real-time**. `its-log` operates around the assumption that no data visibility is needed regarding *today*. Yesterday is good enough.
-* **Semantic compression**. The data collected daily should be "compressed" daily based on knowledge of the data. Because we are counting *events*, it should be possible to compress (say) 100K events of a given type to a single row representing the summation over the day, or (at most) 24 rows, representing an hour-by-hour summation. There should be no need for storing the original, second-by-second raw data.
-* **Zero PHI/PII**. `its-log` provides support for encrypting data "one way," guaranteeing that data is countable while eliminating the information content of the event.
 
-Taken together, this leads to a highly performant event-logging system that is intended, primarily, for operational awareness. "How much traffic did each API endpoint in our system receive?" "Are there days we receive more total traffic than others?" "How many unique users 
+Taken together, this leads to a highly performant event-logging system that is intended, primarily, for product- or application-level awareness. "How much traffic did each API endpoint in our system receive?" "Are there days we receive more total traffic than others?" "How many unique users 
 
 ## api design
 
-The API itself currently has one endpoint; a second might be added. This is described in [api.md](api.md).
+The logging API is essentially a single endpoint. 
+
+There are additional endpoints for loading ETL transforms (SQL) as well as running individual ETL steps or sequences of steps.
 
 ## design implementation
 
-`its-log` has two tables under the hood.
+`its-log` has several tables under the hood. Two tables drive the data collection, and one drives the ETL.
 
 ### events
 
@@ -28,27 +28,41 @@ The events table stores four values:
 
 * id: the SQLite-native row ID; primary key, auto-incrementing, auto-assigned
 * timestamp: the native `DATETIME` type; auto-assigned
-* source: a 64-bit signed integer
-* event: a 64-bit signed integer
-
-The `its-log` API server consumes a string for the source and event; it then hashes that value, and takes a signed 64-bit portion to write to the database. This means that each row of data becomes roughly 8 + 6 + 8 + 8 bytes, or 30 bytes. These values are then buffered, so that writes happen in bulk; this is configurable, but the default configuration buffers 2000 events and flushes the cache once per minute. (2000x30 bytes is 60K + fixed overhead, meaning we're not taxing RAM to buffer that many events.) The events are then written to disk in a single transaction, again a significant performance optimization.
-
-Alone, this table is indescipherable. It is possible to tell how many unique applications there are, and how many events per app... but, they are meaning-free integers.
-
-### dictionary
-
-The dictionary table is much smaller. It is maintained to map the space-efficient integer representation back to human-readable text.
-
-* id: a row ID/PK, not used
-* source_hash: the hashed value of an event source, the same as would be stored in the `source` column of the `events` table
-* event_hash: the hashed value of an event, the same as would be stored in the `event` column of the `events` table
-* source_name: the plain-text value for the source name associated with this hash
-* event_name: the plain-text value for the event name associated with this hash
-
-This dictionary is necessary if events are going to be converted back to human-readable form. However, it is a small table: 30 applications with 100 unique events each would yield a table with 30x100 rows, or 3000 rows. This is tiny, and easily `JOIN`ed with the `events` table as needed for dynamic queries, or used for semantic compression on a daily basis (where the plain text can be used, because there are so many fewer rows).
-
-A new dictionary is started every day. This allows for hash seeds to change over time, and as a result, we maintain a complete mapping from the hashed values to something human-understandable.
+* key_id: the API key logging the event
+* cluster: a string for a unique id connecting *several* events; possibly a UUID or similar
+* tags: a string (period separated) representing one or more categorical tags associated with the event (e.g. ["v3", "endpoint"] gets alphabetized and mapped to "endpoint.v3")
+* value: a string representing a unique value associated with this particular event
 
 ## summary
 
 `its-log` stores events. It is intended to support counting things. Those might be events that happen repeatedly (e.g. "how many times was this web page accessed?"), or they might be counts of unique events within the system ("how many unique applications were used each day of the last week?"). It is a spaec-efficient design, capable of storing millions of events in a handful of megabytes of space, and compressing data *meaningfully* down to a handful of rows on a daily basis. 
+
+The summary table stores:
+
+* last_run: a timestamp for when the row in question was last generated
+* key_id: the API generating the summary
+* operation: the ETL action that led to this row (e.g. `count.total` vs. `count.by-tag`)
+* value: for operations that count across unique values
+* count: the number of rows or events counted by this operation
+
+## ETL table
+
+The ETL table stores the ETL events used for transforming the data. The events are recorded in the table for multiple reasons:
+
+1. Historical awareness. It is possible to see the source for each ETL transform that was applied at this point in history. So, if an ETL action changes over time, we can see which version was used at any given point (if necessary).
+2. Automation. `its-log` provides several "common" or "standard" ETL actions, but individual applications can load additional ETL actions via API for use on their data.  
+
+The table contains:
+
+* inserted: when the ETL action was inserted into the table
+* last_run: when the ETL action was last executed against the data
+* key_id: the API key triggering the action (or `its-log` for default actions)
+* name: the name of the ETL action
+* kind: whether it is a native `sql` action, a `golang` action, or a `sequence` of actions
+* body: the body of the action
+
+`sql` actions are typically SQL transforms that read from the `events` table and write to the `summary` table. They should always end with `SELECT 1;` to indicate success. Because all actions are run in a transaction, they will either complete fully or fail. More guidelines on writing ETL actions can be found in [etl.md](etl.md).
+
+`golang` actions are compiled into `its-log`. They carry out transforms that would either be too complex in SQL, or play a role in moving data around. For example, an ETL action that copies the database to S3, or exports a copy of the database as a CSV would be an ETL action that must be expressed in Golang.
+
+`sequence` is a comma- or newline-separated list of sequence actions. Each action should be a valid name in the table. When triggered as a sequence, each ETL action is run in turn; if one fails, the sequence exits. Each individual action is run in a transaction, but not the sequence as a whole.
