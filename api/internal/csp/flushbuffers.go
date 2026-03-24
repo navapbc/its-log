@@ -6,7 +6,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/navapbc/its-log/internal/b2"
+	"github.com/navapbc/its-log/internal/base"
 	"github.com/navapbc/its-log/internal/schema/models"
 	"github.com/navapbc/its-log/internal/types"
 )
@@ -65,7 +65,7 @@ func FlushBuffersOnce(ch_flush_in <-chan types.EventBuffers) {
 
 	for appId, dateMap := range org {
 		for formatted_date, events := range dateMap {
-			s := b2.NewStorage(appId)
+			s := base.NewStorage(appId)
 			err := s.SetDate(formatted_date)
 			if err != nil {
 				panic("failed to parse date in FlushBuffersOnce")
@@ -104,7 +104,7 @@ func FlushBuffers(ch_flush_in <-chan types.EventBuffers) {
 	}
 }
 
-func ManyEvents(s *b2.Storage, evt_buff []*types.Event) (int64, error) {
+func ManyEvents(s *base.Storage, evt_buff []*types.Event) (int64, error) {
 	counter := int64(0)
 
 	s.Lock()

@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/navapbc/its-log/internal/b2"
+	"github.com/navapbc/its-log/internal/base"
 	"github.com/navapbc/its-log/internal/constants"
 	"github.com/navapbc/its-log/internal/types"
 )
@@ -85,8 +85,8 @@ func Event(ch_evt_out chan<- *types.Event, permission types.PermissionType) func
 			return
 		}
 
-		evt.AppId = b2.GetOrPanic(c, constants.ITSLOG_APPID)
-		evt.KeyId = b2.GetOrPanic(c, constants.ITSLOG_KEYID)
+		evt.AppId = base.GetOrPanic(c, constants.ITSLOG_APPID)
+		evt.KeyId = base.GetOrPanic(c, constants.ITSLOG_KEYID)
 
 		// If it is a test event, we mangle a date parameter.
 		// If it is not a test event, we use Now().

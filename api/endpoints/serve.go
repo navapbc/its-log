@@ -10,13 +10,10 @@ import (
 	status "github.com/appleboy/gin-status-api"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/navapbc/its-log/docs"
 	"github.com/navapbc/its-log/internal/constants"
 	"github.com/navapbc/its-log/internal/csp"
 	"github.com/navapbc/its-log/internal/types"
 	"github.com/spf13/viper"
-	swaggerfiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func Serve() {
@@ -66,7 +63,6 @@ func PourGin(ch_evt_out chan<- *types.Event) *gin.Engine {
 
 	apiV1 := router.Group("/v1")
 
-	addSwaggerEndpoints(apiV1)
 	addMetadataEndpoints(apiV1)
 	addLoggingEndpoints(apiV1, ch_evt_out)
 	//addTestingEndpoints(apiV1, ch_evt_out)
@@ -74,12 +70,6 @@ func PourGin(ch_evt_out chan<- *types.Event) *gin.Engine {
 	//addSequenceEndpoints(apiV1)
 
 	return router
-}
-
-func addSwaggerEndpoints(rG *gin.RouterGroup) {
-	docs.SwaggerInfo.BasePath = rG.BasePath()
-	rG.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
-
 }
 
 func addMetadataEndpoints(rG *gin.RouterGroup) {

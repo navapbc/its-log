@@ -1,4 +1,4 @@
-package b2
+package base
 
 import (
 	"context"

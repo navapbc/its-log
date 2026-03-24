@@ -5,7 +5,7 @@ import (
 	"slices"
 
 	"github.com/gin-gonic/gin"
-	"github.com/navapbc/its-log/internal/b2"
+	"github.com/navapbc/its-log/internal/base"
 	"github.com/navapbc/its-log/internal/constants"
 	"github.com/navapbc/its-log/internal/types"
 )
@@ -29,7 +29,7 @@ import (
 func AuthMiddleWare(permissions []types.PermissionType) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		api_key := c.GetHeader("x-api-key")
-		for _, key := range b2.LiveKeys {
+		for _, key := range base.LiveKeys {
 			keylen := len(api_key)
 			doesContain := slices.Contains(permissions, key.Permission)
 			if doesContain && keylen >= 32 {
