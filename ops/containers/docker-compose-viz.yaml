@@ -1,0 +1,15 @@
+include:
+  - path: ./docker-compose.yaml
+services:
+  viz:
+    build:
+      context: .
+      dockerfile: sqliteviz/Dockerfile.python
+    command: python3 -m http.server 9999
+    volumes:
+      # If I use nginx
+      # - ./sqliteviz/inquiries.json:/usr/share/nginx/html/inquiries.json
+      # If I use Python
+      - ./sqliteviz/inquiries.json:/sqliteviz/inquiries.json
+    ports:
+      - "9999:9999"

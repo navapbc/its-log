@@ -1,0 +1,14 @@
+package constants
+
+const ITSLOG_APPID = "AppId"
+const ITSLOG_KEYID = "KeyId"
+
+const OK = "ok"
+const ERROR = "error"
+
+const (
+	Log = iota + 1
+	ReadOnly
+	Admin
+	Test
+)

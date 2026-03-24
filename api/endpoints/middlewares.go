@@ -1,0 +1,46 @@
+package serve
+
+import (
+	"net/http"
+	"slices"
+
+	"github.com/gin-gonic/gin"
+	"github.com/navapbc/its-log/internal/b2"
+	"github.com/navapbc/its-log/internal/constants"
+	"github.com/navapbc/its-log/internal/types"
+)
+
+// its-log is intended to be used by a single application.
+// For local testing, set `api_key` in the config file.
+// For production deployments, set `ITSLOG_API_KEY` to a
+// random value at least 32 bytes long. This is intended to be
+// a shared, symmetric key between the client and its-log.
+//
+// python -c 'import secrets ; print(secrets.token_urlsafe(32))'
+//
+// or
+//
+// openssl rand -hex 32
+//
+// would likely do the trick.
+//
+// This middleware sets the AppId for use downstream
+
+func AuthMiddleWare(permissions []types.PermissionType) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		api_key := c.GetHeader("x-api-key")
+		for _, key := range b2.LiveKeys {
+			keylen := len(api_key)
+			doesContain := slices.Contains(permissions, key.Permission)
+			if doesContain && keylen >= 32 {
+				if api_key == key.Key {
+					c.Set(constants.ITSLOG_KEYID, key.KeyId)
+					c.Set(constants.ITSLOG_APPID, key.AppId)
+					return
+				}
+			}
+		}
+		// Otherwise, fail.
+		c.AbortWithStatus(http.StatusUnauthorized)
+	}
+}

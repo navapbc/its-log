@@ -6,10 +6,20 @@ e2e:
 	up \
 	--abort-on-container-exit
 
+e2e-build:
+	docker compose \
+	-f docker-compose-e2e.yaml \
+	up \
+	--build \
+	--abort-on-container-exit
+
 amd:
 	cd ../../api ; make linux-amd
 arm:
 	cd ../../api ; make linux-arm
+
+native:
+	cd ../../api ; make native
 
 k6:
 	docker compose \

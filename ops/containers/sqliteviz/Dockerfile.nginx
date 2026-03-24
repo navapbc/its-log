@@ -1,0 +1,9 @@
+FROM nginx:trixie
+
+WORKDIR /sqliteviz
+RUN apt update && apt install -y zip
+RUN curl -LO https://github.com/lana-k/sqliteviz/releases/download/0.29.0/dist.zip
+RUN unzip dist.zip
+RUN mkdir -p /usr/share/nginx/html
+RUN cp -R . /usr/share/nginx/html
+COPY sqliteviz/inquiries.json /usr/share/nginx/html/inquiries.json

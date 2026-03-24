@@ -5,3 +5,4 @@ its-log
 .vscode/settings.json
 __*
 .DS_Store
+_base/*

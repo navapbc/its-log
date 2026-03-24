@@ -1,10 +1,14 @@
 package csp
 
 import (
+	"context"
+	"database/sql"
 	"log"
+	"time"
 
-	"github.com/jadudm/its-log/internal/base"
-	"github.com/spf13/viper"
+	"github.com/navapbc/its-log/internal/b2"
+	"github.com/navapbc/its-log/internal/schema/models"
+	"github.com/navapbc/its-log/internal/types"
 )
 
 // Using a nested set of maps, we end up with a structure
@@ -19,13 +23,13 @@ import (
 //
 //	\
 //	 2026-01-01 <- [ e1 ]
-type BufferTree map[string]map[string][]*base.Event
+type BufferTree map[string]map[string][]*types.Event
 
 // We could be getting things from any number of apps at any given time.
 // Therefore, the buffer needs to be organized for writing.
 // It is a multi-level hash.
 // org[appId][date] = []events
-func organizeEvents(eventBuffer EventBuffers) BufferTree {
+func organizeEvents(eventBuffer types.EventBuffers) BufferTree {
 	org := make(BufferTree)
 
 	for _, evt := range eventBuffer.Events {
@@ -38,12 +42,12 @@ func organizeEvents(eventBuffer EventBuffers) BufferTree {
 
 			if _, ok := org[evt.AppId]; !ok {
 				// If we have not seen this app before, we have to initialize it
-				org[evt.AppId] = make(map[string][]*base.Event)
+				org[evt.AppId] = make(map[string][]*types.Event)
 			}
 
 			// Now, have we seen this date before from that app?
 			if _, ok := org[evt.AppId]; !ok {
-				org[evt.AppId][formatted_date] = make([]*base.Event, 0)
+				org[evt.AppId][formatted_date] = make([]*types.Event, 0)
 			}
 
 			// We're ready; append the event
@@ -55,28 +59,26 @@ func organizeEvents(eventBuffer EventBuffers) BufferTree {
 
 }
 
-func FlushBuffersOnce(s *base.SqliteStorage, ch_flush_in <-chan EventBuffers) {
+func FlushBuffersOnce(ch_flush_in <-chan types.EventBuffers) {
 	eventBuffer := <-ch_flush_in
 	org := organizeEvents(eventBuffer)
 
 	for appId, dateMap := range org {
 		for formatted_date, events := range dateMap {
-			if s == nil {
-				s = &base.SqliteStorage{
-					Path: viper.GetString("storage.path"),
-					// Filename: formatted_date + ".sqlite",
-					AppId: appId,
-					Date:  formatted_date,
-					Kind:  base.NamedDatabase,
-				}
+			s := b2.NewStorage(appId)
+			err := s.SetDate(formatted_date)
+			if err != nil {
+				panic("failed to parse date in FlushBuffersOnce")
 			}
 
-			err := s.Init()
+			err = s.Init()
 			if err != nil {
-				log.Println(err.Error())
+				log.Println("storage init error: " + err.Error())
 				panic(err)
 			}
-			_, err = s.ManyEvents(events)
+
+			_, err = ManyEvents(s, events)
+
 			if err != nil {
 				// FIXME: really, this should percolate up to a 5xx error
 				// going back to the client. But, we don't have a Gin context, and
@@ -85,16 +87,59 @@ func FlushBuffersOnce(s *base.SqliteStorage, ch_flush_in <-chan EventBuffers) {
 				// we buffered the event(s), and then flushed the buffer. This may have
 				// to just be a log that we look for.
 				log.Printf("Failed to write event buffer; lost %d events\n", len(events))
+				log.Println("err: " + err.Error())
 			}
+
 			s.Close()
+
 		}
 	}
 
 }
 
 // For use in infinite contexts
-func FlushBuffers(ch_flush_in <-chan EventBuffers) {
+func FlushBuffers(ch_flush_in <-chan types.EventBuffers) {
 	for {
-		FlushBuffersOnce(nil, ch_flush_in)
+		FlushBuffersOnce(ch_flush_in)
 	}
+}
+
+func ManyEvents(s *b2.Storage, evt_buff []*types.Event) (int64, error) {
+	counter := int64(0)
+
+	s.Lock()
+	// Unlock regardless of whether we complete
+	// or leave part way through the loop.
+	defer s.Unlock()
+
+	for _, e := range evt_buff {
+		if e != nil {
+
+			valid_cluster := false
+			if len(e.Cluster) > 0 {
+				valid_cluster = true
+			}
+
+			valid_value := false
+			if len(e.Value) > 0 {
+				valid_value = true
+			}
+
+			_, err := s.Queries.LogEvent(context.Background(), models.LogEventParams{
+				Timestamp: e.Timestamp.Format(time.RFC3339),
+				KeyID:     e.KeyId,
+				Cluster:   sql.NullString{String: e.Cluster, Valid: valid_cluster},
+				Tags:      e.TagString,
+				Value:     sql.NullString{String: e.Value, Valid: valid_value},
+			})
+
+			if err != nil {
+				log.Println("Error in storing event:" + err.Error())
+				return -1, err
+			}
+			counter += 1
+		}
+	}
+
+	return counter, nil
 }
