@@ -1,4 +1,4 @@
-package serve
+package endpoints
 
 import (
 	"fmt"
@@ -23,7 +23,7 @@ func Serve() {
 
 	// Build the process network for buffering and
 	// saving events that come in via the API
-	ch_eb := make(chan types.EventBuffers)
+	ch_eb := make(chan types.EventBuffer)
 	ch_evt := make(chan *types.Event)
 	//ch_funs := make(chan func())
 
@@ -66,10 +66,26 @@ func PourGin(ch_evt_out chan<- *types.Event) *gin.Engine {
 	addMetadataEndpoints(apiV1)
 	addLoggingEndpoints(apiV1, ch_evt_out)
 	//addTestingEndpoints(apiV1, ch_evt_out)
-	//addEtlEndpoints(apiV1)
+	addEtlEndpoints(apiV1)
 	//addSequenceEndpoints(apiV1)
 
 	return router
+}
+
+func addEtlEndpoints(rG *gin.RouterGroup) {
+	auth_adminV1 := rG.Group("/")
+	permissions := []types.PermissionType{constants.Admin, constants.Test}
+	auth_adminV1.Use(AuthMiddleWare(permissions))
+
+	// Insert a new ETL step
+	auth_adminV1.POST("etl/insert", InsertEtl)
+	// Run an ETL step
+	// auth_adminV1.GET("etl/run/:date/:name", RunEtl)
+	// Retrieve the contents of a step, including the last run and run status
+	// auth_adminV1.GET("etl/retrieve/:date/:name", GetEtl)
+	// Combine a table from one DB into another DB
+	// auth_adminV1.PUT("combine/:source/:destination/:table", Combine)
+	// auth_adminV1.GET("etl/reload/:date", ReloadEtl)
 }
 
 func addMetadataEndpoints(rG *gin.RouterGroup) {

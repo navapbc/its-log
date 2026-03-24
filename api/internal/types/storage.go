@@ -1,11 +1,11 @@
-package base
+package types
 
 import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"path"
+	"strings"
 	"sync"
 	"time"
 
@@ -15,7 +15,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-var SQLITE_PARAMS = [...]string{"_time_format=sqlite"}
+var SQLITE_PARAMS = [...]string{"_timefmt=sqlite"}
 
 const SQLITE_DRIVER string = "sqlite3"
 
@@ -63,11 +63,10 @@ func NewStorage(appId string) *Storage {
 func (s *Storage) Init() error {
 	// Compute filename based on date and app ID
 	s.filename = fmt.Sprintf("%s_%s.sqlite", s.AppId, s.YYYYMMDD())
-	// +"?"+strings.Join(SQLITE_PARAMS[:], "&")
-	dbPath := path.Join(viper.GetString("storage.path"), s.filename)
-	log.Println("opening database: " + dbPath)
+	// https://github.com/ncruces/go-sqlite3/commit/7c820ede3caf7a861f53c700e188db59d9928d3b
+	dbPath := path.Join(viper.GetString("storage.path"), s.filename+"?"+strings.Join(SQLITE_PARAMS[:], "&"))
 	// Create tables
-	db, err := sql.Open(SQLITE_DRIVER, dbPath)
+	db, err := sql.Open(SQLITE_DRIVER, "file:"+dbPath)
 	if err != nil {
 		panic("could not create database: " + s.filename)
 	}
@@ -75,27 +74,22 @@ func (s *Storage) Init() error {
 
 	// Load query models
 	s.Queries = models.New(s.db)
-	// Populate tables
-	if _, err := s.db.ExecContext(context.Background(), schema.DDL); err != nil {
-		return err
-	}
-	// If the file exists, check that there's something in the ETL.
-	summaries, err := s.Queries.GetAllSummaries(context.Background())
+
+	// Create tables
+	_, err = s.db.ExecContext(context.Background(), schema.DDL)
 	if err != nil {
 		return err
-	}
-	if !(len(summaries) > 0) {
-		// If we can't find the table, it isn't initialized.
-		log.Println("Loading default ETL values")
-		LoadDefaultEtlFiles(s)
 	}
 
 	return nil
 }
 
 func (s *Storage) Close() {
-
 	s.db.Close()
+}
+
+func (s *Storage) GetDB() *sql.DB {
+	return s.db
 }
 
 func (s *Storage) Lock() {

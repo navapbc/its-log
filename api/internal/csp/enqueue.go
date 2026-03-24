@@ -26,21 +26,8 @@ import (
 	"github.com/navapbc/its-log/internal/types"
 )
 
-// Do this by value, so we can pass it down a channel,
-// create a new set of buffers, and not worry about
-// races on the pointered structure.
-func NewEventBuffers(buffer_length int) types.EventBuffers {
-	eb := types.EventBuffers{
-		Events: make([]*types.Event, buffer_length),
-	}
-	eb.NextEventPtr = 0
-	eb.EventBufferLength = buffer_length
-
-	return eb
-}
-
-func Enqueue(ch_evt_in <-chan *types.Event, ch_flush_out chan<- types.EventBuffers, bufferLength int, timeout int) {
-	event_buffers := NewEventBuffers(bufferLength)
+func Enqueue(ch_evt_in <-chan *types.Event, ch_flush_out chan<- types.EventBuffer, bufferLength int, timeout int) {
+	event_buffers := types.NewEventBuffer(bufferLength)
 	timeoutDuration := time.Duration(timeout) * time.Second
 	timer := time.NewTimer(timeoutDuration)
 	defer timer.Stop()
@@ -49,11 +36,18 @@ func Enqueue(ch_evt_in <-chan *types.Event, ch_flush_out chan<- types.EventBuffe
 		select {
 		case e := <-ch_evt_in:
 			is_full := event_buffers.AddEvent(e)
+			// We reset the timer here because we're "live" and getting
+			// events in less than timeoutDuration seconds. So, let's not flush
+			// yet. Flushing the buffer too frequently leads to bad performance
+			// when under heavy logging load.
 			timer.Reset(timeoutDuration)
+			// If the buffer is full, we should flush and create a new buffer.
+			// This lets us keep grabbing events from the API handler while we are
+			// writing this buffer to the DB.
 			if is_full {
 				log.Println("flushing full buffers")
 				ch_flush_out <- event_buffers
-				event_buffers = NewEventBuffers(bufferLength)
+				event_buffers = types.NewEventBuffer(bufferLength)
 			}
 		case <-timer.C:
 			// This will flush once at startup, because the timer fires.
@@ -62,7 +56,7 @@ func Enqueue(ch_evt_in <-chan *types.Event, ch_flush_out chan<- types.EventBuffe
 			// Send the structure out for writing
 			ch_flush_out <- event_buffers
 			// Allocate a new structure here in this process
-			event_buffers = NewEventBuffers(bufferLength)
+			event_buffers = types.NewEventBuffer(bufferLength)
 			// Do not reset the timer here. Only reset if
 			// new events come through, and they might need to
 			// be flushed before the buffer is full.

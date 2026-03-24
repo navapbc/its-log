@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/navapbc/its-log/internal/schema/models"
+	"github.com/navapbc/its-log/internal/types"
 )
 
 //go:embed etl/sql
@@ -18,14 +19,14 @@ var defaultSql embed.FS
 //go:embed etl/sequence
 var defaultSeq embed.FS
 
-// //go:embed etl/golang
-// var defaultGolang embed.FS
+//go:embed etl/golang
+var defaultGolang embed.FS
 
 func fileNameWithoutExtension(fileName string) string {
 	return strings.TrimSuffix(fileName, filepath.Ext(fileName))
 }
 
-func insertEtl(s *Storage, key, name, kind, body string) {
+func insertEtl(s *types.Storage, key, name, kind, body string) {
 	err := s.Queries.InsertETL(context.Background(), models.InsertETLParams{
 		KeyID: key,
 		Name:  name,
@@ -39,7 +40,7 @@ func insertEtl(s *Storage, key, name, kind, body string) {
 	}
 }
 
-func loadFilesFromFS(s *Storage, dirName string) {
+func loadFilesFromFS(s *types.Storage, dirName string) {
 	var filesystem embed.FS
 	switch dirName {
 	case "sql":
@@ -47,7 +48,7 @@ func loadFilesFromFS(s *Storage, dirName string) {
 	case "sequence":
 		filesystem = defaultSeq
 	case "golang":
-		// filesystem = defaultGolang
+		filesystem = defaultGolang
 	}
 	dirEntries, err := fs.ReadDir(filesystem, filepath.Join("etl", dirName))
 	if err != nil {
@@ -71,10 +72,19 @@ func loadFilesFromFS(s *Storage, dirName string) {
 
 }
 
-func LoadDefaultEtlFiles(s *Storage) {
-	// Just log if we can't read from the embedded FS.
-	// Actually... panic? Yeah. This shouldn't fail.
-	loadFilesFromFS(s, "sql")
-	loadFilesFromFS(s, "sequence")
-	//loadFilesFromFS(s, "golang")
+func LoadDefaultEtlFiles(s *types.Storage) error {
+
+	// If the file exists, check that there's something in the ETL.
+	_, err := s.Queries.GetETL(context.Background(), "sentinel")
+	if err != nil {
+		// If we can't find the table, it isn't initialized.
+		log.Println("Loading default ETL values")
+		// Just log if we can't read from the embedded FS.
+		// Actually... panic? Yeah. This shouldn't fail.
+		loadFilesFromFS(s, "sql")
+		loadFilesFromFS(s, "sequence")
+		loadFilesFromFS(s, "golang")
+	}
+
+	return nil
 }

@@ -1,0 +1,17 @@
+package types
+
+import "github.com/gin-gonic/gin"
+
+type ETLPostBody struct {
+	Name string `json:"name" binding:"required"`
+	Kind string `json:"kind" binding:"required"`
+	Body string `json:"body" binding:"required"`
+	Date string `json:"date" binding:"required"`
+}
+
+type EtlParams struct {
+	Storage *Storage
+	GinCtx  *gin.Context
+	AppId   string
+	KeyId   string
+}

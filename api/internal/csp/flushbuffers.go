@@ -29,7 +29,7 @@ type BufferTree map[string]map[string][]*types.Event
 // Therefore, the buffer needs to be organized for writing.
 // It is a multi-level hash.
 // org[appId][date] = []events
-func organizeEvents(eventBuffer types.EventBuffers) BufferTree {
+func organizeEvents(eventBuffer types.EventBuffer) BufferTree {
 	org := make(BufferTree)
 
 	for _, evt := range eventBuffer.Events {
@@ -59,14 +59,16 @@ func organizeEvents(eventBuffer types.EventBuffers) BufferTree {
 
 }
 
-func FlushBuffersOnce(ch_flush_in <-chan types.EventBuffers) {
+var isEtlLoaded = make(map[string]bool)
+
+func FlushBuffersOnce(ch_flush_in <-chan types.EventBuffer) {
 	eventBuffer := <-ch_flush_in
 	org := organizeEvents(eventBuffer)
 
 	for appId, dateMap := range org {
-		for formatted_date, events := range dateMap {
-			s := base.NewStorage(appId)
-			err := s.SetDate(formatted_date)
+		for formattedDate, events := range dateMap {
+			s := types.NewStorage(appId)
+			err := s.SetDate(formattedDate)
 			if err != nil {
 				panic("failed to parse date in FlushBuffersOnce")
 			}
@@ -90,6 +92,14 @@ func FlushBuffersOnce(ch_flush_in <-chan types.EventBuffers) {
 				log.Println("err: " + err.Error())
 			}
 
+			if _, ok := isEtlLoaded[formattedDate]; !ok {
+				err := base.LoadDefaultEtlFiles(s)
+				if err != nil {
+					log.Println("could not load default ETL files for " + formattedDate + ": " + err.Error())
+				}
+				isEtlLoaded[formattedDate] = true
+			}
+
 			s.Close()
 
 		}
@@ -98,13 +108,13 @@ func FlushBuffersOnce(ch_flush_in <-chan types.EventBuffers) {
 }
 
 // For use in infinite contexts
-func FlushBuffers(ch_flush_in <-chan types.EventBuffers) {
+func FlushBuffers(ch_flush_in <-chan types.EventBuffer) {
 	for {
 		FlushBuffersOnce(ch_flush_in)
 	}
 }
 
-func ManyEvents(s *base.Storage, evt_buff []*types.Event) (int64, error) {
+func ManyEvents(s *types.Storage, evt_buff []*types.Event) (int64, error) {
 	counter := int64(0)
 
 	s.Lock()
@@ -134,7 +144,7 @@ func ManyEvents(s *base.Storage, evt_buff []*types.Event) (int64, error) {
 			})
 
 			if err != nil {
-				log.Println("Error in storing event:" + err.Error())
+				log.Println("Error in storing event: " + err.Error())
 				return -1, err
 			}
 			counter += 1

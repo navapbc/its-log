@@ -1,4 +1,4 @@
-package serve
+package endpoints
 
 import (
 	"net/http"
@@ -13,14 +13,14 @@ import (
 // its-log is intended to be used by a single application.
 // For local testing, set `api_key` in the config file.
 // For production deployments, set `ITSLOG_API_KEY` to a
-// random value at least 32 bytes long. This is intended to be
+// random value at least 48 bytes long. This is intended to be
 // a shared, symmetric key between the client and its-log.
 //
-// python -c 'import secrets ; print(secrets.token_urlsafe(32))'
+// python -c 'import secrets ; print(secrets.token_urlsafe(48))'
 //
 // or
 //
-// openssl rand -hex 32
+// openssl rand -base64 48
 //
 // would likely do the trick.
 //
@@ -32,7 +32,7 @@ func AuthMiddleWare(permissions []types.PermissionType) gin.HandlerFunc {
 		for _, key := range base.LiveKeys {
 			keylen := len(api_key)
 			doesContain := slices.Contains(permissions, key.Permission)
-			if doesContain && keylen >= 32 {
+			if doesContain && keylen >= 48 {
 				if api_key == key.Key {
 					c.Set(constants.ITSLOG_KEYID, key.KeyId)
 					c.Set(constants.ITSLOG_APPID, key.AppId)
