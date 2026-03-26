@@ -4,9 +4,7 @@ import (
 	"log"
 	"os"
 	"path"
-	"time"
 
-	"github.com/navapbc/its-log/e2e"
 	serve "github.com/navapbc/its-log/endpoints"
 	"github.com/navapbc/its-log/internal/base"
 	"github.com/spf13/cobra"
@@ -64,11 +62,11 @@ func test_cmd(cmd *cobra.Command, args []string) {
 	log.Printf("storage path: %s", viper.GetString("storage.path"))
 
 	go serve.Serve()
-	e2e.GenerateLogEvents()
-	for _ = range 5 {
-		time.Sleep(1 * time.Second)
-		log.Print(".")
-	}
+	// e2e.GenerateLogEvents()
+	// for _ = range 5 {
+	// 	time.Sleep(1 * time.Second)
+	// 	log.Print(".")
+	// }
 
 	os.Exit(0)
 }

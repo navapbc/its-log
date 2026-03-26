@@ -13,16 +13,17 @@ import (
 
 // Using a nested set of maps, we end up with a structure
 // that looks roughly like the following:
+//
 // app1
 //
 //	|
-//	| - 2026-01-01 <- [ e1, e2 ]
-//	| - 2026-01-02 <- [ e1, e2, e3 ]
+//	| - 2026-01-01 <- [ e1, e3 ]
+//	| - 2026-01-02 <- [ e2, e4, e5 ]
 //
 // app2
 //
 //	\
-//	 2026-01-01 <- [ e1 ]
+//	 2026-01-01 <- [ e6 ]
 type BufferTree map[string]map[string][]*types.Event
 
 // We could be getting things from any number of apps at any given time.
@@ -83,25 +84,26 @@ func FlushBuffersOnce(ch_flush_in <-chan types.EventBuffer) {
 
 			if err != nil {
 				// FIXME: really, this should percolate up to a 5xx error
-				// going back to the client. But, we don't have a Gin context, and
-				// we're far away from the point where the event was logged.
-				// There's no direct communication back to the client at this point, because
-				// we buffered the event(s), and then flushed the buffer. This may have
-				// to just be a log that we look for.
+				// going back to the client. But, there's no direct communication back to
+				// the client at this point, because we buffered the event(s), and then
+				// flushed the buffer. This may have to just be a log that we look for.
 				log.Printf("Failed to write event buffer; lost %d events\n", len(events))
 				log.Println("err: " + err.Error())
 			}
 
+			// This `if` saves us from attempting to reload multiple times for a single
+			// running session of its-log, but it also means there is no hot-reloading
+			// of the defaults. (Or, there could be, but it would have to be an API call.)
+			// I think this keeps us from hitting the DB too often, so I'm going to leave it.
 			if _, ok := isEtlLoaded[formattedDate]; !ok {
 				err := base.LoadDefaultEtlFiles(s)
 				if err != nil {
 					log.Println("could not load default ETL files for " + formattedDate + ": " + err.Error())
+				} else {
+					isEtlLoaded[formattedDate] = true
 				}
-				isEtlLoaded[formattedDate] = true
 			}
-
 			s.Close()
-
 		}
 	}
 
