@@ -16,6 +16,10 @@ func RunDefaultSequence() *types.Storage {
 	}
 	s := types.NewStorage(apiKey.AppId)
 	s.Init()
+	// If we don't do an insert, then nothing loads the
+	// default ETLs. For testing, we have to force the issue.
+	base.LoadDefaultEtlFiles(s)
+
 	today := s.YYYYMMDD()
 	target := "/v1" + constants.SEQUENCE_RUN
 	target = strings.Replace(target, ":date", today, -1)

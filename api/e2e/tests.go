@@ -14,18 +14,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-func StressTest(wg *sync.WaitGroup, iterations int, jitter int) {
-	defer wg.Done()
-	gleCount := GenerateLogEvents(iterations, jitter)
-	glevCount := GenerateLogEventsWithValues(iterations, jitter)
-	gclCount := GenerateClusteredLogs(iterations, jitter)
-	total := gleCount + glevCount + gclCount
-	time.Sleep(time.Duration(viper.GetInt("buffer.flushwaitsec")+1) * time.Second)
-	RunDefaultSequence()
-	log.Printf("total events: %d\n", total)
-}
-
-const DETERMINISTIC_ITERATIONS = 5
+const DETERMINISTIC_ITERATIONS = 10
 
 var count_total int = 27 * DETERMINISTIC_ITERATIONS
 var count_by_tags = map[string]int{
@@ -66,11 +55,25 @@ func DeterministicTest(iterations int) {
 		CheckSummaryValue("count.combinations", tags, value)
 	}
 }
+func StressTest(wg *sync.WaitGroup, iterations int, jitter int) {
+	defer wg.Done()
+	gleCount := GenerateLogEvents(iterations, jitter)
+	glevCount := GenerateLogEventsWithValues(iterations, jitter)
+	gclCount := GenerateClusteredLogs(iterations, jitter)
+	total := gleCount + glevCount + gclCount
+	time.Sleep(time.Duration(viper.GetInt("buffer.flushwaitsec")+1) * time.Second)
+	RunDefaultSequence()
+	log.Printf("total events: %d\n", total)
+}
 
-func Cleanup() {
+func Setup() *types.Storage {
 	// Cleanup
 	s := types.NewStorage("pupper")
 	s.Init()
+	return s
+}
+
+func Cleanup(s *types.Storage) {
 	s.Delete()
 }
 
@@ -82,25 +85,28 @@ func RunTests() {
 	go endpoints.Serve()
 
 	// Make sure nothing is hanging around
-	Cleanup()
+	s := Setup()
+	Cleanup(s)
 
 	// This is a deterministic test.
 	// We should be able to get the same results every time it runs.
 	// This can run blocking.
+	log.Println("== Running deterministic tests ==")
 	DeterministicTest(DETERMINISTIC_ITERATIONS)
-	os.Exit(0)
-	Cleanup()
+	Cleanup(Setup())
+	Setup()
 
 	// This stresses the concurrent/parallel nature of the server, with
 	// multiple loggers at once, as well as running the ETL while under heavy
 	// logging load.
+	log.Println("== Running parallel stress tests ==")
 	var wg sync.WaitGroup
 	for i := range 5 {
 		wg.Add(1)
-		go StressTest(&wg, 50*i, 10*i)
+		go StressTest(&wg, 50*i+1, 10*i+1)
 	}
 	wg.Wait()
-	Cleanup()
+	Cleanup(Setup())
 
 	os.Exit(0)
 }
