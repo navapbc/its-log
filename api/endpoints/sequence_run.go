@@ -55,6 +55,7 @@ func RunSequence(c *gin.Context) {
 		steps = strings.Split(trimmed, "\n")
 	}
 
+	// Lock the entire sequence.
 	s.Lock()
 	defer s.Unlock()
 
