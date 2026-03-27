@@ -14,3 +14,5 @@ const (
 )
 
 const MINIMUM_API_KEY_LENGTH = 32
+
+const ETL_SUCCESS_VALUE = 0

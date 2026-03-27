@@ -11,13 +11,6 @@ type ETLPostBody struct {
 	Date string `json:"date" binding:"required"`
 }
 
-// type EtlParams struct {
-// 	Storage *Storage
-// 	GinCtx  *gin.Context
-// 	AppId   string
-// 	KeyId   string
-// }
-
 type RunEtlParams struct {
 	AppId   string
 	GinCtx  *gin.Context

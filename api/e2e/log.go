@@ -19,15 +19,15 @@ func buildBase() string {
 	return fmt.Sprintf("http://%s:%s", os.Getenv("ITSLOG_SERVE_HOST"), os.Getenv("ITSLOG_SERVE_PORT"))
 }
 
-func GenerateLogEvents(N int64) int {
+func GenerateLogEvents(iterations int, jitter int) int {
 	targetUrl := buildBase() + "/v1/log"
 	apiKey, _ := base.GetKeyBundle("pupper", "pup_logging")
-	counter := 0
+	var counter int = 0
 	for _, version := range versions {
 		for _, endpoint := range endpoints {
 			// This generates 45 events
-			for range N {
-				time.Sleep(time.Duration(rand.IntN(3)) * time.Millisecond)
+			for range iterations {
+				time.Sleep(time.Duration(rand.IntN(jitter)) * time.Millisecond)
 				bundle := map[string]any{
 					"tags": [...]string{version, endpoint},
 				}
@@ -47,7 +47,7 @@ func generatePatientId(length int) string {
 	return base64.URLEncoding.EncodeToString(bytes)[:length]
 }
 
-func GenerateLogEventsWithValues(N int64) int {
+func GenerateLogEventsWithValues(iterations int, jitter int) int {
 	targetUrl := buildBase() + "/v1/log"
 	apiKey, _ := base.GetKeyBundle("pupper", "pup_logging")
 
@@ -55,8 +55,8 @@ func GenerateLogEventsWithValues(N int64) int {
 	for _, version := range versions {
 		for _, endpoint := range endpoints {
 			// This generates 9*N events
-			for range N {
-				time.Sleep(time.Duration(rand.IntN(3)) * time.Millisecond)
+			for range iterations {
+				time.Sleep(time.Duration(rand.IntN(jitter)) * time.Millisecond)
 				bundle := map[string]any{
 					"tags":  [...]string{version, endpoint},
 					"value": generatePatientId(8),
@@ -70,14 +70,14 @@ func GenerateLogEventsWithValues(N int64) int {
 }
 
 // 9 events total in three clusters of three
-func GenerateClusteredLogs(N int64) int {
+func GenerateClusteredLogs(iterations int, jitter int) int {
 	targetUrl := buildBase() + "/v1/log"
 	apiKey, _ := base.GetKeyBundle("pupper", "pup_logging")
 
 	counter := 0
 	for _, version := range versions {
-		for _ = range N {
-			time.Sleep(time.Duration(rand.IntN(3)) * time.Millisecond)
+		for _ = range iterations {
+			time.Sleep(time.Duration(rand.IntN(jitter)) * time.Millisecond)
 			cluster := generatePatientId(8)
 			for _, endpoint := range endpoints {
 				bundle := map[string]any{

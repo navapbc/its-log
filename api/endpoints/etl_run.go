@@ -11,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/navapbc/its-log/internal/base"
 	etl "github.com/navapbc/its-log/internal/base/etl/golang"
+	"github.com/navapbc/its-log/internal/constants"
 	"github.com/navapbc/its-log/internal/schema/models"
 	"github.com/navapbc/its-log/internal/types"
 )
@@ -140,11 +141,6 @@ func callWithParams(etlP *types.RunEtlParams, theSql string) *sql.Row {
 }
 
 func etlRunSql(etlP *types.RunEtlParams, row models.GetETLRow, tx *sql.Tx) error {
-	named := make([]sql.NamedArg, 0)
-	named = append(named, sql.Named("key_id", &etlP.KeyId))
-	named = append(named, sql.Named("app_id", &etlP.AppId))
-	named = append(named, sql.Named("date", etlP.Storage.YYYYMMDD()))
-
 	// Run the query
 	if !row.Body.Valid {
 		msg := "sql is null for ETL step"
@@ -171,10 +167,10 @@ func etlRunSql(etlP *types.RunEtlParams, row models.GetETLRow, tx *sql.Tx) error
 	case sql.ErrNoRows:
 		log.Println("No rows were returned!")
 	case nil:
-		if success == 1 {
+		if success == constants.ETL_SUCCESS_VALUE {
 			return nil
 		} else {
-			return fmt.Errorf("expected 1; %s returned %v", row.Name, success)
+			return fmt.Errorf("expected %d; %s returned %v", constants.ETL_SUCCESS_VALUE, row.Name, success)
 		}
 	default:
 		log.Println(etlP)
@@ -187,7 +183,10 @@ func etlRunSql(etlP *types.RunEtlParams, row models.GetETLRow, tx *sql.Tx) error
 func etlRunGolang(etlP *types.RunEtlParams, row models.GetETLRow, tx *sql.Tx) error {
 	functionName := row.Name
 	if function, ok := etl.GolangETLMap[functionName]; ok {
-		function(etlP)
+		err := function(etlP)
+		if err != nil {
+			return err
+		}
 	} else {
 		fmt.Printf("Function %s not found\n", functionName)
 	}

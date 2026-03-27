@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path"
-	"time"
+	"sync"
 
 	"github.com/gin-gonic/gin"
 	"github.com/navapbc/its-log/e2e"
@@ -35,7 +35,7 @@ func configureEnv() {
 		"ITSLOG_APIKEY_PUPPERADMIN":  "{\"app_id\": \"pupper\", \"key_id\": \"pup_admin\", \"permission\": \"admin\", \"key\": \"abcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefgh\"}",
 		"ITSLOG_BUFFER_FLUSHWAITSEC": "1",
 		"ITSLOG_BUFFER_LENGTH":       "100",
-		"ITSLOG_GINMODE":             "production", // "debug" or "production"
+		"ITSLOG_GINMODE":             "debug", // "debug" or "production"
 		"ITSLOG_PROXIES_TRUSTED":     "TBD",
 		"ITSLOG_STORAGE_PATH":        path.Join(os.TempDir()),
 	}
@@ -48,16 +48,14 @@ func configureEnv() {
 	}
 }
 
-func testSequence(N int64) {
-	gleCount := e2e.GenerateLogEvents(N)
-	glevCount := e2e.GenerateLogEventsWithValues(N)
-	gclCount := e2e.GenerateClusteredLogs(N)
+func stressTest(wg *sync.WaitGroup, iterations int, jitter int) {
+	defer wg.Done()
+	gleCount := e2e.GenerateLogEvents(iterations, jitter)
+	glevCount := e2e.GenerateLogEventsWithValues(iterations, jitter)
+	gclCount := e2e.GenerateClusteredLogs(iterations, jitter)
 	total := gleCount + glevCount + gclCount
-
 	e2e.RunDefaultSequence()
-
 	log.Printf("total events: %d\n", total)
-
 }
 
 func test_cmd(cmd *cobra.Command, args []string) {
@@ -82,28 +80,12 @@ func test_cmd(cmd *cobra.Command, args []string) {
 
 	go serve.Serve()
 
-	for _ = range 5 {
-		go testSequence(100)
+	var wg sync.WaitGroup
+	for i := range 5 {
+		wg.Add(1)
+		go stressTest(&wg, 50*i, 10*i)
 	}
-
-	for _ = range 2 {
-		time.Sleep(1 * time.Second)
-		log.Print("x")
-	}
-	e2e.RunDefaultSequence()
-
-	for _ = range 2 {
-		time.Sleep(1 * time.Second)
-		log.Print("y")
-	}
-	e2e.RunDefaultSequence()
-
-	for _ = range 5 {
-		time.Sleep(1 * time.Second)
-		log.Print("z")
-	}
-
-	e2e.RunDefaultSequence()
+	wg.Wait()
 
 	log.Println(path.Join(os.Getenv("ITSLOG_STORAGE_PATH")))
 	os.Exit(0)

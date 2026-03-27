@@ -55,6 +55,9 @@ func RunSequence(c *gin.Context) {
 		steps = strings.Split(trimmed, "\n")
 	}
 
+	s.Lock()
+	defer s.Unlock()
+
 	for _, step := range steps {
 		err := runEtl(&types.RunEtlParams{
 			AppId:   appId,
@@ -67,6 +70,7 @@ func RunSequence(c *gin.Context) {
 		if err != nil {
 			errStep = step
 			log.Println("breaking on step: " + step)
+			log.Println("err: " + err.Error())
 			break
 		}
 	}

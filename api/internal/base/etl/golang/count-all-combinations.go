@@ -27,7 +27,7 @@ func unique[A comparable](input []A) []A {
 	return result
 }
 
-func CountAllCombinations(etlP *types.RunEtlParams) {
+func CountAllCombinations(etlP *types.RunEtlParams) error {
 	allTags, err := etlP.Storage.Queries.GetDistinctTags(context.Background())
 	if err != nil {
 		panic(":panicohnoes: " + err.Error())
@@ -89,7 +89,8 @@ func CountAllCombinations(etlP *types.RunEtlParams) {
 		if err != nil {
 			// FIXME: Handle this error better.
 			// If that query didn't work, panic.
-			panic(err)
+			log.Println("combinations SQL event count err: " + err.Error())
+			return err
 		}
 		// Build a map of the counts against the original name.
 		slices.Sort(comb)
@@ -108,8 +109,11 @@ func CountAllCombinations(etlP *types.RunEtlParams) {
 				(?, 'count.combinations', ?, ?)`,
 				etlP.KeyId, tag, count)
 			if err != nil {
-				log.Println("err " + err.Error())
+				log.Println("combinations SQL insert err: " + err.Error())
+				return err
 			}
 		}
 	}
+
+	return nil
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"os"
 	"path"
 	"strings"
 	"sync"
@@ -98,4 +99,9 @@ func (s *Storage) Lock() {
 
 func (s *Storage) Unlock() {
 	s.lock.Unlock()
+}
+
+func (s *Storage) Delete() {
+	path := path.Join(viper.GetString("storage.path"), s.filename)
+	os.Remove(path)
 }
