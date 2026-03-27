@@ -18,7 +18,7 @@ import (
 
 // This is the handler if we call it directly from the API.
 // We only get the gin context.
-func RunEtlHandler(c *gin.Context) {
+func RunEtl(c *gin.Context) {
 	appId := base.GetOrPanic(c, "AppId")
 	keyId := base.GetOrPanic(c, "KeyId")
 	date := c.GetString("date")

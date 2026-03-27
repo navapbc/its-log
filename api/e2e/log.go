@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/navapbc/its-log/internal/base"
+	"github.com/navapbc/its-log/internal/constants"
 )
 
 var versions = [...]string{"v1", "v2", "v3"}
@@ -20,7 +21,7 @@ func buildBase() string {
 }
 
 func GenerateLogEvents(iterations int, jitter int) int {
-	targetUrl := buildBase() + "/v1/log"
+	targetUrl := buildBase() + "/v1" + constants.LOG_CREATE
 	apiKey, _ := base.GetKeyBundle("pupper", "pup_logging")
 	var counter int = 0
 	for _, version := range versions {
@@ -48,7 +49,7 @@ func generatePatientId(length int) string {
 }
 
 func GenerateLogEventsWithValues(iterations int, jitter int) int {
-	targetUrl := buildBase() + "/v1/log"
+	targetUrl := buildBase() + "/v1" + constants.LOG_CREATE
 	apiKey, _ := base.GetKeyBundle("pupper", "pup_logging")
 
 	counter := 0
@@ -71,7 +72,7 @@ func GenerateLogEventsWithValues(iterations int, jitter int) int {
 
 // 9 events total in three clusters of three
 func GenerateClusteredLogs(iterations int, jitter int) int {
-	targetUrl := buildBase() + "/v1/log"
+	targetUrl := buildBase() + "/v1" + constants.LOG_CREATE
 	apiKey, _ := base.GetKeyBundle("pupper", "pup_logging")
 
 	counter := 0

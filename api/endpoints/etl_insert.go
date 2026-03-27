@@ -13,7 +13,7 @@ import (
 	"github.com/navapbc/its-log/internal/types"
 )
 
-func InsertEtl(c *gin.Context) {
+func CreateEtl(c *gin.Context) {
 
 	var body types.ETLPostBody
 	// Call ShouldBindJSON to bind the incoming JSON to the newItem struct

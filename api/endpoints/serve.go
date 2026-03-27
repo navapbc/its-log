@@ -63,8 +63,8 @@ func PourGin(ch_evt_out chan<- *types.Event) *gin.Engine {
 
 	apiV1 := router.Group("/v1")
 
-	addMetadataEndpoints(apiV1)
 	addLoggingEndpoints(apiV1, ch_evt_out)
+	addMetadataEndpoints(apiV1)
 	//addTestingEndpoints(apiV1, ch_evt_out)
 	addEtlEndpoints(apiV1)
 	addSequenceEndpoints(apiV1)
@@ -72,15 +72,25 @@ func PourGin(ch_evt_out chan<- *types.Event) *gin.Engine {
 	return router
 }
 
+// LOGGING ENDPOINTS
+func addLoggingEndpoints(rG *gin.RouterGroup, ch_evt_out chan<- *types.Event) {
+	// Logging
+	auth_logV1 := rG.Group("/")
+	permissions := []types.PermissionType{constants.Log, constants.Test}
+	auth_logV1.Use(AuthMiddleWare(permissions))
+	auth_logV1.POST(constants.LOG_CREATE, InsertLog(ch_evt_out, constants.Log))
+}
+
+// ETL ENDPOINTS
 func addEtlEndpoints(rG *gin.RouterGroup) {
 	auth_adminV1 := rG.Group("/")
 	permissions := []types.PermissionType{constants.Admin, constants.Test}
 	auth_adminV1.Use(AuthMiddleWare(permissions))
 
 	// Insert a new ETL step
-	auth_adminV1.POST("etl/insert", InsertEtl)
+	auth_adminV1.POST(constants.ETL_CREATE, CreateEtl)
 	// Run an ETL step
-	auth_adminV1.GET("etl/run/:date/:name", RunEtlHandler)
+	auth_adminV1.GET(constants.ETL_RUN, RunEtl)
 	// Retrieve the contents of a step, including the last run and run status
 	// auth_adminV1.GET("etl/retrieve/:date/:name", GetEtl)
 	// Combine a table from one DB into another DB
@@ -88,9 +98,10 @@ func addEtlEndpoints(rG *gin.RouterGroup) {
 	// auth_adminV1.GET("etl/reload/:date", ReloadEtl)
 }
 
+// METADATA ENDPOINTS
 func addMetadataEndpoints(rG *gin.RouterGroup) {
 	// The healthcheck is a public endpoint
-	rG.GET("/health", func(c *gin.Context) {
+	rG.GET(constants.METADATA_HEALTH, func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
 
@@ -104,7 +115,7 @@ func addMetadataEndpoints(rG *gin.RouterGroup) {
 		constants.Test,
 	}
 	auth_adminV1.Use(AuthMiddleWare(permissions))
-	rG.GET("/status", status.GinHandler)
+	rG.GET(constants.METADATA_STATUS, status.GinHandler)
 
 }
 
@@ -117,7 +128,7 @@ func addSequenceEndpoints(rG *gin.RouterGroup) {
 	// It's actually just inserting an entry into the
 	// ETL table with the correct values. We give it a 'sequence'
 	// endpoint, but it is interchangeable.
-	auth_adminV1.POST("sequence/:date", InsertEtl)
+	auth_adminV1.POST(constants.SEQUENCE_CREATE, CreateEtl)
 	// Run a sequence
-	auth_adminV1.GET("sequence/:date/:name", RunSequence)
+	auth_adminV1.GET(constants.SEQUENCE_RUN, RunSequence)
 }

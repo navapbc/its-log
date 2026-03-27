@@ -14,14 +14,6 @@ import (
 	"github.com/navapbc/its-log/internal/types"
 )
 
-func addLoggingEndpoints(rG *gin.RouterGroup, ch_evt_out chan<- *types.Event) {
-	// Logging
-	auth_logV1 := rG.Group("/")
-	permissions := []types.PermissionType{constants.Log, constants.Test}
-	auth_logV1.Use(AuthMiddleWare(permissions))
-	auth_logV1.POST("/log", InsertLog(ch_evt_out, constants.Log))
-}
-
 func InsertLog(ch_evt_out chan<- *types.Event, permission types.PermissionType) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		var evt types.Event
