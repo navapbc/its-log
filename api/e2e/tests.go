@@ -55,8 +55,8 @@ func DeterministicTest(iterations int) {
 		CheckSummaryValue("count.combinations", tags, value)
 	}
 }
-func StressTest(wg *sync.WaitGroup, iterations int, jitter int) {
-	defer wg.Done()
+func StressTest(iterations int, jitter int) {
+	log.Printf("== Running stress test: %d ==\n", iterations)
 	gleCount := GenerateLogEvents(iterations, jitter)
 	glevCount := GenerateLogEventsWithValues(iterations, jitter)
 	gclCount := GenerateClusteredLogs(iterations, jitter)
@@ -103,7 +103,10 @@ func RunTests() {
 	var wg sync.WaitGroup
 	for i := range 5 {
 		wg.Add(1)
-		go StressTest(&wg, 50*i+1, 10*i+1)
+		go func() {
+			defer wg.Done()
+			StressTest(50*i+1, 10*i+1)
+		}()
 	}
 	wg.Wait()
 	Cleanup(Setup())
