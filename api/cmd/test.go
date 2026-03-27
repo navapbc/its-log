@@ -1,11 +1,14 @@
 package cmd
 
 import (
+	"io"
 	"log"
+	"net/http"
 	"os"
 	"path"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/navapbc/its-log/e2e"
 	serve "github.com/navapbc/its-log/endpoints"
 	"github.com/navapbc/its-log/internal/base"
@@ -32,7 +35,7 @@ func configureEnv() {
 		"ITSLOG_APIKEY_PUPPERADMIN":  "{\"app_id\": \"pupper\", \"key_id\": \"pup_admin\", \"permission\": \"admin\", \"key\": \"abcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefgh\"}",
 		"ITSLOG_BUFFER_FLUSHWAITSEC": "1",
 		"ITSLOG_BUFFER_LENGTH":       "100",
-		"ITSLOG_GINMODE":             "debug",
+		"ITSLOG_GINMODE":             "production", // "debug" or "production"
 		"ITSLOG_PROXIES_TRUSTED":     "TBD",
 		"ITSLOG_STORAGE_PATH":        path.Join(os.TempDir()),
 	}
@@ -43,6 +46,18 @@ func configureEnv() {
 			os.Setenv(k, v)
 		}
 	}
+}
+
+func testSequence(N int64) {
+	gleCount := e2e.GenerateLogEvents(N)
+	glevCount := e2e.GenerateLogEventsWithValues(N)
+	gclCount := e2e.GenerateClusteredLogs(N)
+	total := gleCount + glevCount + gclCount
+
+	e2e.RunDefaultSequence()
+
+	log.Printf("total events: %d\n", total)
+
 }
 
 func test_cmd(cmd *cobra.Command, args []string) {
@@ -62,21 +77,34 @@ func test_cmd(cmd *cobra.Command, args []string) {
 	}
 
 	log.Printf("storage path: %s", viper.GetString("storage.path"))
+	gin.DefaultWriter = io.Discard
+	http.DefaultTransport.(*http.Transport).MaxIdleConnsPerHost = 100
 
 	go serve.Serve()
-	gleCount := e2e.GenerateLogEvents()
-	glevCount := e2e.GenerateLogEventsWithValues()
-	gclCount := e2e.GenerateClusteredLogs()
-	total := gleCount + glevCount + gclCount
 
+	for _ = range 5 {
+		go testSequence(100)
+	}
+
+	for _ = range 2 {
+		time.Sleep(1 * time.Second)
+		log.Print("x")
+	}
 	e2e.RunDefaultSequence()
 
-	log.Printf("total events: %d\n", total)
+	for _ = range 2 {
+		time.Sleep(1 * time.Second)
+		log.Print("y")
+	}
+	e2e.RunDefaultSequence()
 
 	for _ = range 5 {
 		time.Sleep(1 * time.Second)
-		log.Print(".")
+		log.Print("z")
 	}
+
+	e2e.RunDefaultSequence()
+
 	log.Println(path.Join(os.Getenv("ITSLOG_STORAGE_PATH")))
 	os.Exit(0)
 }

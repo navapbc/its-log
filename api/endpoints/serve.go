@@ -80,7 +80,7 @@ func addEtlEndpoints(rG *gin.RouterGroup) {
 	// Insert a new ETL step
 	auth_adminV1.POST("etl/insert", InsertEtl)
 	// Run an ETL step
-	// auth_adminV1.GET("etl/run/:date/:name", RunEtl)
+	auth_adminV1.GET("etl/run/:date/:name", RunEtlHandler)
 	// Retrieve the contents of a step, including the last run and run status
 	// auth_adminV1.GET("etl/retrieve/:date/:name", GetEtl)
 	// Combine a table from one DB into another DB

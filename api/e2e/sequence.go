@@ -2,6 +2,7 @@ package e2e
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/navapbc/its-log/internal/base"
 	"github.com/navapbc/its-log/internal/types"
@@ -15,5 +16,6 @@ func RunDefaultSequence() {
 	s := types.NewStorage(apiKey.AppId)
 	today := s.YYYYMMDD()
 	targetUrl := fmt.Sprintf("%s/v1/sequence/%s/default", buildBase(), today)
+	log.Println("running default sequence")
 	get(targetUrl, apiKey)
 }
