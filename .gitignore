@@ -6,3 +6,5 @@ its-log
 __*
 .DS_Store
 _base/*
+**.sqlite-wal
+**.sqlite-journal

@@ -67,7 +67,7 @@ func PourGin(ch_evt_out chan<- *types.Event) *gin.Engine {
 	addLoggingEndpoints(apiV1, ch_evt_out)
 	//addTestingEndpoints(apiV1, ch_evt_out)
 	addEtlEndpoints(apiV1)
-	//addSequenceEndpoints(apiV1)
+	addSequenceEndpoints(apiV1)
 
 	return router
 }
@@ -106,4 +106,18 @@ func addMetadataEndpoints(rG *gin.RouterGroup) {
 	auth_adminV1.Use(AuthMiddleWare(permissions))
 	rG.GET("/status", status.GinHandler)
 
+}
+
+func addSequenceEndpoints(rG *gin.RouterGroup) {
+	auth_adminV1 := rG.Group("/")
+	permissions := []types.PermissionType{constants.Admin, constants.Test}
+	auth_adminV1.Use(AuthMiddleWare(permissions))
+
+	// Insert a sequence
+	// It's actually just inserting an entry into the
+	// ETL table with the correct values. We give it a 'sequence'
+	// endpoint, but it is interchangeable.
+	auth_adminV1.POST("sequence/:date", InsertEtl)
+	// Run a sequence
+	auth_adminV1.GET("sequence/:date/:name", RunSequence)
 }

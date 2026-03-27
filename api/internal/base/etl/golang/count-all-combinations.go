@@ -27,7 +27,7 @@ func unique[A comparable](input []A) []A {
 	return result
 }
 
-func CountAllCombinations(etlP types.EtlParams) {
+func CountAllCombinations(etlP *types.RunEtlParams) {
 	allTags, err := etlP.Storage.Queries.GetDistinctTags(context.Background())
 	if err != nil {
 		panic(":panicohnoes: " + err.Error())

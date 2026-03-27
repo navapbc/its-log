@@ -32,7 +32,7 @@ func AuthMiddleWare(permissions []types.PermissionType) gin.HandlerFunc {
 		for _, key := range base.LiveKeys {
 			keylen := len(api_key)
 			doesContain := slices.Contains(permissions, key.Permission)
-			if doesContain && keylen >= 48 {
+			if doesContain && keylen >= constants.MINIMUM_API_KEY_LENGTH {
 				if api_key == key.Key {
 					c.Set(constants.ITSLOG_KEYID, key.KeyId)
 					c.Set(constants.ITSLOG_APPID, key.AppId)

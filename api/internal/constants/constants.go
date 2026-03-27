@@ -12,3 +12,5 @@ const (
 	Admin
 	Test
 )
+
+const MINIMUM_API_KEY_LENGTH = 32

@@ -45,6 +45,8 @@ func InsertEtl(c *gin.Context) {
 		log.Println("storage init error: " + err.Error())
 		panic(err)
 	}
+	// We cache whether this is loaded, so it is safe/fast to check every time
+	// we try and load another ETL into the table.
 	base.LoadDefaultEtlFiles(s)
 
 	if err := s.Queries.InsertETL(context.Background(), models.InsertETLParams{

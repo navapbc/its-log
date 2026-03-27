@@ -2,6 +2,7 @@ package base
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"maps"
@@ -100,4 +101,13 @@ func GetApiKeys() error {
 	}
 
 	return nil
+}
+
+func GetKeyBundle(appId, keyId string) (*types.ApiKey, error) {
+	for _, k := range LiveKeys {
+		if k.AppId == appId && k.KeyId == keyId {
+			return &k, nil
+		}
+	}
+	return nil, errors.New("could not find key for " + appId + ", " + keyId)
 }
