@@ -25,6 +25,6 @@ func RunDefaultSequence() *types.Storage {
 	target = strings.Replace(target, ":date", today, -1)
 	target = strings.Replace(target, ":name", "default", -1)
 	log.Println("running default sequence")
-	get(buildBase()+target, apiKey)
+	post(buildBase()+target, make(map[string]any), apiKey)
 	return s
 }

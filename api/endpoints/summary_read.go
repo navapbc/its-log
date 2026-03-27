@@ -58,7 +58,14 @@ func SummaryRead(c *gin.Context) {
 	row, err := s.Queries.ReadSummary(context.Background(), params)
 	if err != nil {
 		log.Println("err: " + err.Error())
-		panic(err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "error",
+			"method":  c.Request.Method,
+			"message": "read summary err: " + err.Error(),
+			"date":    body.Date,
+			"name":    body.Operation,
+		})
+		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{

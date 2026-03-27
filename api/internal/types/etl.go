@@ -17,4 +17,5 @@ type RunEtlParams struct {
 	EtlName string
 	KeyId   string
 	Storage *Storage
+	Payload map[string]any
 }

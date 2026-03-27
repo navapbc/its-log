@@ -91,7 +91,7 @@ func addEtlEndpoints(rG *gin.RouterGroup) {
 	// Insert a new ETL step
 	auth_adminV1.POST(constants.ETL_CREATE, CreateEtl)
 	// Run an ETL step
-	auth_adminV1.GET(constants.ETL_RUN, RunEtl)
+	auth_adminV1.POST(constants.ETL_RUN, RunEtl)
 	// Retrieve the contents of a step, including the last run and run status
 	// auth_adminV1.GET("etl/retrieve/:date/:name", GetEtl)
 	// Combine a table from one DB into another DB
@@ -132,7 +132,7 @@ func addSequenceEndpoints(rG *gin.RouterGroup) {
 	// endpoint, but it is interchangeable.
 	auth_adminV1.POST(constants.SEQUENCE_CREATE, CreateEtl)
 	// Run a sequence
-	auth_adminV1.GET(constants.SEQUENCE_RUN, RunSequence)
+	auth_adminV1.POST(constants.SEQUENCE_RUN, RunSequence)
 }
 
 // SUMMARY ENDPOINTS

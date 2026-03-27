@@ -9,4 +9,5 @@ import (
 // so we leave it out of the table.
 var GolangETLMap = map[string]func(*types.RunEtlParams) error{
 	"count-all-combinations": CountAllCombinations,
+	"db-to-csv":              SqliteToCSV,
 }

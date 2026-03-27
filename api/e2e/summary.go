@@ -28,12 +28,18 @@ func CheckSummaryValue(operation string, tags string, expected int) bool {
 	}
 	mapResponse := post(buildBase()+target, bundle, apiKey)
 
-	count := int(mapResponse["count"].(float64))
-	if expected == count {
-		log.Printf("✅ %s: %d\n", operation, count)
-		return true
+	v, ok := mapResponse["count"]
+	if ok {
+		count := int(v.(float64))
+		if expected == count {
+			log.Printf("✅ %s: %d\n", operation, count)
+			return true
+		} else {
+			log.Printf("%s: expected %d, found %d\n", operation, expected, mapResponse["count"])
+			return false
+		}
 	} else {
-		log.Printf("%s: expected %d, found %d\n", operation, expected, mapResponse["count"])
+		log.Printf("⚠️ %s: nil\n", operation)
 		return false
 	}
 }

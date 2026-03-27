@@ -4,7 +4,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"os"
 	"sync"
 	"time"
 
@@ -101,15 +100,17 @@ func RunTests() {
 	// logging load.
 	log.Println("== Running parallel stress tests ==")
 	var wg sync.WaitGroup
-	for i := range 5 {
+	for i := range 8 {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			StressTest(50*i+1, 10*i+1)
+			StressTest(30*i+1, 10)
 		}()
 	}
-	wg.Wait()
-	Cleanup(Setup())
 
-	os.Exit(0)
+	wg.Add(1)
+	wg.Wait()
+	// Cleanup(Setup())
+
+	// os.Exit(0)
 }

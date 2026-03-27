@@ -3,7 +3,9 @@ package endpoints
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"strings"
@@ -21,12 +23,23 @@ import (
 func RunEtl(c *gin.Context) {
 	appId := base.GetOrPanic(c, "AppId")
 	keyId := base.GetOrPanic(c, "KeyId")
-	date := c.GetString("date")
-	name := c.GetString("name")
+	date := c.Param("date")
+	name := c.Param("name")
+
+	// ETL steps can have an arbitrary POST body?
+	body, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		body = []byte("{}")
+	}
+	payload := make(map[string]any)
+	jsonErr := json.Unmarshal(body, &payload)
+	if jsonErr != nil {
+		payload = make(map[string]any)
+	}
 
 	s := types.NewStorage(appId)
-	err := s.SetDate(date)
-	if err != nil {
+	dateErr := s.SetDate(date)
+	if dateErr != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
 			"method":  c.Request.Method,
@@ -36,22 +49,34 @@ func RunEtl(c *gin.Context) {
 		})
 		return
 	}
+	s.Init()
+	base.LoadDefaultEtlFiles(s)
 
-	err = runEtl(&types.RunEtlParams{
+	etlErr := runEtl(&types.RunEtlParams{
 		AppId:   appId,
 		KeyId:   keyId,
 		GinCtx:  c,
 		Storage: s,
 		EtlName: name,
+		Payload: payload,
 	})
 
-	if err != nil {
+	if etlErr == nil {
 		c.JSON(http.StatusCreated, gin.H{
 			"status": "ok",
 			"method": c.Request.Method,
 			"date":   date,
 			"name":   name,
 		})
+	} else {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "error",
+			"method":  c.Request.Method,
+			"message": "Golang ETL error: " + etlErr.Error(),
+			"date":    date,
+			"name":    name,
+		})
+		return
 	}
 }
 
@@ -102,9 +127,9 @@ func runEtl(etlP *types.RunEtlParams) error {
 		return fmt.Errorf("%s: %s", msg, http.StatusText(http.StatusInternalServerError))
 	}
 
-	err = etlP.Storage.Queries.UpdateLastRun(context.Background(), etlP.EtlName)
+	updateErr := etlP.Storage.Queries.UpdateLastRun(context.Background(), etlP.EtlName)
 
-	if err != nil {
+	if updateErr != nil {
 		msg := "could not update ETL metadata"
 		log.Println(msg)
 		if etlP.GinCtx != nil {
