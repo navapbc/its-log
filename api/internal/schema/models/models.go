@@ -34,7 +34,7 @@ type ItslogSummary struct {
 	Date      string
 	KeyID     string
 	Operation string
-	Tags      sql.NullString
-	Value     sql.NullString
+	Tags      string
+	Value     string
 	Count     float64
 }

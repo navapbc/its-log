@@ -6,26 +6,26 @@ import (
 	"fmt"
 	"math/rand/v2"
 
-	"os"
 	"time"
 
 	"github.com/navapbc/its-log/internal/base"
 	"github.com/navapbc/its-log/internal/constants"
+	"github.com/spf13/viper"
 )
 
-var versions = [...]string{"v1", "v2", "v3"}
-var endpoints = [...]string{"eob", "patient", "claim"}
+var _versions = [...]string{"v1", "v2", "v3"}
+var _endpoints = [...]string{"eob", "patient", "claim"}
 
 func buildBase() string {
-	return fmt.Sprintf("http://%s:%s", os.Getenv("ITSLOG_SERVE_HOST"), os.Getenv("ITSLOG_SERVE_PORT"))
+	return fmt.Sprintf("http://%s:%s", viper.GetString("serve.host"), viper.GetString("serve.port"))
 }
 
 func GenerateLogEvents(iterations int, jitter int) int {
 	targetUrl := buildBase() + "/v1" + constants.LOG_CREATE
 	apiKey, _ := base.GetKeyBundle("pupper", "pup_logging")
 	var counter int = 0
-	for _, version := range versions {
-		for _, endpoint := range endpoints {
+	for _, version := range _versions {
+		for _, endpoint := range _endpoints {
 			// This generates 45 events
 			for range iterations {
 				time.Sleep(time.Duration(rand.IntN(jitter)) * time.Millisecond)
@@ -53,8 +53,8 @@ func GenerateLogEventsWithValues(iterations int, jitter int) int {
 	apiKey, _ := base.GetKeyBundle("pupper", "pup_logging")
 
 	counter := 0
-	for _, version := range versions {
-		for _, endpoint := range endpoints {
+	for _, version := range _versions {
+		for _, endpoint := range _endpoints {
 			// This generates 9*N events
 			for range iterations {
 				time.Sleep(time.Duration(rand.IntN(jitter)) * time.Millisecond)
@@ -76,11 +76,11 @@ func GenerateClusteredLogs(iterations int, jitter int) int {
 	apiKey, _ := base.GetKeyBundle("pupper", "pup_logging")
 
 	counter := 0
-	for _, version := range versions {
+	for _, version := range _versions {
 		for _ = range iterations {
 			time.Sleep(time.Duration(rand.IntN(jitter)) * time.Millisecond)
 			cluster := generatePatientId(8)
-			for _, endpoint := range endpoints {
+			for _, endpoint := range _endpoints {
 				bundle := map[string]any{
 					"cluster": cluster,
 					"tags":    [...]string{version, endpoint},

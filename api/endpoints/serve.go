@@ -68,6 +68,7 @@ func PourGin(ch_evt_out chan<- *types.Event) *gin.Engine {
 	//addTestingEndpoints(apiV1, ch_evt_out)
 	addEtlEndpoints(apiV1)
 	addSequenceEndpoints(apiV1)
+	addSummaryEndpoints(apiV1)
 
 	return router
 }
@@ -78,7 +79,7 @@ func addLoggingEndpoints(rG *gin.RouterGroup, ch_evt_out chan<- *types.Event) {
 	auth_logV1 := rG.Group("/")
 	permissions := []types.PermissionType{constants.Log, constants.Test}
 	auth_logV1.Use(AuthMiddleWare(permissions))
-	auth_logV1.POST(constants.LOG_CREATE, InsertLog(ch_evt_out, constants.Log))
+	auth_logV1.POST(constants.LOG_CREATE, LogCreate(ch_evt_out, constants.Log))
 }
 
 // ETL ENDPOINTS
@@ -119,6 +120,7 @@ func addMetadataEndpoints(rG *gin.RouterGroup) {
 
 }
 
+// SEQUENCE ENDPOINTS
 func addSequenceEndpoints(rG *gin.RouterGroup) {
 	auth_adminV1 := rG.Group("/")
 	permissions := []types.PermissionType{constants.Admin, constants.Test}
@@ -131,4 +133,13 @@ func addSequenceEndpoints(rG *gin.RouterGroup) {
 	auth_adminV1.POST(constants.SEQUENCE_CREATE, CreateEtl)
 	// Run a sequence
 	auth_adminV1.GET(constants.SEQUENCE_RUN, RunSequence)
+}
+
+// SUMMARY ENDPOINTS
+func addSummaryEndpoints(rG *gin.RouterGroup) {
+	auth_adminV1 := rG.Group("/")
+	permissions := []types.PermissionType{constants.Admin, constants.Test}
+	auth_adminV1.Use(AuthMiddleWare(permissions))
+
+	auth_adminV1.POST(constants.SUMMARY_READ, SummaryRead)
 }

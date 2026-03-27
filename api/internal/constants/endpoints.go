@@ -10,3 +10,5 @@ const SEQUENCE_RUN = "/sequence/run/:date/:name"
 
 const METADATA_HEALTH = "/health"
 const METADATA_STATUS = "/status"
+
+const SUMMARY_READ = "/summary/read"

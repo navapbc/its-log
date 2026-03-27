@@ -1,16 +1,11 @@
 package cmd
 
 import (
-	"io"
 	"log"
-	"net/http"
 	"os"
 	"path"
-	"sync"
 
-	"github.com/gin-gonic/gin"
 	"github.com/navapbc/its-log/e2e"
-	serve "github.com/navapbc/its-log/endpoints"
 	"github.com/navapbc/its-log/internal/base"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -48,16 +43,6 @@ func configureEnv() {
 	}
 }
 
-func stressTest(wg *sync.WaitGroup, iterations int, jitter int) {
-	defer wg.Done()
-	gleCount := e2e.GenerateLogEvents(iterations, jitter)
-	glevCount := e2e.GenerateLogEventsWithValues(iterations, jitter)
-	gclCount := e2e.GenerateClusteredLogs(iterations, jitter)
-	total := gleCount + glevCount + gclCount
-	e2e.RunDefaultSequence()
-	log.Printf("total events: %d\n", total)
-}
-
 func test_cmd(cmd *cobra.Command, args []string) {
 	configureEnv()
 	err := base.ConfirmEnvVars()
@@ -75,20 +60,8 @@ func test_cmd(cmd *cobra.Command, args []string) {
 	}
 
 	log.Printf("storage path: %s", viper.GetString("storage.path"))
-	gin.DefaultWriter = io.Discard
-	http.DefaultTransport.(*http.Transport).MaxIdleConnsPerHost = 100
 
-	go serve.Serve()
-
-	var wg sync.WaitGroup
-	for i := range 5 {
-		wg.Add(1)
-		go stressTest(&wg, 50*i, 10*i)
-	}
-	wg.Wait()
-
-	log.Println(path.Join(os.Getenv("ITSLOG_STORAGE_PATH")))
-	os.Exit(0)
+	e2e.RunTests()
 }
 
 func init() {

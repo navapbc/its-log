@@ -37,8 +37,8 @@ CREATE TABLE IF NOT EXISTS itslog_summary (
     date TEXT DEFAULT CURRENT_DATE NOT NULL,
     key_id TEXT NOT NULL,
     operation TEXT NOT NULL,
-    tags TEXT,
-    value TEXT,
+    tags TEXT NOT NULL,
+    value TEXT NOT NULL,
     count REAL NOT NULL
 );
 

@@ -14,7 +14,7 @@ import (
 	"github.com/navapbc/its-log/internal/types"
 )
 
-func InsertLog(ch_evt_out chan<- *types.Event, permission types.PermissionType) func(c *gin.Context) {
+func LogCreate(ch_evt_out chan<- *types.Event, permission types.PermissionType) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		var evt types.Event
 		if err := c.ShouldBindJSON(&evt); err != nil {

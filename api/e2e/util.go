@@ -11,7 +11,7 @@ import (
 	"github.com/navapbc/its-log/internal/types"
 )
 
-func post(targetUrl string, bundle map[string]interface{}, k *types.ApiKey) {
+func post(targetUrl string, bundle map[string]interface{}, k *types.ApiKey) map[string]any {
 	jsonBytes, _ := json.MarshalIndent(bundle, "", "  ")
 
 	req, err := http.NewRequest("POST", targetUrl, bytes.NewReader(jsonBytes))
@@ -28,7 +28,16 @@ func post(targetUrl string, bundle map[string]interface{}, k *types.ApiKey) {
 		log.Fatalf("Error sending request: %s", err)
 	}
 	// Ensure the response body is closed to prevent resource leaks
+	result, err := io.ReadAll(resp.Body)
+	if err != nil {
+		panic(err.Error())
+	}
 	resp.Body.Close()
+
+	asmap := make(map[string]any)
+	err = json.Unmarshal(result, &asmap)
+
+	return asmap
 }
 
 func get(targetUrl string, k *types.ApiKey) {

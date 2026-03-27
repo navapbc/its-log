@@ -13,6 +13,6 @@ const (
 	Test
 )
 
-const MINIMUM_API_KEY_LENGTH = 32
+const MINIMUM_API_KEY_LENGTH = 48
 
 const ETL_SUCCESS_VALUE = 0

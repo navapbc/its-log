@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	serve "github.com/navapbc/its-log/endpoints"
+	"github.com/navapbc/its-log/endpoints"
 	"github.com/navapbc/its-log/internal/base"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -39,7 +39,7 @@ func serve_cmd(cmd *cobra.Command, args []string) {
 
 	log.Printf("storage path: %s", viper.GetString("storage.path"))
 
-	serve.Serve()
+	endpoints.Serve()
 }
 
 func init() {

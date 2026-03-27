@@ -56,6 +56,20 @@ Administrative endpoints include
 | GET  | /v1/health | A standard healthcheck endpoint  |
 | GET  | /v1/status | Get server stats (RAM, GC, etc.) |
 
+## testing
+
+`its-log` can test itself. It will run on localhost and then run a sequence of parallel and sequential tests, exercising itself end-to-end.
+
+```
+go run ./... test
+```
+
+or, compiled
+
+```
+its-log test
+```
+
 ## running its-log
 
 `its-log` is compiled for multiple architectures.

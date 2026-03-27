@@ -108,6 +108,7 @@ const insertETL = `-- name: InsertETL :exec
 ;
 
 
+
 INSERT OR REPLACE INTO itslog_etl (
   key_id, name, kind, body
 ) VALUES (
@@ -139,23 +140,23 @@ const insertSummary = `-- name: InsertSummary :exec
 INSERT OR REPLACE INTO itslog_summary (
   date, operation, tags, value
   ) VALUES (
-  ?, ?, ?, ?
+  ?, ?, COALESCE(?, ""), COALESCE(?, "")
   )
 `
 
 type InsertSummaryParams struct {
 	Date      string
 	Operation string
-	Tags      sql.NullString
-	Value     sql.NullString
+	Column3   interface{}
+	Column4   interface{}
 }
 
 func (q *Queries) InsertSummary(ctx context.Context, arg InsertSummaryParams) error {
 	_, err := q.db.ExecContext(ctx, insertSummary,
 		arg.Date,
 		arg.Operation,
-		arg.Tags,
-		arg.Value,
+		arg.Column3,
+		arg.Column4,
 	)
 	return err
 }
@@ -195,12 +196,15 @@ func (q *Queries) LogEvent(ctx context.Context, arg LogEventParams) (int64, erro
 	return id, err
 }
 
-const readSummary = `-- name: ReadSummary :many
+const readSummaries = `-- name: ReadSummaries :many
+;
+
 SELECT 
   date, 
   operation, 
   COALESCE(tags, '') as tags, 
-  value 
+  value,
+  count
 FROM itslog_summary
 WHERE 
   tags LIKE COALESCE(?, '%')
@@ -209,32 +213,34 @@ WHERE
 ORDER BY id
 `
 
-type ReadSummaryParams struct {
-	Tags      sql.NullString
+type ReadSummariesParams struct {
+	Tags      string
 	Operation string
 }
 
-type ReadSummaryRow struct {
+type ReadSummariesRow struct {
 	Date      string
 	Operation string
 	Tags      string
-	Value     sql.NullString
+	Value     string
+	Count     float64
 }
 
-func (q *Queries) ReadSummary(ctx context.Context, arg ReadSummaryParams) ([]ReadSummaryRow, error) {
-	rows, err := q.db.QueryContext(ctx, readSummary, arg.Tags, arg.Operation)
+func (q *Queries) ReadSummaries(ctx context.Context, arg ReadSummariesParams) ([]ReadSummariesRow, error) {
+	rows, err := q.db.QueryContext(ctx, readSummaries, arg.Tags, arg.Operation)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ReadSummaryRow
+	var items []ReadSummariesRow
 	for rows.Next() {
-		var i ReadSummaryRow
+		var i ReadSummariesRow
 		if err := rows.Scan(
 			&i.Date,
 			&i.Operation,
 			&i.Tags,
 			&i.Value,
+			&i.Count,
 		); err != nil {
 			return nil, err
 		}
@@ -247,6 +253,48 @@ func (q *Queries) ReadSummary(ctx context.Context, arg ReadSummaryParams) ([]Rea
 		return nil, err
 	}
 	return items, nil
+}
+
+const readSummary = `-- name: ReadSummary :one
+SELECT 
+  date, 
+  operation, 
+  tags, 
+  value,
+  count
+FROM itslog_summary
+WHERE 
+  tags LIKE ?
+  AND
+  operation LIKE ?
+ORDER BY id
+LIMIT 1
+`
+
+type ReadSummaryParams struct {
+	Tags      string
+	Operation string
+}
+
+type ReadSummaryRow struct {
+	Date      string
+	Operation string
+	Tags      string
+	Value     string
+	Count     float64
+}
+
+func (q *Queries) ReadSummary(ctx context.Context, arg ReadSummaryParams) (ReadSummaryRow, error) {
+	row := q.db.QueryRowContext(ctx, readSummary, arg.Tags, arg.Operation)
+	var i ReadSummaryRow
+	err := row.Scan(
+		&i.Date,
+		&i.Operation,
+		&i.Tags,
+		&i.Value,
+		&i.Count,
+	)
+	return i, err
 }
 
 const updateLastRun = `-- name: UpdateLastRun :exec
