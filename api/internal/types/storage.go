@@ -45,7 +45,7 @@ func (s *Storage) Yesterday() {
 
 func (s *Storage) SetDate(ymd string) error {
 	d, e := time.Parse("2006-01-02", ymd)
-	if e != nil {
+	if e == nil {
 		s.date = d
 	}
 	return e

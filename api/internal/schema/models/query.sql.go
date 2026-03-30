@@ -8,6 +8,7 @@ package models
 import (
 	"context"
 	"database/sql"
+	"time"
 )
 
 const getAllSummaries = `-- name: GetAllSummaries :many
@@ -136,27 +137,62 @@ func (q *Queries) InsertETL(ctx context.Context, arg InsertETLParams) error {
 	return err
 }
 
+const insertFullSummary = `-- name: InsertFullSummary :exec
+INSERT OR REPLACE INTO itslog_summary (
+  last_run, key_id, date, operation, tags, value, count
+  ) VALUES (
+  ?, ?, ?, ?, ?, ?, ?
+  )
+`
+
+type InsertFullSummaryParams struct {
+	LastRun   time.Time
+	KeyID     string
+	Date      string
+	Operation string
+	Tags      string
+	Value     string
+	Count     float64
+}
+
+func (q *Queries) InsertFullSummary(ctx context.Context, arg InsertFullSummaryParams) error {
+	_, err := q.db.ExecContext(ctx, insertFullSummary,
+		arg.LastRun,
+		arg.KeyID,
+		arg.Date,
+		arg.Operation,
+		arg.Tags,
+		arg.Value,
+		arg.Count,
+	)
+	return err
+}
+
 const insertSummary = `-- name: InsertSummary :exec
 INSERT OR REPLACE INTO itslog_summary (
-  date, operation, tags, value
+  key_id, date, operation, tags, value, count
   ) VALUES (
-  ?, ?, COALESCE(?, ""), COALESCE(?, "")
+  ?, ?, ?, ?, ?, ?
   )
 `
 
 type InsertSummaryParams struct {
+	KeyID     string
 	Date      string
 	Operation string
-	Column3   interface{}
-	Column4   interface{}
+	Tags      string
+	Value     string
+	Count     float64
 }
 
 func (q *Queries) InsertSummary(ctx context.Context, arg InsertSummaryParams) error {
 	_, err := q.db.ExecContext(ctx, insertSummary,
+		arg.KeyID,
 		arg.Date,
 		arg.Operation,
-		arg.Column3,
-		arg.Column4,
+		arg.Tags,
+		arg.Value,
+		arg.Count,
 	)
 	return err
 }

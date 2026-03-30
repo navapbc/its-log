@@ -2,6 +2,7 @@ package etl
 
 import (
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -13,22 +14,12 @@ import (
 	"github.com/spf13/viper"
 )
 
-var sqliteToCsvPrefix string = "sqlite_to_csv"
-var sqliteToCsvExpectedKeys = []string{
-	sqliteToCsvPrefix + "_source", sqliteToCsvPrefix + "_destination",
-}
-
-func hasExpectedKeys(etlP *types.RunEtlParams, keylist []string) error {
-	for _, key := range sqliteToCsvExpectedKeys {
-		_, ok := etlP.Payload[key]
-		if !ok {
-			return fmt.Errorf("missing parameter %s for db-to-csv", key)
-		}
-	}
-	return nil
-}
-
 func SqliteToCSV(etlP *types.RunEtlParams) error {
+	// var sqliteToCsvPrefix string = "sqlite_to_csv"
+	// var sqliteToCsvExpectedKeys = []string{
+	// 	sqliteToCsvPrefix + "_source", sqliteToCsvPrefix + "_destination",
+	// }
+
 	// err := hasExpectedKeys(etlP, sqliteToCsvExpectedKeys)
 	// if err != nil {
 	// 	return err
@@ -55,7 +46,7 @@ func SqliteToCSV(etlP *types.RunEtlParams) error {
 
 		file, err := os.Create(csvFullPath)
 		if err != nil {
-			log.Fatal(err)
+			return fmt.Errorf("could not create CSV: %s", csvFilename)
 		}
 		defer file.Close()
 
@@ -64,11 +55,10 @@ func SqliteToCSV(etlP *types.RunEtlParams) error {
 
 		columns, err := rows.Columns()
 		if err != nil {
-			// FIXME: error handling
-			log.Fatal(err)
+			return fmt.Errorf("could not read columns: %s", table)
 		}
 		if err := writer.Write(columns); err != nil {
-			log.Fatal(err)
+			return fmt.Errorf("could not write column names: %s", table)
 		}
 
 		for rows.Next() {
@@ -79,7 +69,7 @@ func SqliteToCSV(etlP *types.RunEtlParams) error {
 			}
 
 			if err := rows.Scan(valuePointers...); err != nil {
-				log.Fatal(err)
+				return fmt.Errorf("could not read row: %s", table)
 			}
 
 			csvRow := make([]string, len(columns))
@@ -91,12 +81,12 @@ func SqliteToCSV(etlP *types.RunEtlParams) error {
 				}
 			}
 			if err := writer.Write(csvRow); err != nil {
-				log.Fatal(err)
+				return fmt.Errorf("could not write row: %s", table)
 			}
 		}
 
 		if err = rows.Err(); err != nil {
-			log.Fatal(err)
+			return errors.New("row handling error at end of process")
 		}
 
 		log.Println("exported: " + csvFilename)

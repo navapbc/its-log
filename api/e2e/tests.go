@@ -4,6 +4,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 
@@ -103,14 +104,13 @@ func RunTests() {
 	for i := range 8 {
 		wg.Add(1)
 		go func() {
-			defer wg.Done()
 			StressTest(30*i+1, 10)
+			wg.Done()
 		}()
 	}
 
-	wg.Add(1)
 	wg.Wait()
 	// Cleanup(Setup())
 
-	// os.Exit(0)
+	os.Exit(0)
 }
