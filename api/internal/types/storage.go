@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"os"
 	"path"
 	"strings"
@@ -95,12 +94,12 @@ func (s *Storage) GetDB() *sql.DB {
 }
 
 func (s *Storage) Lock() {
-	log.Println("locking")
+	// log.Println("locking")
 	s.lock.Lock()
 }
 
 func (s *Storage) Unlock() {
-	log.Println("unlocking")
+	// log.Println("unlocking")
 	s.lock.Unlock()
 }
 

@@ -1,6 +1,7 @@
 package constants
 
 const LOG_CREATE = "/log/create"
+const LOG_CREATE_DATE = "/log/create/date"
 
 const ETL_CREATE = "/etl/create"
 const ETL_RUN = "/etl/run/:date/:name"

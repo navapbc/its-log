@@ -44,9 +44,9 @@ func LogCreate(ch_evt_out chan<- *types.Event, permission types.PermissionType) 
 func setTimestamp(c *gin.Context, evt *types.Event, permission types.PermissionType) {
 	switch permission {
 	case constants.Test:
-		// The date in the testing cases comes from the URL.
-		// Hence, we might have parsing errors on what is passed in.
-		date := c.Param("date")
+		// If this is a test event, it will come in on the /create/date pathway, and
+		// have a `date` field in the JSON, and the permission will be `Test`.
+		date := evt.Date
 		timestamp, err := time.Parse("2006-01-02", date)
 		min := time.Date(timestamp.Year(), timestamp.Month(), timestamp.Day(), 0, 0, 0, 0, time.UTC).Unix()
 		max := time.Date(timestamp.Year(), timestamp.Month(), timestamp.Day(), 23, 59, 59, 0, time.UTC).Unix()

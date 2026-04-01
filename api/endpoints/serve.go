@@ -80,6 +80,8 @@ func addLoggingEndpoints(rG *gin.RouterGroup, ch_evt_out chan<- *types.Event) {
 	permissions := []types.PermissionType{constants.Log, constants.Test}
 	auth_logV1.Use(AuthMiddleWare(permissions))
 	auth_logV1.POST(constants.LOG_CREATE, LogCreate(ch_evt_out, constants.Log))
+	auth_logV1.POST(constants.LOG_CREATE_DATE, LogCreate(ch_evt_out, constants.Test))
+
 }
 
 // ETL ENDPOINTS

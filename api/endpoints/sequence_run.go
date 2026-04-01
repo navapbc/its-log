@@ -32,7 +32,6 @@ func RunSequence(c *gin.Context) {
 	}
 
 	s := types.NewStorage(appId)
-	s.Init()
 	dateErr := s.SetDate(sequenceDate)
 	if dateErr != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -44,7 +43,9 @@ func RunSequence(c *gin.Context) {
 		})
 		return
 	}
-	errStep := ""
+	s.Init()
+	base.LoadDefaultEtlFiles(s)
+
 	seq, err := s.Queries.GetETL(context.Background(), sequenceName)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -84,7 +85,7 @@ func RunSequence(c *gin.Context) {
 			useThisOne = step.Params
 		}
 
-		err := runEtl(&types.RunEtlParams{
+		sequenceError := runEtl(&types.RunEtlParams{
 			AppId:   appId,
 			KeyId:   keyId,
 			GinCtx:  nil,
@@ -93,23 +94,18 @@ func RunSequence(c *gin.Context) {
 			Payload: useThisOne,
 		})
 
-		if err != nil {
-			errStep = step.Name
-			log.Println("breaking on step: " + step.Name)
-			log.Println("err: " + err.Error())
-			break
+		if sequenceError != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"status":  "error",
+				"method":  c.Request.Method,
+				"message": fmt.Sprintf("error in sequence execution: %s", step.Name),
+				"detail":  sequenceError.Error(),
+				"date":    sequenceDate,
+				"name":    step.Name,
+			})
+			return
 		}
 	}
 
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"status":  "error",
-			"method":  c.Request.Method,
-			"message": fmt.Sprintf("error in sequence execution: %s", errStep),
-			"detail":  err.Error(),
-			"date":    sequenceDate,
-			"name":    errStep,
-		})
-		return
-	}
+	c.JSON(http.StatusOK, gin.H{"status": "ok"})
 }

@@ -62,7 +62,7 @@ func SummaryCreate(c *gin.Context) {
 		Value:     body.Value,
 		Count:     body.Count,
 	}
-	ils.HashItslogSummary()
+	ils.UpdateHash()
 
 	if err := s.Queries.InsertFullSummary(context.Background(), models.InsertFullSummaryParams{
 		LastRun:   ils.LastRun,

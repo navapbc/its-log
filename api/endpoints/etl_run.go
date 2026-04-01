@@ -157,6 +157,7 @@ func callWithParams(etlP *types.RunEtlParams, theSql string) *sql.Row {
 	args := make([]any, 0)
 	for param, val := range paramMap {
 		if strings.Contains(theSql, ":"+param) {
+			log.Println(etlP.EtlName + " replacing :" + param + " with " + val)
 			args = append(args, sql.Named(param, val))
 		}
 	}
@@ -203,8 +204,19 @@ func etlRunSql(etlP *types.RunEtlParams, row models.GetETLRow, tx *sql.Tx) error
 			return fmt.Errorf("expected %d; %s returned %v", constants.ETL_SUCCESS_VALUE, row.Name, success)
 		}
 	default:
-		log.Println(etlP)
-		panic(err)
+		msg := err.Error()
+		if etlP.GinCtx != nil {
+			etlP.GinCtx.JSON(http.StatusInternalServerError, gin.H{
+				"status":  "error",
+				"method":  etlP.GinCtx.Request.Method,
+				"message": msg,
+				"detail":  msg,
+				"date":    etlP.Storage.YYYYMMDD(),
+				"name":    etlP.EtlName,
+			})
+		}
+		log.Println(msg)
+		return fmt.Errorf("%s: %s", msg, http.StatusText(http.StatusInternalServerError))
 	}
 
 	return nil

@@ -10,4 +10,5 @@ type Event struct {
 	Tags      []string `json:"tags"`
 	TagString string
 	Value     string `json:"value"`
+	Date      string `json:"date"`
 }

@@ -17,7 +17,7 @@ import (
 // Value     sql.NullString
 // Count     float64
 
-func (ils *ItslogSummary) HashItslogSummary() string {
+func (ils *ItslogSummary) ReturnHash() string {
 	fields := []string{
 		ils.Date,
 		ils.KeyID,
@@ -30,14 +30,16 @@ func (ils *ItslogSummary) HashItslogSummary() string {
 	h := sha1.New()
 	h.Write([]byte(joined))
 	hashed := hex.EncodeToString(h.Sum(nil))
-	ils.Hash = sql.NullString{String: hashed, Valid: true}
 	return hashed
 }
 
+func (ils *ItslogSummary) UpdateHash() {
+	hashed := ils.ReturnHash()
+	ils.Hash = sql.NullString{String: hashed, Valid: true}
+}
+
 func (ils ItslogSummary) IsHashSameAs(other ItslogSummary) bool {
-	thisHash := ils.HashItslogSummary()
-	otherHash := other.HashItslogSummary()
-	return thisHash == otherHash
+	return ils.ReturnHash() == other.ReturnHash()
 }
 
 // func (ils ItslogSummary) IsComputedSameAsExisting() bool {
