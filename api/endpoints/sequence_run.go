@@ -55,10 +55,6 @@ func RunSequence(c *gin.Context) {
 		steps = strings.Split(trimmed, "\n")
 	}
 
-	// Lock the entire sequence.
-	s.Lock()
-	defer s.Unlock()
-
 	for _, step := range steps {
 		err := runEtl(&types.RunEtlParams{
 			AppId:   appId,

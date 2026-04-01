@@ -12,7 +12,7 @@ import (
 )
 
 const getAllSummaries = `-- name: GetAllSummaries :many
-SELECT id, last_run, date, key_id, operation, tags, value, count FROM itslog_summary
+SELECT id, last_run, date, key_id, operation, tags, value, count, hash FROM itslog_summary
 `
 
 // ------------------------------------------------------
@@ -36,6 +36,7 @@ func (q *Queries) GetAllSummaries(ctx context.Context) ([]ItslogSummary, error) 
 			&i.Tags,
 			&i.Value,
 			&i.Count,
+			&i.Hash,
 		); err != nil {
 			return nil, err
 		}
@@ -139,9 +140,9 @@ func (q *Queries) InsertETL(ctx context.Context, arg InsertETLParams) error {
 
 const insertFullSummary = `-- name: InsertFullSummary :exec
 INSERT OR REPLACE INTO itslog_summary (
-  last_run, key_id, date, operation, tags, value, count
+  last_run, key_id, date, operation, tags, value, count, hash
   ) VALUES (
-  ?, ?, ?, ?, ?, ?, ?
+  ?, ?, ?, ?, ?, ?, ?, ?
   )
 `
 
@@ -153,6 +154,7 @@ type InsertFullSummaryParams struct {
 	Tags      string
 	Value     string
 	Count     float64
+	Hash      sql.NullString
 }
 
 func (q *Queries) InsertFullSummary(ctx context.Context, arg InsertFullSummaryParams) error {
@@ -164,15 +166,16 @@ func (q *Queries) InsertFullSummary(ctx context.Context, arg InsertFullSummaryPa
 		arg.Tags,
 		arg.Value,
 		arg.Count,
+		arg.Hash,
 	)
 	return err
 }
 
 const insertSummary = `-- name: InsertSummary :exec
 INSERT OR REPLACE INTO itslog_summary (
-  key_id, date, operation, tags, value, count
+  key_id, date, operation, tags, value, count, hash
   ) VALUES (
-  ?, ?, ?, ?, ?, ?
+  ?, ?, ?, ?, ?, ?, ?
   )
 `
 
@@ -183,6 +186,7 @@ type InsertSummaryParams struct {
 	Tags      string
 	Value     string
 	Count     float64
+	Hash      sql.NullString
 }
 
 func (q *Queries) InsertSummary(ctx context.Context, arg InsertSummaryParams) error {
@@ -193,6 +197,7 @@ func (q *Queries) InsertSummary(ctx context.Context, arg InsertSummaryParams) er
 		arg.Tags,
 		arg.Value,
 		arg.Count,
+		arg.Hash,
 	)
 	return err
 }

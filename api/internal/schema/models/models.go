@@ -37,4 +37,5 @@ type ItslogSummary struct {
 	Tags      string
 	Value     string
 	Count     float64
+	Hash      sql.NullString
 }

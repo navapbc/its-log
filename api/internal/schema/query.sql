@@ -19,20 +19,19 @@ SELECT * FROM itslog_summary;
 
 -- name: InsertSummary :exec
 INSERT OR REPLACE INTO itslog_summary (
-  key_id, date, operation, tags, value, count
+  key_id, date, operation, tags, value, count, hash
   ) VALUES (
-  ?, ?, ?, ?, ?, ?
+  ?, ?, ?, ?, ?, ?, ?
   );
 
 
 
 -- name: InsertFullSummary :exec
 INSERT OR REPLACE INTO itslog_summary (
-  last_run, key_id, date, operation, tags, value, count
+  last_run, key_id, date, operation, tags, value, count, hash
   ) VALUES (
-  ?, ?, ?, ?, ?, ?, ?
+  ?, ?, ?, ?, ?, ?, ?, ?
   );
-
 
 -- name: ReadSummary :one
 SELECT 

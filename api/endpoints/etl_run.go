@@ -160,8 +160,13 @@ func callWithParams(etlP *types.RunEtlParams, theSql string) *sql.Row {
 			args = append(args, sql.Named(param, val))
 		}
 	}
-	// log.Println(theSql)
+
+	// An SQL step will read from and write to the DB.
+	// Lock and release around this action.
+	etlP.Storage.Lock()
 	etlRow := etlP.Storage.GetDB().QueryRowContext(context.Background(), theSql, args...)
+	etlP.Storage.Unlock()
+
 	return etlRow
 }
 
@@ -208,7 +213,12 @@ func etlRunSql(etlP *types.RunEtlParams, row models.GetETLRow, tx *sql.Tx) error
 func etlRunGolang(etlP *types.RunEtlParams, row models.GetETLRow, tx *sql.Tx) error {
 	functionName := row.Name
 	if function, ok := etl.GolangETLMap[functionName]; ok {
+		// Like the SQL actions, lock/unlock around what we do.
+		// This saves the Golang ETLs from having to manage locks internal
+		// to each individual action.
+		etlP.Storage.Lock()
 		err := function(etlP)
+		etlP.Storage.Unlock()
 		if err != nil {
 			return err
 		}

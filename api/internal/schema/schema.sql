@@ -39,7 +39,8 @@ CREATE TABLE IF NOT EXISTS itslog_summary (
     operation TEXT NOT NULL,
     tags TEXT NOT NULL,
     value TEXT NOT NULL,
-    count REAL NOT NULL
+    count REAL NOT NULL,
+    hash TEXT
 );
 
 -- See https://stackoverflow.com/questions/22699409/sqlite-null-and-unique
