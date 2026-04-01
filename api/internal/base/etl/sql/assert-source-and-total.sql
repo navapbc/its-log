@@ -9,7 +9,7 @@
 SELECT
 	(ABS(
 		(select count as total from itslog_summary
-			where operation = 'count.total')
+			where operation = 'count.total' and date = :date)
 		-
 		(select sum(count) as s from itslog_summary
-			where operation = 'count.by_tags')) > 0.1);
+			where operation = 'count.by_tags' and date = :date)) > 0.1);

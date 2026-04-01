@@ -31,6 +31,9 @@ func Consolidate(etlP *types.RunEtlParams) error {
 	}
 
 	prior_dates_any := etlP.Payload["prior_summary_dates_to_include"]
+	if prior_dates_any == nil {
+		prior_dates_any = make([]any, 0)
+	}
 	for _, past_date_any := range prior_dates_any.([]any) {
 		// For each of those keys, let's check the date, and if it parses, look to see if there's a DB we can process.
 		if past_date, ok := past_date_any.(string); ok {
