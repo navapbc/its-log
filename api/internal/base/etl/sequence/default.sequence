@@ -1,5 +1,7 @@
-sentinel
-count-total
-count-by-tags
-count-all-combinations
-assert-source-and-total
+[
+    { "name": "sentinel" },
+    { "name": "count-total" },
+    { "name": "count-by-tags" },
+    { "name": "count-all-combinations" },
+    { "name": "assert-source-and-total" }
+]

@@ -2,10 +2,11 @@ package endpoints
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/navapbc/its-log/internal/base"
@@ -19,10 +20,21 @@ func RunSequence(c *gin.Context) {
 	sequenceName := c.Param("name")
 	sequenceDate := c.Param("date")
 
+	// // ETL steps can have an arbitrary POST body?
+	body, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		body = []byte("{}")
+	}
+	payload := make(map[string]any)
+	jsonErr := json.Unmarshal(body, &payload)
+	if jsonErr != nil {
+		payload = make(map[string]any)
+	}
+
 	s := types.NewStorage(appId)
 	s.Init()
-	err := s.SetDate(sequenceDate)
-	if err != nil {
+	dateErr := s.SetDate(sequenceDate)
+	if dateErr != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
 			"method":  c.Request.Method,
@@ -45,28 +57,45 @@ func RunSequence(c *gin.Context) {
 		return
 	}
 
-	// Split on commas if they are present; otherwise
-	// split on newlines.
-	trimmed := strings.TrimSpace(seq.Body.String)
-	var steps []string
-	if strings.Contains(trimmed, ",") {
-		steps = strings.Split(trimmed, ",")
-	} else {
-		steps = strings.Split(trimmed, "\n")
+	// Sequences are JSON.
+	// [ { name: "count-total" }, { name: "consolidate", params: { ... } } ]
+	var seqEntries []types.SequenceEntry
+	jsonErr2 := json.Unmarshal([]byte(seq.Body.String), &seqEntries)
+	if jsonErr2 != nil {
+		msg := fmt.Sprintf("malformed sequence spec: %s", seq.Body.String)
+		log.Println(msg)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "error",
+			"method":  c.Request.Method,
+			"message": msg,
+			"date":    s.YYYYMMDD(),
+			"name":    sequenceName,
+		})
+		return
 	}
 
-	for _, step := range steps {
+	for _, step := range seqEntries {
+		// If there is a payload in the sequence, use that.
+		// Otherwise, use the payload passed via the API
+		useThisOne := make(map[string]any)
+		if len(payload) > 0 {
+			useThisOne = payload
+		} else {
+			useThisOne = step.Params
+		}
+
 		err := runEtl(&types.RunEtlParams{
 			AppId:   appId,
 			KeyId:   keyId,
 			GinCtx:  nil,
 			Storage: s,
-			EtlName: step,
+			EtlName: step.Name,
+			Payload: useThisOne,
 		})
 
 		if err != nil {
-			errStep = step
-			log.Println("breaking on step: " + step)
+			errStep = step.Name
+			log.Println("breaking on step: " + step.Name)
 			log.Println("err: " + err.Error())
 			break
 		}

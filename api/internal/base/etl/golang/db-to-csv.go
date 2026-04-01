@@ -17,7 +17,7 @@ import (
 func SqliteToCSV(etlP *types.RunEtlParams) error {
 	// var sqliteToCsvPrefix string = "sqlite_to_csv"
 	// var sqliteToCsvExpectedKeys = []string{
-	// 	sqliteToCsvPrefix + "_source", sqliteToCsvPrefix + "_destination",
+	// 	sqliteToCsvPrefix + "-source", sqliteToCsvPrefix + "-destination",
 	// }
 
 	// err := hasExpectedKeys(etlP, sqliteToCsvExpectedKeys)

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/navapbc/its-log/internal/base"
 	"github.com/navapbc/its-log/internal/schema/models"
 	"github.com/navapbc/its-log/internal/types"
 )
@@ -23,7 +22,7 @@ func Consolidate(etlP *types.RunEtlParams) error {
 	// This will use the extended keys feature to allow us to specify the date(s) we want to pull
 	// forward into the current table.
 	var expectedConsolidateKeys = []string{
-		"prior_summary_dates_to_include",
+		"prior-summary-dates-to-include",
 	}
 
 	err := hasExpectedKeys("consolidate", etlP, expectedConsolidateKeys)
@@ -35,11 +34,9 @@ func Consolidate(etlP *types.RunEtlParams) error {
 	for _, past_date_any := range prior_dates_any.([]any) {
 		// For each of those keys, let's check the date, and if it parses, look to see if there's a DB we can process.
 		if past_date, ok := past_date_any.(string); ok {
-			appId := base.GetOrPanic(etlP.GinCtx, "AppId")
-			keyId := base.GetOrPanic(etlP.GinCtx, "KeyId")
 
 			// Init the past storage
-			past_storage := types.NewStorage(appId)
+			past_storage := types.NewStorage(etlP.AppId)
 			err := past_storage.SetDate(past_date)
 			if err != nil {
 				return fmt.Errorf("could not parse date; must be YYYY-MM-DD: %s", past_date)
@@ -66,7 +63,7 @@ func Consolidate(etlP *types.RunEtlParams) error {
 			for _, srow := range summaryRows {
 
 				err := etlP.Storage.Queries.InsertFullSummary(context.Background(), models.InsertFullSummaryParams{
-					KeyID:     keyId,
+					KeyID:     etlP.KeyId,
 					LastRun:   srow.LastRun,
 					Date:      srow.Date,
 					Operation: srow.Operation,
