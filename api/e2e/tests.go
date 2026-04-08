@@ -16,59 +16,74 @@ import (
 
 const DETERMINISTIC_ITERATIONS = 10
 
-var count_total int = 27 * DETERMINISTIC_ITERATIONS
-var count_by_tags = map[string]int{
-	"claim.v1":   3 * DETERMINISTIC_ITERATIONS,
-	"claim.v2":   3 * DETERMINISTIC_ITERATIONS,
-	"claim.v3":   3 * DETERMINISTIC_ITERATIONS,
-	"eob.v1":     3 * DETERMINISTIC_ITERATIONS,
-	"eob.v2":     3 * DETERMINISTIC_ITERATIONS,
-	"eob.v3":     3 * DETERMINISTIC_ITERATIONS,
-	"patient.v1": 3 * DETERMINISTIC_ITERATIONS,
-	"patient.v2": 3 * DETERMINISTIC_ITERATIONS,
-	"patient.v3": 3 * DETERMINISTIC_ITERATIONS,
+func ExpectedResults(iterations int) (int, map[string]int, map[string]int) {
+
+	var countTotal int = 27 * iterations
+	var countByTags = map[string]int{
+		"claim.v1":   3 * iterations,
+		"claim.v2":   3 * iterations,
+		"claim.v3":   3 * iterations,
+		"eob.v1":     3 * iterations,
+		"eob.v2":     3 * iterations,
+		"eob.v3":     3 * iterations,
+		"patient.v1": 3 * iterations,
+		"patient.v2": 3 * iterations,
+		"patient.v3": 3 * iterations,
+	}
+
+	var countCombinations = map[string]int{
+		"v2":      9 * iterations,
+		"eob":     9 * iterations,
+		"claim":   9 * iterations,
+		"v1":      9 * iterations,
+		"v3":      9 * iterations,
+		"patient": 9 * iterations,
+	}
+
+	return countTotal, countByTags, countCombinations
 }
 
-var count_combinations = map[string]int{
-	"v2":      9 * DETERMINISTIC_ITERATIONS,
-	"eob":     9 * DETERMINISTIC_ITERATIONS,
-	"claim":   9 * DETERMINISTIC_ITERATIONS,
-	"v1":      9 * DETERMINISTIC_ITERATIONS,
-	"v3":      9 * DETERMINISTIC_ITERATIONS,
-	"patient": 9 * DETERMINISTIC_ITERATIONS,
-}
+func DeterministicTest(iterations int, dateOffset int) {
+	date := time.Now().AddDate(0, 0, dateOffset).Format("2006-01-02")
+	log.Println("running for date: " + date)
+	gleCount := GenerateLogEvents(iterations, 10, date)
+	glevCount := GenerateLogEventsWithValues(iterations, 10, date)
+	gclCount := GenerateClusteredLogs(iterations, 10, date)
 
-func DeterministicTest(iterations int) {
-	gleCount := GenerateLogEvents(iterations, 10)
-	glevCount := GenerateLogEventsWithValues(iterations, 10)
-	gclCount := GenerateClusteredLogs(iterations, 10)
 	total := gleCount + glevCount + gclCount
 	// Make sure we flush the logs.
 	time.Sleep(time.Duration(viper.GetInt("buffer.flushwaitsec")+1) * time.Second)
-	RunDefaultSequence()
+	RunDefaultSequence(dateOffset)
 
-	CheckSummaryValue("count.total", "%", total)
-	for tags, value := range count_by_tags {
-		CheckSummaryValue("count.by_tags", tags, value)
+	countTotal, countByTags, countCombinations := ExpectedResults(DETERMINISTIC_ITERATIONS)
+	CheckSummaryValue("count.total", "%", countTotal, date)
+	CheckSummaryValue("count.total", "%", total, date)
+
+	for tags, value := range countByTags {
+		CheckSummaryValue("count.by_tags", tags, value, date)
 	}
-	for tags, value := range count_combinations {
-		CheckSummaryValue("count.combinations", tags, value)
+	for tags, value := range countCombinations {
+		CheckSummaryValue("count.combinations", tags, value, date)
 	}
 }
-func StressTest(iterations int, jitter int) {
+func StressTest(iterations int, jitter int, dateOffset int) {
+	date := time.Now().AddDate(0, 0, dateOffset).Format("2006-01-02")
+	log.Println("running for date: " + date)
+
 	log.Printf("== Running stress test: %d ==\n", iterations)
-	gleCount := GenerateLogEvents(iterations, jitter)
-	glevCount := GenerateLogEventsWithValues(iterations, jitter)
-	gclCount := GenerateClusteredLogs(iterations, jitter)
+	gleCount := GenerateLogEvents(iterations, jitter, date)
+	glevCount := GenerateLogEventsWithValues(iterations, jitter, date)
+	gclCount := GenerateClusteredLogs(iterations, jitter, date)
 	total := gleCount + glevCount + gclCount
 	time.Sleep(time.Duration(viper.GetInt("buffer.flushwaitsec")+1) * time.Second)
-	RunDefaultSequence()
+	RunDefaultSequence(dateOffset)
 	log.Printf("total events: %d\n", total)
 }
 
-func Setup() *types.Storage {
-	// Cleanup
+func Setup(dateOffset int) *types.Storage {
+	date := time.Now().AddDate(0, 0, dateOffset).Format("2006-01-02")
 	s := types.NewStorage("pupper")
+	s.SetDate(date)
 	s.Init()
 	return s
 }
@@ -84,17 +99,20 @@ func RunTests() {
 	// Run the server
 	go endpoints.Serve()
 
-	// Make sure nothing is hanging around
-	s := Setup()
-	Cleanup(s)
-
 	// This is a deterministic test.
 	// We should be able to get the same results every time it runs.
 	// This can run blocking.
 	log.Println("== Running deterministic tests ==")
-	DeterministicTest(DETERMINISTIC_ITERATIONS)
-	Cleanup(Setup())
-	Setup()
+	Cleanup(Setup(0))
+	DeterministicTest(DETERMINISTIC_ITERATIONS, 0)
+	Cleanup(Setup(0))
+
+	log.Println("== Running a week of deterministic tests ==")
+	for offset := range 5 {
+		Cleanup(Setup(offset))
+		Setup(offset)
+		DeterministicTest(DETERMINISTIC_ITERATIONS, -1*offset)
+	}
 
 	// This stresses the concurrent/parallel nature of the server, with
 	// multiple loggers at once, as well as running the ETL while under heavy
@@ -104,7 +122,7 @@ func RunTests() {
 	for i := range 8 {
 		wg.Add(1)
 		go func() {
-			StressTest(30*i+1, 10)
+			StressTest(30*i+1, 10, 0)
 			wg.Done()
 		}()
 	}

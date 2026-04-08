@@ -20,8 +20,14 @@ func buildBase() string {
 	return fmt.Sprintf("http://%s:%s", viper.GetString("serve.host"), viper.GetString("serve.port"))
 }
 
-func GenerateLogEvents(iterations int, jitter int) int {
-	targetUrl := buildBase() + "/v1" + constants.LOG_CREATE
+func GenerateLogEvents(iterations int, jitter int, date string) int {
+	// This is convoluted, but makes sure we exercise both endpoints.
+	var targetUrl string
+	if time.Now().Format("2006-01-02") == date {
+		targetUrl = buildBase() + "/v1" + constants.LOG_CREATE
+	} else {
+		targetUrl = buildBase() + "/v1" + constants.LOG_CREATE_DATE
+	}
 	apiKey, _ := base.GetKeyBundle("pupper", "pup_logging")
 	var counter int = 0
 	for _, version := range _versions {
@@ -31,6 +37,7 @@ func GenerateLogEvents(iterations int, jitter int) int {
 				time.Sleep(time.Duration(rand.IntN(jitter)) * time.Millisecond)
 				bundle := map[string]any{
 					"tags": [...]string{version, endpoint},
+					"date": date,
 				}
 				post(targetUrl, bundle, apiKey)
 				counter += 1
@@ -48,8 +55,13 @@ func generatePatientId(length int) string {
 	return base64.URLEncoding.EncodeToString(bytes)[:length]
 }
 
-func GenerateLogEventsWithValues(iterations int, jitter int) int {
-	targetUrl := buildBase() + "/v1" + constants.LOG_CREATE
+func GenerateLogEventsWithValues(iterations int, jitter int, date string) int {
+	var targetUrl string
+	if time.Now().Format("2006-01-02") == date {
+		targetUrl = buildBase() + "/v1" + constants.LOG_CREATE
+	} else {
+		targetUrl = buildBase() + "/v1" + constants.LOG_CREATE_DATE
+	}
 	apiKey, _ := base.GetKeyBundle("pupper", "pup_logging")
 
 	counter := 0
@@ -61,6 +73,7 @@ func GenerateLogEventsWithValues(iterations int, jitter int) int {
 				bundle := map[string]any{
 					"tags":  [...]string{version, endpoint},
 					"value": generatePatientId(8),
+					"date":  date,
 				}
 				post(targetUrl, bundle, apiKey)
 				counter += 1
@@ -71,8 +84,13 @@ func GenerateLogEventsWithValues(iterations int, jitter int) int {
 }
 
 // 9 events total in three clusters of three
-func GenerateClusteredLogs(iterations int, jitter int) int {
-	targetUrl := buildBase() + "/v1" + constants.LOG_CREATE
+func GenerateClusteredLogs(iterations int, jitter int, date string) int {
+	var targetUrl string
+	if time.Now().Format("2006-01-02") == date {
+		targetUrl = buildBase() + "/v1" + constants.LOG_CREATE
+	} else {
+		targetUrl = buildBase() + "/v1" + constants.LOG_CREATE_DATE
+	}
 	apiKey, _ := base.GetKeyBundle("pupper", "pup_logging")
 
 	counter := 0
