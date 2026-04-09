@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/fastschema/qjs"
 	"go.starlark.net/starlark"
 	"go.starlark.net/syntax"
 
@@ -251,60 +250,8 @@ func etlRunGolang(etlP *types.RunEtlParams, row models.GetETLRow, tx *sql.Tx) er
 	return nil
 }
 
-func etlRunJS(etlP *types.RunEtlParams, row models.GetETLRow, tx *sql.Tx) error {
-	// Run the query
-	if !row.Body.Valid {
-		msg := "sql is null for ETL step"
-		log.Println(msg)
-		if etlP.GinCtx != nil {
-			etlP.GinCtx.JSON(http.StatusInternalServerError, gin.H{
-				"status":  "error",
-				"method":  etlP.GinCtx.Request.Method,
-				"message": msg,
-				"detail":  msg,
-				"date":    etlP.Storage.YYYYMMDD(),
-				"name":    etlP.EtlName,
-			})
-		}
-		return fmt.Errorf("%s: %s", msg, http.StatusText(http.StatusInternalServerError))
-	}
-
-	// row.Body.String
-
-	rt, err := qjs.New()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer rt.Close()
-	ctx := rt.Context()
-
-	result, err := ctx.Eval(row.Name, qjs.Code(row.Body.String))
-	if err != nil {
-		return err
-	}
-	defer result.Free()
-
-	summaryRow, err := qjs.JsObjectToGo[types.SummaryRow](result)
-	if err != nil {
-		log.Fatalf("Failed to convert JS value to Post: %v", err)
-		return err
-	}
-
-	log.Println(summaryRow)
-	log.Println(summaryRow.Operation, summaryRow.Value, summaryRow.Count)
-	return nil
-}
-
-/*
-def query() {
-	return {
-		"operation": "js.test",
-		"tags": "test.zebra",
-		"count": 42,
-	}
-}
-*/
+// -----------
+// Running Starlark ETLs
 
 func queryFun(etlP *types.RunEtlParams) func(_ *starlark.Thread, _ *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
 	return func(_ *starlark.Thread, _ *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
@@ -332,12 +279,10 @@ func queryFun(etlP *types.RunEtlParams) func(_ *starlark.Thread, _ *starlark.Bui
 
 		// An SQL step will read from and write to the DB.
 		// Lock and release around this action.
-		etlP.Storage.Lock()
 		rows, err := etlP.Storage.GetDB().QueryContext(context.Background(), queryString, sqlArgs...)
 		if err != nil {
 			return starlark.None, err
 		}
-		etlP.Storage.Unlock()
 
 		log.Println("golang", queryString)
 		resultList := starlark.NewList([]starlark.Value{})
@@ -411,9 +356,9 @@ func etlRunStarlark(etlP *types.RunEtlParams, row models.GetETLRow, tx *sql.Tx) 
 	// Now, we're going to construct a list of rows that are suitable for insertion into the
 	// summary table from this result. We should get back a Starlark list, which will
 	// contain starlark dictionaries. These need to be turned into Golang structs.
-	arr := make([]types.SummaryRow, 0)
+	arr := make([]models.ItslogSummary, 0)
 	for elem := range v.(*starlark.List).Elements() {
-		srjs := types.SummaryRow{}
+		srjs := models.ItslogSummary{}
 		for _, k := range elem.(*starlark.Dict).Keys() {
 			s, _ := starlark.AsString(k)
 			switch s {
@@ -437,7 +382,7 @@ func etlRunStarlark(etlP *types.RunEtlParams, row models.GetETLRow, tx *sql.Tx) 
 				if found {
 					var i int
 					_ = starlark.AsInt(v, &i)
-					srjs.Count = int64(i)
+					srjs.Count = float64(i)
 
 				}
 			}
@@ -451,7 +396,25 @@ func etlRunStarlark(etlP *types.RunEtlParams, row models.GetETLRow, tx *sql.Tx) 
 	fmt.Println(arr)
 
 	// Now, write them to the summary table.
-	// TODO
+	etlP.Storage.Lock()
+	for _, e := range arr {
+		summ := models.InsertSummaryParams{
+			KeyID:     etlP.KeyId,
+			Date:      etlP.Storage.YYYYMMDD(),
+			Operation: e.Operation,
+			Tags:      e.Tags,
+			Value:     e.Value,
+			Count:     float64(e.Count),
+		}
+		summ.Hash = sql.NullString{String: e.ReturnHash(), Valid: true}
+
+		err := etlP.Storage.Queries.InsertSummary(context.Background(), summ)
+		if err != nil {
+			etlP.Storage.Unlock()
+			return err
+		}
+	}
+	etlP.Storage.Unlock()
 
 	return nil
 }

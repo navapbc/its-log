@@ -4,6 +4,7 @@
     { "name": "count-by-tags" },
     { "name": "count-all-combinations" },
     { "name": "assert-source-and-total" },
+    { "name": "count-vowels-and-consonants" },
     { "name": "hash-summaries" },
     { "name": "consolidate" }
 ]

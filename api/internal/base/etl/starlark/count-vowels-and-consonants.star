@@ -24,8 +24,8 @@ def summarize():
                 total_consonants += 1
 
     result = [
-        {"operation": "total_vowels", "count": total_vowels},
-        {"operation": "total_consonants", "count": total_consonants}
+        {"operation": "total.vowels", "count": total_vowels},
+        {"operation": "total.consonants", "count": total_consonants}
     ]
     return result
 
