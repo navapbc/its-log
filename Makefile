@@ -4,7 +4,7 @@ native:
 	cd api ; make native
 
 e2e:
-	cd ops/containers ; make e2e
+	cd api ; make e2e
 
 k6-arm:
 	cd ops/containers ; make k6-arm
@@ -17,9 +17,6 @@ itslog-arm:
 
 itslog-amd:
 	cmd ops/containers ; make itslog-amd
-
-swagger:
-	cd api ; swag init -o ./docs
 
 generate:
 	cd api ; make generate

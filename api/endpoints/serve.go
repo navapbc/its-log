@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gin-contrib/pprof"
+
 	status "github.com/appleboy/gin-status-api"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -16,7 +18,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-func Serve() {
+func Serve(params types.ServeParams) {
 	buffer_length := viper.GetInt("buffer.length")
 	buffer_flushwaitsec := viper.GetInt("buffer.flushwaitsec")
 	log.Printf("buffer length: %d flushwaitsec: %d\n", buffer_length, buffer_flushwaitsec)
@@ -33,6 +35,9 @@ func Serve() {
 	// This updates *yesterdays* database on minute one of the day
 
 	engine := PourGin(ch_evt)
+	if params.Mode == "debug" {
+		pprof.Register(engine, "dev/pprof")
+	}
 
 	host := viper.GetString("serve.host")
 	port := viper.GetString("serve.port")
@@ -94,11 +99,6 @@ func addEtlEndpoints(rG *gin.RouterGroup) {
 	auth_adminV1.POST(constants.ETL_CREATE, CreateEtl)
 	// Run an ETL step
 	auth_adminV1.POST(constants.ETL_RUN, RunEtl)
-	// Retrieve the contents of a step, including the last run and run status
-	// auth_adminV1.GET("etl/retrieve/:date/:name", GetEtl)
-	// Combine a table from one DB into another DB
-	// auth_adminV1.PUT("combine/:source/:destination/:table", Combine)
-	// auth_adminV1.GET("etl/reload/:date", ReloadEtl)
 }
 
 // METADATA ENDPOINTS

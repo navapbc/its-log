@@ -60,10 +60,10 @@ For working with the summary table directly
 Administrative endpoints include
 
 
-| HTTP | Endpoint   | Desc                             |
-| ---- | ---------- | -------------------------------- |
-| GET  | /v1/health | A standard healthcheck endpoint  |
-| GET  | /v1/status | Get server stats (RAM, GC, etc.) |
+| HTTP | Endpoint | Permissions | Desc                             |
+| ---- | -------- | ----------- | -------------------------------- |
+| GET  | /health  | any         | A standard healthcheck endpoint  |
+| GET  | /status  | any         | Get server stats (RAM, GC, etc.) |
 
 ## testing
 

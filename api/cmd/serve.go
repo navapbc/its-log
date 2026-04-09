@@ -6,6 +6,7 @@ import (
 
 	"github.com/navapbc/its-log/endpoints"
 	"github.com/navapbc/its-log/internal/base"
+	"github.com/navapbc/its-log/internal/types"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -39,7 +40,10 @@ func serve_cmd(cmd *cobra.Command, args []string) {
 
 	log.Printf("storage path: %s", viper.GetString("storage.path"))
 
-	endpoints.Serve()
+	// FIXME: this should not default to debug
+	endpoints.Serve(types.ServeParams{
+		Mode: "debug",
+	})
 }
 
 func init() {

@@ -21,5 +21,8 @@ generate:
 up: build-amd
 	cd ../containers ; docker compose up itslog lite
 
+e2e:
+	go test -cpuprofile cpu.prof -memprofile mem.prof -bench -v ./e2e
+
 test:
 	go test ./...

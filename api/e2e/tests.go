@@ -4,7 +4,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"os"
 	"sync"
 	"time"
 
@@ -97,7 +96,9 @@ func RunTests() {
 	http.DefaultTransport.(*http.Transport).MaxIdleConnsPerHost = 100
 
 	// Run the server
-	go endpoints.Serve()
+	go endpoints.Serve(types.ServeParams{
+		Mode: "debug",
+	})
 
 	// This is a deterministic test.
 	// We should be able to get the same results every time it runs.
@@ -128,7 +129,6 @@ func RunTests() {
 	}
 
 	wg.Wait()
-	// Cleanup(Setup())
+	Cleanup(Setup(0))
 
-	os.Exit(0)
 }

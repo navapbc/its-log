@@ -8,3 +8,4 @@ __*
 _base/*
 **.sqlite-wal
 **.sqlite-journal
+**.prof
