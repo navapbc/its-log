@@ -1,0 +1,77 @@
+{
+    "version": 3,
+    "inquiries": [
+        {
+            "id": "YMTduAdxssh50XnAy1hZuSSIs",
+            "query": "select tags, count\nfrom itslog_summary \nwhere tags like '%bwell%' and (tags like '%v2' or tags like '%v3') \ngroup by tags",
+            "viewType": "chart",
+            "viewOptions": {
+                "data": [
+                    {
+                        "type": "bar",
+                        "mode": "markers",
+                        "orientation": "v",
+                        "x": [
+                            "bwell.eob.v3",
+                            "bwell.patient.v2",
+                            "bwell.v2",
+                            "bwell.v3"
+                        ],
+                        "xsrc": "tags",
+                        "meta": {
+                            "columnNames": {
+                                "x": "tags",
+                                "y": "count"
+                            }
+                        },
+                        "y": [
+                            7,
+                            5,
+                            2,
+                            5
+                        ],
+                        "ysrc": "count"
+                    }
+                ],
+                "layout": {
+                    "autosize": true,
+                    "xaxis": {
+                        "range": [
+                            -0.5,
+                            6.5
+                        ],
+                        "autorange": true,
+                        "type": "category",
+                        "title": {
+                            "text": "tag"
+                        }
+                    },
+                    "yaxis": {
+                        "range": [
+                            0,
+                            7.368421052631579
+                        ],
+                        "autorange": true,
+                        "type": "linear",
+                        "title": {
+                            "text": "# events"
+                        }
+                    },
+                    "mapbox": {
+                        "style": "open-street-map"
+                    },
+                    "title": {
+                        "text": "Events by tag",
+                        "subtitle": {
+                            "text": "for bwell"
+                        }
+                    }
+                },
+                "frames": []
+            },
+            "name": "The Histogram Also 3",
+            "updatedAt": "2026-03-23T18:08:07.017Z",
+            "createdAt": "2026-03-23T18:08:07.017Z"
+        }
+    ]
+}

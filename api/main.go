@@ -1,6 +1,6 @@
 package main
 
-import "github.com/jadudm/its-log/cmd"
+import "github.com/navapbc/its-log/cmd"
 
 func main() {
 	cmd.Execute()

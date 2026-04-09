@@ -9,7 +9,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/jadudm/its-log/internal/base/models"
+	"github.com/navapbc/its-log/internal/schema/models"
+	"github.com/navapbc/its-log/internal/types"
 )
 
 //go:embed etl/sql
@@ -21,16 +22,15 @@ var defaultSeq embed.FS
 //go:embed etl/golang
 var defaultGolang embed.FS
 
-func (s *SqliteStorage) GetDB() *sql.DB {
-	return s.db
-}
+//go:embed etl/starlark
+var defaultStarlark embed.FS
 
 func fileNameWithoutExtension(fileName string) string {
 	return strings.TrimSuffix(fileName, filepath.Ext(fileName))
 }
 
-func insertEtl(s *SqliteStorage, key, name, kind, body string) {
-	err := s.queries.InsertETL(context.Background(), models.InsertETLParams{
+func insertEtl(s *types.Storage, key, name, kind, body string) {
+	err := s.Queries.InsertETL(context.Background(), models.InsertETLParams{
 		KeyID: key,
 		Name:  name,
 		Kind:  kind,
@@ -43,7 +43,7 @@ func insertEtl(s *SqliteStorage, key, name, kind, body string) {
 	}
 }
 
-func loadFilesFromFS(s *SqliteStorage, dirName string) {
+func loadFilesFromFS(s *types.Storage, dirName string) {
 	var filesystem embed.FS
 	switch dirName {
 	case "sql":
@@ -52,6 +52,8 @@ func loadFilesFromFS(s *SqliteStorage, dirName string) {
 		filesystem = defaultSeq
 	case "golang":
 		filesystem = defaultGolang
+	case "starlark":
+		filesystem = defaultStarlark
 	}
 	dirEntries, err := fs.ReadDir(filesystem, filepath.Join("etl", dirName))
 	if err != nil {
@@ -75,10 +77,21 @@ func loadFilesFromFS(s *SqliteStorage, dirName string) {
 
 }
 
-func (s *SqliteStorage) LoadDefaultEtlFiles() {
-	// Just log if we can't read from the embedded FS.
-	// Actually... panic? Yeah. This shouldn't fail.
-	loadFilesFromFS(s, "sql")
-	loadFilesFromFS(s, "sequence")
-	loadFilesFromFS(s, "golang")
+func LoadDefaultEtlFiles(s *types.Storage) error {
+
+	// If the file exists, check that there's something in the ETL.
+	_, err := s.Queries.GetETL(context.Background(), "sentinel")
+	if err != nil {
+		// If we can't find the table, it isn't initialized.
+		log.Println("Loading default ETL values")
+		// Just log if we can't read from the embedded FS.
+		// Actually... panic? Yeah. This shouldn't fail.
+		loadFilesFromFS(s, "sql")
+		loadFilesFromFS(s, "sequence")
+		loadFilesFromFS(s, "golang")
+		loadFilesFromFS(s, "starlark")
+
+	}
+
+	return nil
 }

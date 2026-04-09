@@ -1,0 +1,10 @@
+FROM golang:1.25.5-trixie AS builder
+
+RUN apt update && apt install python3 zip
+
+WORKDIR /sqliteviz
+
+RUN curl -LO https://github.com/lana-k/sqliteviz/releases/download/0.29.0/dist.zip
+RUN unzip dist.zip 
+# COPY sqliteviz/inquiries.json inquiries.json
+CMD [ "python3", "-m", "http.server", "9999" ]

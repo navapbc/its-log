@@ -33,28 +33,21 @@ An explicit goal of `its-log` is to move analysis "left" in the pipeline, and re
 
 ## the API
 
-The documentation can be accessed at http://localhost:8888/v1/swagger/index.html.
-
 The logging endpoints are
 
-| HTTP | Endpoint       | Desc                                                         |
-| ---- | -------------- | ------------------------------------------------------------ |
-| POST | /v1/log        | Log an event with cluster (optional), tags, value (optional) |
-| POST | /v1/log/{date} | Log an event with a date (for testing only)                  |
+| HTTP | Endpoint | Desc                                                         |
+| ---- | -------- | ------------------------------------------------------------ |
+| POST | /v1/log  | Log an event with cluster (optional), tags, value (optional) |
 
 The ETL and analysis endpoints are
 
-| HTTP   | Endpoint                   | Desc                                   |
-| ------ | -------------------------- | -------------------------------------- |
-| GET    | /v1/etl/{date}/{name}      | Download the contents of an ETL action |
-| POST   | /v1/etl/{date}/{name}      | Upload an ETL action                   |
-| PUT    | /v1/etl/{date}/{name}      | Run an ETL action                      |
-| DELETE | /v1/etl/{date}/{name}      | Remove an ETL action                   |
-| POST   | /v1/sequence               | Create an ETL sequence                 |
-| GET    | /v1/sequence/{date}/{name} | Run a sequence for a given date        |
-| PUT    | /v1/summarize              | Consolidate summary tables             |
-| GET    | /v1/summary/{name}         | Fetch the value of the named summary   |
-
+| HTTP | Endpoint                     | Desc                            |
+| ---- | ---------------------------- | ------------------------------- |
+| POST | /v1/etl/create               | Create an ETL action            |
+| GET  | /v1/etl/run/:date/:name      | Run an ETL action               |
+| POST | /v1/sequence/create/:date    | Create an ETL sequence          |
+| GET  | /v1/sequence/run/:date/:name | Run a sequence for a given date |
+`
 Administrative endpoints include
 
 
@@ -62,6 +55,20 @@ Administrative endpoints include
 | ---- | ---------- | -------------------------------- |
 | GET  | /v1/health | A standard healthcheck endpoint  |
 | GET  | /v1/status | Get server stats (RAM, GC, etc.) |
+
+## testing
+
+`its-log` can test itself. It will run on localhost and then run a sequence of parallel and sequential tests, exercising itself end-to-end.
+
+```
+go run ./... test
+```
+
+or, compiled
+
+```
+its-log test
+```
 
 ## running its-log
 

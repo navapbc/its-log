@@ -2,10 +2,13 @@ import os
 from random import choice
 import requests
 import time
+from datetime import datetime, UTC, timedelta
+import json
 
 ITSLOG_HOST = os.getenv('ITSLOG_HOST')
 ITSLOG_PORT = os.getenv('ITSLOG_PORT')
 ITSLOG_APIKEY = os.getenv('ITSLOG_APIKEY')
+ITSLOG_ADMIN_APIKEY = os.getenv('ITSLOG_ADMIN_APIKEY')
 
 # 4x endpoints, 3x versions, 5x apps, and N=10 should yield 7200 events.
 endpoints = ['EOB', 'Patient', 'Coverage', 'DigitalInsuranceCard']
@@ -40,6 +43,23 @@ def post(tags, value=None):
                   headers=headers(ITSLOG_APIKEY)
                   )
 
+
+def today():
+    return str(datetime.now(UTC).date())
+
+
+def yesterday():
+    return str(datetime.now(UTC).date() - timedelta(days=1))
+
+
+def get(url, date=today()):
+    url = url.replace(":date", date)
+    resp = requests.get(log_url(url),
+                        headers=headers(ITSLOG_ADMIN_APIKEY))
+    if resp.status_code > 200:
+        print("get error response: " + resp.reason)
+        print("get json: " + json.dumps(resp.json()))
+
 # With N=20, at full speed, we get "cannot assign requested address" errors
 # https://blog.paessler.com/cannot-assign-requested-address-10049-errors-in-webserver-stress-tool-under-vista
 # https://stackoverflow.com/a/64330227
@@ -58,22 +78,19 @@ def simulate_events():
         for _ in range(N):
             for ep in endpoints:
                 # Generate N of each endpoint
-                # without a value
-                for _ in range(N):
-                    post([version, ep])
-                # Generate N of each endpoint
                 # for each app
                 for app in applications:
                     for _ in range(N):
-                        post([version, ep], app)
+                        post([version, ep, app])
 
 
 def run_etl():
-    pass
+    get("/v1/sequence/:date/default")
 
 
 def main():
     simulate_events()
+    time.sleep(3)
     run_etl()
 
 

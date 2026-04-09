@@ -16,8 +16,8 @@
             "env": {
                 "ITSLOG_SERVE_HOST": "localhost",
                 "ITSLOG_SERVE_PORT": "8888",
-                "ITSLOG_APIKEY_PUPPERLOG": "{\"app_id\": \"pupper\", \"key_id\": \"pup_logging\", \"permission\": \"log\", \"key\": \"12345678901234561234567890123456\"}",
-                "ITSLOG_APIKEY_PUPPERADMIN": "{\"app_id\": \"pupper\", \"key_id\": \"pup_admin\", \"permission\": \"admin\", \"key\": \"abcdefghabcdefghabcdefghabcdefgh\"}",
+                "ITSLOG_APIKEY_PUPPERLOG": "{\"app_id\": \"pupper\", \"key_id\": \"pup_logging\", \"permission\": \"log\", \"key\": \"1234567890123456123456789012345612345678901234561234567890123456\"}",
+                "ITSLOG_APIKEY_PUPPERADMIN": "{\"app_id\": \"pupper\", \"key_id\": \"pup_admin\", \"permission\": \"admin\", \"key\": \"abcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefgh\"}",
                 "ITSLOG_BUFFER_FLUSHWAITSEC": "1",
                 "ITSLOG_BUFFER_LENGTH": "2000",
                 "ITSLOG_GINMODE": "debug",

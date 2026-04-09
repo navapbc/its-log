@@ -4,8 +4,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/jadudm/its-log/internal/itslog"
-	"github.com/jadudm/its-log/internal/serve"
+	"github.com/navapbc/its-log/endpoints"
+	"github.com/navapbc/its-log/internal/base"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -23,15 +23,15 @@ via the application's 'config.yaml'.
 
 func serve_cmd(cmd *cobra.Command, args []string) {
 	// This will panic if we don't have the tools we need.
-	err := itslog.ConfirmEnvVars()
+	err := base.ConfirmEnvVars()
 	if err != nil {
 		log.Println(err.Error())
 		os.Exit(-1)
 	}
 
 	// Load the API keys from the environment
-	err = itslog.GetApiKeys()
-	log.Printf("found %d keys", len(itslog.LiveKeys))
+	err = base.GetApiKeys()
+	log.Printf("found %d keys", len(base.LiveKeys))
 	if err != nil {
 		log.Println(err.Error())
 		os.Exit(-2)
@@ -39,7 +39,7 @@ func serve_cmd(cmd *cobra.Command, args []string) {
 
 	log.Printf("storage path: %s", viper.GetString("storage.path"))
 
-	serve.Serve()
+	endpoints.Serve()
 }
 
 func init() {

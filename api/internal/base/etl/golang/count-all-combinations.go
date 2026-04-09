@@ -2,15 +2,15 @@ package etl
 
 import (
 	"context"
-	"database/sql"
 	"log"
 	"slices"
 	"strings"
 
 	sq "github.com/Masterminds/squirrel"
 
+	"github.com/navapbc/its-log/internal/types"
+
 	// "gonum.org/v1/gonum/stat/combin"
-	"github.com/jadudm/its-log/internal/base"
 	combi "github.com/mxschmitt/golang-combinations"
 )
 
@@ -27,8 +27,8 @@ func unique[A comparable](input []A) []A {
 	return result
 }
 
-func CountAllCombinations(sctx *base.ServeCtx, tx *sql.Tx) {
-	allTags, err := sctx.Storage.GetQueries().GetDistinctTags(context.Background())
+func CountAllCombinations(etlP *types.RunEtlParams) error {
+	allTags, err := etlP.Storage.Queries.GetDistinctTags(context.Background())
 	if err != nil {
 		panic(":panicohnoes: " + err.Error())
 	}
@@ -83,13 +83,14 @@ func CountAllCombinations(sctx *base.ServeCtx, tx *sql.Tx) {
 		// and an array of arguments in the correct order.
 		query_string, args, err := the_query.ToSql()
 		// Run the query. Get back one value.
-		the_count_row := sctx.Storage.GetDB().QueryRowContext(context.Background(), query_string, args...)
+		the_count_row := etlP.Storage.GetDB().QueryRowContext(context.Background(), query_string, args...)
 		var the_count int
 		err = the_count_row.Scan(&the_count)
 		if err != nil {
 			// FIXME: Handle this error better.
 			// If that query didn't work, panic.
-			panic(err)
+			log.Println("combinations SQL event count err: " + err.Error())
+			return err
 		}
 		// Build a map of the counts against the original name.
 		slices.Sort(comb)
@@ -101,15 +102,18 @@ func CountAllCombinations(sctx *base.ServeCtx, tx *sql.Tx) {
 		// Expect all ETLs to return 0 or 1.
 		if count > 0 && !slices.Contains(allTags, tag) {
 			// FIXME: sqlc can do this insert.
-			_, err := tx.ExecContext(context.Background(),
+			_, err := etlP.Storage.GetDB().ExecContext(context.Background(),
 				`INSERT OR REPLACE INTO itslog_summary 
-				(key_id, operation, tags, count)
+				(key_id, operation, tags, value, count)
 				VALUES
-				(?, 'count.combinations', ?, ?)`,
-				sctx.KeyId, tag, count)
+				(?, 'count.combinations', ?, '', ?)`,
+				etlP.KeyId, tag, count)
 			if err != nil {
-				log.Println("err " + err.Error())
+				log.Println("combinations SQL insert err: " + err.Error())
+				return err
 			}
 		}
 	}
+
+	return nil
 }
