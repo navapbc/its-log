@@ -11,11 +11,11 @@
 #     return [{"tags": "something.v3"}, {"tags": "another.v2"}]
 
 def summarize():
-    result = query("SELECT * from itslog_events")
+    query_rows = query("SELECT * from itslog_events")
     summaries = []
     total_vowels = 0
     total_consonants = 0
-    for row in result:
+    for row in query_rows:
         for l in "aeiou".elems():
             if l in row["tags"]:
                 total_vowels += 1

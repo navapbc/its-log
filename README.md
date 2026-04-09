@@ -33,21 +33,30 @@ An explicit goal of `its-log` is to move analysis "left" in the pipeline, and re
 
 ## the API
 
-The logging endpoints are
+The logging endpoints are rooted at `/v1`. So, `/log/create` should be read as `/v1/log/create`.
 
-| HTTP | Endpoint | Desc                                                         |
-| ---- | -------- | ------------------------------------------------------------ |
-| POST | /v1/log  | Log an event with cluster (optional), tags, value (optional) |
+| HTTP | Endpoint         | Permissions | Desc                                                                                             |
+| ---- | ---------------- | ----------- | ------------------------------------------------------------------------------------------------ |
+| POST | /log/create      | logging     | Log an event with cluster (optional), tags, value (optional)                                     |
+| POST | /log/create/date | admin       | Log an event per above plus a *date*, for creating test scenarios by logging events in the past. |
+
 
 The ETL and analysis endpoints are
 
-| HTTP | Endpoint                     | Desc                            |
-| ---- | ---------------------------- | ------------------------------- |
-| POST | /v1/etl/create               | Create an ETL action            |
-| GET  | /v1/etl/run/:date/:name      | Run an ETL action               |
-| POST | /v1/sequence/create/:date    | Create an ETL sequence          |
-| GET  | /v1/sequence/run/:date/:name | Run a sequence for a given date |
-`
+| HTTP | Endpoint                  | Permissions | Desc                                                                  |
+| ---- | ------------------------- | ----------- | --------------------------------------------------------------------- |
+| POST | /etl/create               | admin       | Create an ETL action                                                  |
+| POST | /etl/run/:date/:name      | admin       | Run an ETL action. Takes optional params in the JSON body.            |
+| POST | /sequence/create/:date    | admin       | Create an ETL sequence                                                |
+| POST | /sequence/run/:date/:name | admin       | Run a sequence for a given date. Takes optional params like /etl/run. |
+
+For working with the summary table directly
+
+| HTTP | Endpoint      | Permissions | Desc                                                                      |
+| ---- | ------------- | ----------- | ------------------------------------------------------------------------- |
+| POST | /summary/read | admin       | Read from the summary table; used for testing the results of ETL actions. |
+
+
 Administrative endpoints include
 
 
