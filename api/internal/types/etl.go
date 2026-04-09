@@ -19,3 +19,10 @@ type RunEtlParams struct {
 	Storage *Storage
 	Payload map[string]any
 }
+
+type SummaryRow struct {
+	Operation string `json:"operation"`
+	Tags      string `json:"tags"`
+	Value     string `json:"value"`
+	Count     int64  `json:"count"`
+}

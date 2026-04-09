@@ -22,6 +22,9 @@ var defaultSeq embed.FS
 //go:embed etl/golang
 var defaultGolang embed.FS
 
+//go:embed etl/starlark
+var defaultStarlark embed.FS
+
 func fileNameWithoutExtension(fileName string) string {
 	return strings.TrimSuffix(fileName, filepath.Ext(fileName))
 }
@@ -49,6 +52,8 @@ func loadFilesFromFS(s *types.Storage, dirName string) {
 		filesystem = defaultSeq
 	case "golang":
 		filesystem = defaultGolang
+	case "starlark":
+		filesystem = defaultStarlark
 	}
 	dirEntries, err := fs.ReadDir(filesystem, filepath.Join("etl", dirName))
 	if err != nil {
@@ -84,6 +89,8 @@ func LoadDefaultEtlFiles(s *types.Storage) error {
 		loadFilesFromFS(s, "sql")
 		loadFilesFromFS(s, "sequence")
 		loadFilesFromFS(s, "golang")
+		loadFilesFromFS(s, "starlark")
+
 	}
 
 	return nil

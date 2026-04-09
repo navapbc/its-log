@@ -1,6 +1,9 @@
 package types
 
-import "time"
+import (
+	"database/sql"
+	"time"
+)
 
 type Event struct {
 	Timestamp time.Time
@@ -11,4 +14,13 @@ type Event struct {
 	TagString string
 	Value     string `json:"value"`
 	Date      string `json:"date"`
+}
+
+type EventRow struct {
+	ID        string
+	Timestamp string
+	KeyId     string
+	Cluster   sql.NullString
+	Tags      string
+	Value     sql.NullString
 }
