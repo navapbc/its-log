@@ -356,6 +356,8 @@ func etlRunStarlark(etlP *types.RunEtlParams, row models.GetETLRow, tx *sql.Tx) 
 	// Now, we're going to construct a list of rows that are suitable for insertion into the
 	// summary table from this result. We should get back a Starlark list, which will
 	// contain starlark dictionaries. These need to be turned into Golang structs.
+	// FIXME: what if someone wants `summary` rows? This does not work.
+	// consider using map[string]any instead.
 	arr := make([]models.ItslogSummary, 0)
 	for elem := range v.(*starlark.List).Elements() {
 		srjs := models.ItslogSummary{}
