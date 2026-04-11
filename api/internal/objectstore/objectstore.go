@@ -84,12 +84,19 @@ func NewObjectClient(os *ObjectStore) (*ObjectClient, error) {
 	return oclient, nil
 }
 
-// FIXME: This can be broken into several setters, and then an .Init() method
 func NewObjectStore(provider string) *ObjectStore {
 	os := &ObjectStore{
 		Provider: provider,
 	}
 	return os
+}
+
+func (os *ObjectStore) Init() {
+	client, err := NewObjectClient(os)
+	if err != nil {
+		panic("could not initialize object store")
+	}
+	os.ObjectClient = client
 }
 
 func (os *ObjectStore) SetRegion(r string) *ObjectStore {
@@ -110,18 +117,6 @@ func (os *ObjectStore) SetBucket(b string) *ObjectStore {
 	return os
 }
 
-func (os *ObjectStore) Init() {
-	client, err := NewObjectClient(os)
-	if err != nil {
-		panic("could not initialize object store")
-	}
-	os.ObjectClient = client
-}
-
-func (os *ObjectStore) ConstructUrl() string {
-	return fmt.Sprintf("s3://%s", os.Bucket)
-}
-
 func (os *ObjectStore) SetPath(path string) *ObjectStore {
 	os.Path = path
 	return os
@@ -132,6 +127,10 @@ func (os *ObjectStore) SetEndpoint(scheme string, host string, port string) *Obj
 	os.EndpointHost = host
 	os.EndpointPort = port
 	return os
+}
+
+func (os *ObjectStore) ConstructUrl() string {
+	return fmt.Sprintf("s3://%s", os.Bucket)
 }
 
 func (os *ObjectStore) WriteBytes(s3Path []string, obj []byte) (int, error) {
