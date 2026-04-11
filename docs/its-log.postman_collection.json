@@ -10,6 +10,21 @@
   "item": [
     {
       "name": "health check",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"health check test\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
       "request": {
         "method": "GET",
         "header": [],
@@ -30,6 +45,25 @@
     },
     {
       "name": "status",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"status test\", function () {",
+              "    pm.response.to.have.status(200);",
+              "    pm.response.to.be.json;",
+              "    o = pm.response.json()",
+              "    pm.expect(o.time).to.be.a('number');",
+              "    pm.expect(o.go_version).to.be.a('string');",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
       "request": {
         "method": "GET",
         "header": [
@@ -56,6 +90,25 @@
     },
     {
       "name": "create log event",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"test creating events\", function () {",
+              "    pm.response.to.have.status(200);",
+              "    pm.response.to.be.json;",
+              "    o = pm.response.json()",
+              "    pm.expect(o.status).to.be.a('string');",
+              "    pm.expect(o.status).to.eq(\"ok\")",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
       "request": {
         "method": "POST",
         "header": [
@@ -93,6 +146,25 @@
     },
     {
       "name": "create log event in the past",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"test creating an event in the past\", function () {",
+              "    pm.response.to.have.status(200);",
+              "    pm.response.to.be.json;",
+              "    o = pm.response.json()",
+              "    pm.expect(o.status).to.be.a('string');",
+              "    pm.expect(o.status).to.eq(\"ok\")",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
       "request": {
         "method": "POST",
         "header": [
@@ -104,7 +176,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"cluster\": \"\",\n    \"tags\": [\"v3\", \"patient\", \"bwell\"],\n    \"value\": \"\",\n    \"date\": \"2026-03-01\"\n}",
+          "raw": "{\n    \"cluster\": \"\",\n    \"tags\": [\"v3\", \"patient\", \"bwell\"],\n    \"value\": \"\",\n    \"date\": \"2020-05-10\"\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -131,6 +203,27 @@
     },
     {
       "name": "create etl step",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"test adding a trivial ETL step\", function () {",
+              "    pm.response.to.have.status(201);",
+              "    pm.response.to.be.json;",
+              "    o = pm.response.json()",
+              "    pm.expect(o.status).to.be.a('string');",
+              "    pm.expect(o.status).to.eq(\"ok\")",
+              "    pm.expect(o.method).to.eq(\"POST\")",
+              "    pm.expect(o.name).to.eq(\"just-a-test-step\")",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
       "request": {
         "method": "POST",
         "header": [
@@ -142,7 +235,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"name\": \"test\",\n    \"kind\": \"sql\",\n    \"body\": \"RETURNING 0;\",\n    \"date\": \"2026-03-24\"\n}",
+          "raw": "{\n    \"name\": \"just-a-trivial-step\",\n    \"kind\": \"sql\",\n    \"body\": \"SELECT 0;\",\n    \"date\": \"today\"\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -176,6 +269,27 @@
     },
     {
       "name": "run etl step",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"running a trivial ETL step\", function () {",
+              "    pm.response.to.have.status(201);",
+              "    pm.response.to.be.json;",
+              "    o = pm.response.json()",
+              "    pm.expect(o.status).to.be.a('string');",
+              "    pm.expect(o.status).to.eq(\"ok\")",
+              "    pm.expect(o.method).to.eq(\"POST\")",
+              "    pm.expect(o.name).to.eq(\"just-a-trivial-step\")",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
       "request": {
         "method": "POST",
         "header": [
@@ -219,11 +333,11 @@
           "variable": [
             {
               "key": "date",
-              "value": ""
+              "value": "today"
             },
             {
               "key": "name",
-              "value": ""
+              "value": "just-a-trivial-step"
             }
           ]
         },
@@ -233,6 +347,27 @@
     },
     {
       "name": "create sequence",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"creating a sequence using test values\", function () {",
+              "    pm.response.to.have.status(201);",
+              "    pm.response.to.be.json;",
+              "    o = pm.response.json()",
+              "    pm.expect(o.status).to.be.a('string');",
+              "    pm.expect(o.status).to.eq(\"ok\")",
+              "    pm.expect(o.method).to.eq(\"POST\")",
+              "    pm.expect(o.name).to.eq(\"postman-test-sequence\")",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
       "request": {
         "method": "POST",
         "header": [
@@ -244,7 +379,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"name\": \"something-else\",\n  \"kind\": \"sequence\",\n  \"body\": [\n    { \"name\": \"sentinel\" },\n    { \"name\": \"count-total\" },\n    { \"name\": \"count-by-tags\" },\n    { \"name\": \"count-all-combinations\" },\n    { \"name\": \"assert-source-and-total\" }\n  ],\n  \"date\": \"today\"\n}\n",
+          "raw": "{\n  \"name\": \"postman-test-sequence\",\n  \"kind\": \"sequence\",\n  \"body\": [\n    { \"name\": \"sentinel\" },\n    { \"name\": \"just-a-trivial-step\" },\n    { \"name\": \"count-total\" },\n    { \"name\": \"count-by-tags\" },\n    { \"name\": \"count-all-combinations\" },\n    { \"name\": \"assert-source-and-total\" }\n  ],\n  \"date\": \"today\"\n}\n",
           "options": {
             "raw": {
               "language": "json"
@@ -270,6 +405,25 @@
     },
     {
       "name": "run sequence",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"test running a sequence\", function () {",
+              "    pm.response.to.have.status(200);",
+              "    pm.response.to.be.json;",
+              "    o = pm.response.json()",
+              "    pm.expect(o.status).to.be.a('string');",
+              "    pm.expect(o.status).to.eq(\"ok\")",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
       "request": {
         "method": "POST",
         "header": [
@@ -289,7 +443,7 @@
           }
         },
         "url": {
-          "raw": "http://localhost:8888/v1/sequence/run/today/full",
+          "raw": "http://localhost:8888/v1/sequence/run/today/postman-test-sequence",
           "protocol": "http",
           "host": [
             "localhost"
@@ -300,7 +454,7 @@
             "sequence",
             "run",
             "today",
-            "full"
+            "postman-test-sequence"
           ]
         },
         "description": "This runs a sequence of ETL steps.\n\nLike running a single ETL step, it is possible to pass parameters in the body. Any single ETL step will look at those parameters for arguments, and ignore parameters that are not needed. Consult individual ETLs for documentation regarding parameters they may require.\n\nNote that all ETLs do not necessarily like operating on an empty database. Running a sequence before any events have been logged may lead to errors (depending on the ETL statements involved)."
@@ -309,6 +463,25 @@
     },
     {
       "name": "summary read",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"checking summary results\", function () {",
+              "    pm.response.to.have.status(200);",
+              "    pm.response.to.be.json;",
+              "    o = pm.response.json()",
+              "    pm.expect(o.count).to.be.a('number');",
+              "    pm.expect(o.count).to.be.greaterThan(0)",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
       "request": {
         "method": "POST",
         "header": [
@@ -346,6 +519,24 @@
     },
     {
       "name": "summary create",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"checking summary creation\", function () {",
+              "    pm.response.to.have.status(201);",
+              "    pm.response.to.be.json;",
+              "    o = pm.response.json()",
+              "    pm.expect(o.name).to.be.eq(\"something.different\")",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
       "request": {
         "method": "POST",
         "header": [
@@ -377,7 +568,7 @@
             "create"
           ]
         },
-        "description": "Not everything can or should be logged as an event.\n\nIn the context of an application or API, it makes sense to log individual events. For example, as requests come into an API, a logging event might be fired off to `its-log`. In this way, there is one event in `its-log` for every call to the API.\n\nHowever, some data may come as an analysis of internal tables. At the end of each day, a system may want to walk through one or more internal tables, carry out a computation, and report a summary. A good example of this might be unique users of the system. This kind of count may involve counting PII or PHI (identifiers of users) that would not, otherwise, want to be logged. A system can therefore do the count internally, and then record with `its-log` the total count of unique users that day.\n\nThis is not an event. This is a summary. Therefore, `its-log` exposes the `itslog_summary` table for writing. **This should not be done casually**. Because all inserts into the `summary` table are made `INSERT OR REPLACE`, it is up to the developers to make sure that their chosen `operation` and other values do not collide with any rows generated by the standard ETL sequence. Prefixing the operation with a key, like `external.` may be a good practice. E.g. the `summary` table might contain `count.total`, but an _external_ count of some total number of users might be keyed with the operation `external.count.total`. Ideally, the names are more different... but the principle holds: avoid collisions on rows generated by ETL steps.\n\nA summary event must bind to a JSON structure that looks like:\n\n``` json\n{\n    \"date\": \"today\",\n    \"operation\": \"something.different\",\n    \"tags\": [\"v2\", \"nothing\"],\n    \"value\": \"\",\n    \"count\": 42\n}\n\n ```\n\n`date`, `operation`, and `count` are required; `tags` and `value` are optional. `count` is a `FLOAT`, while all other values are strings."
+        "description": "Not everything can or should be logged as an event.\n\nIn the context of an application or API, it makes sense to log individual events. For example, as requests come into an API, a logging event might be fired off to `its-log`. In this way, there is one event in `its-log` for every call to the API.\n\nHowever, some data may come as an analysis of internal tables. At the end of each day, a system may want to walk through one or more internal tables, carry out a computation, and report a summary. A good example of this might be unique users of the system. This kind of count may involve counting PII or PHI (identifiers of users) that would not, otherwise, want to be logged. A system can therefore do the count internally, and then record with `its-log` the total count of unique users that day.\n\nThis is not an event. This is a summary. Therefore, `its-log` exposes the `itslog_summary` table for writing. **This should not be done casually**. Because all inserts into the `summary` table are made `INSERT OR REPLACE`, it is up to the developers to make sure that their chosen `operation` and other values do not collide with any rows generated by the standard ETL sequence. Prefixing the operation with a key, like `external.` may be a good practice. E.g. the `summary` table might contain `count.total`, but an _external_ count of some total number of users might be keyed with the operation `external.count.total`. Ideally, the names are more different... but the principle holds: avoid collisions on rows generated by ETL steps.\n\nA summary event must bind to a JSON structure that looks like:\n\n``` json\n{\n    \"date\": \"today\",\n    \"operation\": \"something.different\",\n    \"tags\": [\"v2\", \"nothing\"],\n    \"value\": \"\",\n    \"count\": 42\n}\n\n ```\n\n`date`, `operation`, and `count` are required; `tags` and `value` are optional. `count` is a `FLOAT`, `tags` is a string array (which will be sorted and converted to a dot-separated form), while all other values are strings."
       },
       "response": []
     }

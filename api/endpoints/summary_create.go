@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"sort"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -49,6 +51,11 @@ func SummaryCreate(c *gin.Context) {
 	// we try and load another ETL into the table.
 	base.LoadDefaultEtlFiles(s)
 
+	// The tags field comes in as a JSON array. It needs to become
+	// a sorted, dot-separated string.
+	sort.Strings(body.Tags)
+	theTags := strings.Join(body.Tags, ".")
+
 	// Load an ItslogSummary structure first.
 	// This has a hashing method that we can use to correctly hash
 	// the summary on insert. This saves calling `hash-summaries`
@@ -58,7 +65,7 @@ func SummaryCreate(c *gin.Context) {
 		KeyID:     keyId,
 		Date:      body.Date,
 		Operation: body.Operation,
-		Tags:      body.Tags,
+		Tags:      theTags,
 		Value:     body.Value,
 		Count:     body.Count,
 	}
