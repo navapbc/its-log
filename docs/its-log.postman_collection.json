@@ -1,0 +1,385 @@
+{
+  "info": {
+    "_postman_id": "64a93484-3c2e-4ccd-bd17-262cf2be122c",
+    "name": "its-log",
+    "description": "`its-log` is a lightweight event-based logging and ETL system. The intent is for users to be able to:\n\n1. Log events as they happen (e.g. hits on an API)\n    \n2. Log summary events on a daily or weekly basis based on analysis of internal application tables (e.g. \"unique users served to date\")\n    \n3. Carry out summarization transforms (e.g. transform 1M rows of events into 100 rows of summary)\n    \n4. Export data for consumption in dashboards, reports, etc.\n    \n\nThis Postman bundle hardcodes API keys for an `its-log` instance running locally containerized or under debug conditions.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "49155689",
+    "_collection_link": "https://go.postman.co/collection/49155689-64a93484-3c2e-4ccd-bd17-262cf2be122c?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "health check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "localhost:8888/v1/health",
+          "host": [
+            "localhost"
+          ],
+          "port": "8888",
+          "path": [
+            "v1",
+            "health"
+          ]
+        },
+        "description": "Returns `status:ok` if everything is OK. Because Golang is highly concurrent, it might return `ok` even if things are not.\n\nThis endpoint does not require authentication."
+      },
+      "response": []
+    },
+    {
+      "name": "status",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-api-key",
+            "value": "1234567890123456123456789012345612345678901234561234567890123456",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "localhost:8888/v1/status",
+          "host": [
+            "localhost"
+          ],
+          "port": "8888",
+          "path": [
+            "v1",
+            "status"
+          ]
+        },
+        "description": "Returns standard Golang profiling information (CPU, heap, GC, etc.).\n\nRequires a valid API key of any permission level."
+      },
+      "response": []
+    },
+    {
+      "name": "create log event",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "x-api-key",
+            "value": "1234567890123456123456789012345612345678901234561234567890123456",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"cluster\": \"\",\n    \"tags\": [\"v2\", \"patient\", \"puppers\"],\n    \"value\": \"\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8888/v1/log/create",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8888",
+          "path": [
+            "v1",
+            "log",
+            "create"
+          ]
+        },
+        "description": "Events are logged via `POST`, and have the following shape:\n\n``` json\n{\n  \"tags\": [\"v3\", \"something\"],\n  \"cluster\": \"A841BBE8-3EFC-4676-A33A-C0A4F5BFED0D\",\n  \"value\": \"something unique but not PII\"\n}\n\n ```\n\nThe `tags` key is required, `cluster` and `value` are optional. All API calls require `x-api-key`, and the key must have the correct permissions.\n\nConceptually:\n\n- `tags` are categorical. Use these for things like API endpoint version, version name, and so on.\n    \n- `cluster` indicates a related set of events. If you have three things you want to long, and they all relate to one conceptual \"event,\" then you should generate a unique ID for the cluster. A UUID4 or similar would be appropriate.\n    \n- `value` is intended to be a unique value associated with the event. For example, a salted hash of a unique identifier would allow the counting of (say) unique users of an API without leaking information about the user(s)."
+      },
+      "response": []
+    },
+    {
+      "name": "create log event in the past",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "x-api-key",
+            "value": "1234567890123456123456789012345612345678901234561234567890123456",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"cluster\": \"\",\n    \"tags\": [\"v3\", \"patient\", \"bwell\"],\n    \"value\": \"\",\n    \"date\": \"2026-03-01\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8888/v1/log/create/date",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8888",
+          "path": [
+            "v1",
+            "log",
+            "create",
+            "date"
+          ]
+        },
+        "description": "Like `log/create`, but allows the specification of the date that the event should be logged to.\n\n**WARNING:** this is intended for test usage only. A standard `logging` API key cannot write to this endpoint. In production, no events should be logged to the `log/create/date` endpoint.\n\nFor testing purposes, it allows the generation of databases in the past or future."
+      },
+      "response": []
+    },
+    {
+      "name": "create etl step",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "x-api-key",
+            "value": "abcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefgh",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"name\": \"test\",\n    \"kind\": \"sql\",\n    \"body\": \"RETURNING 0;\",\n    \"date\": \"2026-03-24\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8888/v1/etl/create",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8888",
+          "path": [
+            "v1",
+            "etl",
+            "create"
+          ],
+          "query": [
+            {
+              "key": "date",
+              "value": "2026-03-09",
+              "type": "text",
+              "disabled": true
+            }
+          ]
+        },
+        "description": "ETL steps take one of several forms. Some steps are default with every `its-log` installation, and users can write and load their own ETL steps via API.\n\n1. SQL transforms\n    \n2. Starlark code\n    \n\nAll transforms must match the shape:\n\n``` json\n{\n  \"name\": \"count-total\",\n  \"kind\": \"sql\",\n  \"body\": \"SELECT count(*) FROM itslog_events RETURNING 0\",\n  \"date\": \"2026-04-10\"\n}\n\n ```\n\nAll four keys must be present.\n\nValid inputs for \"kind\" include `sql` or `starlark`."
+      },
+      "response": []
+    },
+    {
+      "name": "run etl step",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "x-api-key",
+            "value": "abcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefgh",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"random\": \"param\",\n    \"prior_summary_dates_to_include\": [\"2026-03-27\", \"2026-03-28\", \"2026-03-29\", \"2026-03-30\"]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8888/v1/etl/run/:date/:name",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8888",
+          "path": [
+            "v1",
+            "etl",
+            "run",
+            ":date",
+            ":name"
+          ],
+          "query": [
+            {
+              "key": "date",
+              "value": "2026-03-09",
+              "type": "text",
+              "disabled": true
+            }
+          ],
+          "variable": [
+            {
+              "key": "date",
+              "value": ""
+            },
+            {
+              "key": "name",
+              "value": ""
+            }
+          ]
+        },
+        "description": "To run an ETL step, two URL parameters are required: the `date` and the `name` of the ETL step.\n\n```\nhttp://HOST:PORT/v1/etl/run/:date/:name\n\n ```\n\nThe `date` must be `YYYY-MM-DD` (eg. \"2026-04-11\") or the special identifier `today`.\n\nFor example, to run the `sentinel` ETL step (a no-op) on today's database:\n\n```\nhttp://HOST:PORT/v1/etl/run/today/sentinel\n\n ```\n\nIt is possible to pass parameters to the ETL. This is on a per-ETL step basis; not all ETL steps take parameters. For example, the body might look like:\n\n``` json\n{\n    \"random-example\": \"param-value\",\n    \"prior_summary_dates_to_include\": [\"2026-03-29\", \"2026-03-30\"]\n}\n\n ```"
+      },
+      "response": []
+    },
+    {
+      "name": "create sequence",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "x-api-key",
+            "value": "abcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefgh",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"something-else\",\n  \"kind\": \"sequence\",\n  \"body\": [\n    { \"name\": \"sentinel\" },\n    { \"name\": \"count-total\" },\n    { \"name\": \"count-by-tags\" },\n    { \"name\": \"count-all-combinations\" },\n    { \"name\": \"assert-source-and-total\" }\n  ],\n  \"date\": \"today\"\n}\n",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8888/v1/sequence/create",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8888",
+          "path": [
+            "v1",
+            "sequence",
+            "create"
+          ]
+        },
+        "description": "A sequence specifies multiple ETL steps that want to be run one after the other. The date parameter determines which database will be loaded with the sequence; `today` is a valid shorthand for the current database.\n\nThe body of a sequence is a JSON document matching the following shape:\n\n``` json\n{\n  \"name\": \"something-else\",\n  \"kind\": \"sequence\",\n  \"body\": [\n    { \"name\": \"sentinel\" },\n    { \"name\": \"count-total\" },\n    { \"name\": \"count-by-tags\" },\n    { \"name\": \"count-all-combinations\" },\n    { \"name\": \"assert-source-and-total\" }\n  ],\n  \"date\": \"today\"\n}\n\n ```\n\nA sequence is a list of objects, each of which **must** have a `name` key, and may optionally have a `params` key. The `params` key should contain a single object mapping strings to values. Those will be checked and interpreted by the step in question; therefore, the documentation for that particular ETL step must be consulted regarding requirements."
+      },
+      "response": []
+    },
+    {
+      "name": "run sequence",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "x-api-key",
+            "value": "abcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefgh",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"prior-summary-dates-to-include\": []\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8888/v1/sequence/run/today/full",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8888",
+          "path": [
+            "v1",
+            "sequence",
+            "run",
+            "today",
+            "full"
+          ]
+        },
+        "description": "This runs a sequence of ETL steps.\n\nLike running a single ETL step, it is possible to pass parameters in the body. Any single ETL step will look at those parameters for arguments, and ignore parameters that are not needed. Consult individual ETLs for documentation regarding parameters they may require.\n\nNote that all ETLs do not necessarily like operating on an empty database. Running a sequence before any events have been logged may lead to errors (depending on the ETL statements involved)."
+      },
+      "response": []
+    },
+    {
+      "name": "summary read",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "x-api-key",
+            "value": "abcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefgh",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"tags\": \"v%\",\n    \"operation\": \"count.combinations\",\n    \"date\": \"today\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8888/v1/summary/read",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8888",
+          "path": [
+            "v1",
+            "summary",
+            "read"
+          ]
+        },
+        "description": "External applications may want to read summary values. This is used internally for testing, and may serve the same function for pipelines driven externally. For example, a CI/CD pipeline might log a \"completed\" event every night. Another process might then query `its-log` to see if that event is present and what value it contains. (Arguably, this extends the scope of the role that `its-log` might play in production, but it is also arguably easier than attempting to connect to external systems for similar purposes.)\n\nA read request must match the following structure:\n\n``` json\n{\n    \"tags\": string,\n    \"operation\": string,\n    \"date\": string (YYYY-MM-DD or \"today\")\n}\n\n ```\n\nThe tags key will be passed as a parameter to a `LIKE` query; therefore, the `%` operator can be used to look for summary events with a `tags` field containing wildcards. E.g. `\"v%.patient\"` would match `v1`, `v2`, and `v3` rows.\n\nThe `operation` tag, similarly, is a `LIKE` match against the `operation` column of the `itslog_summary` table.\n\nFinally, the `date` is used because summary tables grow over time; it is possible to have the same operation occur multiple times, but possibly on different dates.\n\nUnder the hood, this is the SQL used:\n\n``` sql\nSELECT \n  date, \n  operation, \n  tags, \n  value,\n  count\nFROM itslog_summary\nWHERE \n  tags LIKE ?\n  AND\n  operation LIKE ?\nORDER BY id\nLIMIT 1\n;\n\n ```\n\nNote that only one row comes back. Therefore, crafting your query correctly, to return your desired result, is necessary. This could be more subtle than you think, and it is possible the `summary/read` endpoint needs further refinement."
+      },
+      "response": []
+    },
+    {
+      "name": "summary create",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "x-api-key",
+            "value": "abcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefgh",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"date\": \"today\",\n    \"operation\": \"something.different\",\n    \"tags\": [\"v2\", \"nothing\"],\n    \"value\": \"\",\n    \"count\": 42\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8888/v1/summary/create",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8888",
+          "path": [
+            "v1",
+            "summary",
+            "create"
+          ]
+        },
+        "description": "Not everything can or should be logged as an event.\n\nIn the context of an application or API, it makes sense to log individual events. For example, as requests come into an API, a logging event might be fired off to `its-log`. In this way, there is one event in `its-log` for every call to the API.\n\nHowever, some data may come as an analysis of internal tables. At the end of each day, a system may want to walk through one or more internal tables, carry out a computation, and report a summary. A good example of this might be unique users of the system. This kind of count may involve counting PII or PHI (identifiers of users) that would not, otherwise, want to be logged. A system can therefore do the count internally, and then record with `its-log` the total count of unique users that day.\n\nThis is not an event. This is a summary. Therefore, `its-log` exposes the `itslog_summary` table for writing. **This should not be done casually**. Because all inserts into the `summary` table are made `INSERT OR REPLACE`, it is up to the developers to make sure that their chosen `operation` and other values do not collide with any rows generated by the standard ETL sequence. Prefixing the operation with a key, like `external.` may be a good practice. E.g. the `summary` table might contain `count.total`, but an _external_ count of some total number of users might be keyed with the operation `external.count.total`. Ideally, the names are more different... but the principle holds: avoid collisions on rows generated by ETL steps.\n\nA summary event must bind to a JSON structure that looks like:\n\n``` json\n{\n    \"date\": \"today\",\n    \"operation\": \"something.different\",\n    \"tags\": [\"v2\", \"nothing\"],\n    \"value\": \"\",\n    \"count\": 42\n}\n\n ```\n\n`date`, `operation`, and `count` are required; `tags` and `value` are optional. `count` is a `FLOAT`, while all other values are strings."
+      },
+      "response": []
+    }
+  ]
+}

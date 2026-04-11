@@ -38,16 +38,3 @@ while an event leveraging all possible features might look like:
 ## working with the ETL
 
 ETL steps can be added via POST
-
-
-
-	// Insert a new ETL step
-	auth_adminV1.POST("etl/:date", ETL)
-	// Run an ETL step
-	auth_adminV1.PUT("etl/:date/:name", ETL)
-	// Retrieve the contents of a step, including the last run and run status
-	auth_adminV1.GET("etl/:date/:name", ETL)
-	// Combine a table from one DB into another DB
-	// auth_adminV1.PUT("combine/:source/:destination/:table", Combine)
-	auth_adminV1.GET("etl/reload/:date", ReloadEtl)
-

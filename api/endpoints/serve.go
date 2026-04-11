@@ -118,7 +118,7 @@ func addMetadataEndpoints(rG *gin.RouterGroup) {
 		constants.Test,
 	}
 	auth_adminV1.Use(AuthMiddleWare(permissions))
-	rG.GET(constants.METADATA_STATUS, status.GinHandler)
+	auth_adminV1.GET(constants.METADATA_STATUS, status.GinHandler)
 
 }
 
@@ -144,4 +144,6 @@ func addSummaryEndpoints(rG *gin.RouterGroup) {
 	auth_adminV1.Use(AuthMiddleWare(permissions))
 
 	auth_adminV1.POST(constants.SUMMARY_READ, SummaryRead)
+	auth_adminV1.POST(constants.SUMMARY_CREATE, SummaryCreate)
+
 }

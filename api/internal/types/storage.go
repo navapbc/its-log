@@ -44,6 +44,11 @@ func (s *Storage) Yesterday() {
 }
 
 func (s *Storage) SetDate(ymd string) error {
+	var d time.Time
+	if ymd == "today" {
+		s.date = time.Now()
+		return nil
+	}
 	d, e := time.Parse("2006-01-02", ymd)
 	if e == nil {
 		s.date = d
