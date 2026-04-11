@@ -1,9 +1,16 @@
 package objectstore
 
 import (
+	"bufio"
+	"bytes"
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"log"
+	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -127,27 +134,69 @@ func (os *ObjectStore) SetEndpoint(scheme string, host string, port string) *Obj
 	return os
 }
 
-func (os *ObjectStore) Write(obj []byte) {
-	ctx := context.Background()
-	bucket, err := s3blob.OpenBucketV2(ctx, os.ObjectClient.AwsS3Client, os.Bucket, nil)
+func (os *ObjectStore) WriteBytes(s3Path []string, obj []byte) (int, error) {
+	r := bytes.NewReader(obj)
+	written, err := os.Write(s3Path, r)
+	return written, err
+}
 
-	if err != nil {
-		log.Printf("could not open bucket: %v", err)
+func (os *ObjectStore) Write(s3Path []string, reader io.Reader) (int, error) {
+	ctx := context.Background()
+
+	bucket, bucketErr := s3blob.OpenBucketV2(ctx, os.ObjectClient.AwsS3Client, os.Bucket, nil)
+	if bucketErr != nil {
+		log.Printf("could not open bucket: %v", bucketErr)
+		return -1, bucketErr
 	}
 	defer bucket.Close()
 
-	// Open the key "foo.txt" for writing with the default options.
-	w, err := bucket.NewWriter(ctx, "hello.txt", nil)
-	if err != nil {
-		log.Println("bucket error: " + err.Error())
+	fullPath := strings.Join(s3Path, "/")
+	// NOTE: The options to NewWriter could be of use (e.g. conditional writes)
+
+	w, newWriterErr := bucket.NewWriter(ctx, fullPath, nil)
+	if newWriterErr != nil {
+		log.Println("writer creation error: " + newWriterErr.Error())
+		return -1, newWriterErr
 	}
-	_, writeErr := fmt.Fprintln(w, obj)
+
+	srcBuff := bufio.NewReader(reader)
+	bytesWritten, writeErr := io.Copy(w, srcBuff)
+
+	if writeErr != nil {
+		log.Println("write err: " + writeErr.Error())
+		if w != nil {
+			w.Close()
+		}
+		return -1, writeErr
+	}
 	// Always check the return value of Close when writing.
 	closeErr := w.Close()
-	if writeErr != nil {
-		log.Println(writeErr)
-	}
 	if closeErr != nil {
-		log.Println(closeErr)
+		log.Println("writer close err: " + closeErr.Error())
+		return -1, closeErr
 	}
+
+	return int(bytesWritten), nil
+}
+
+func (objs *ObjectStore) CopyToS3(sourcePath []string, destPath []string) (int, error) {
+	source := filepath.Join(sourcePath...)
+	if _, err := os.Stat(source); errors.Is(err, os.ErrNotExist) {
+		log.Println("path not found locally: " + err.Error())
+		return -1, err
+	}
+
+	srcReader, openErr := os.Open(source)
+	if openErr != nil {
+		log.Println("file open err: " + openErr.Error())
+		return -1, openErr
+	}
+	srcBuff := bufio.NewReader(srcReader)
+
+	bytesWritten, writeErr := objs.Write(destPath, srcBuff)
+	if writeErr != nil {
+		return -1, writeErr
+	}
+
+	return bytesWritten, nil
 }

@@ -22,8 +22,9 @@ const SQLITE_DRIVER string = "sqlite3"
 
 type Storage struct {
 	AppId    string
+	Path     []string
 	date     time.Time
-	filename string
+	Filename string
 	firstUse bool
 	lock     sync.Mutex
 	db       *sql.DB
@@ -68,13 +69,15 @@ func NewStorage(appId string) *Storage {
 
 func (s *Storage) Init() error {
 	// Compute filename based on date and app ID
-	s.filename = fmt.Sprintf("%s_%s.sqlite", s.AppId, s.YYYYMMDD())
+	s.Filename = fmt.Sprintf("%s_%s.sqlite", s.AppId, s.YYYYMMDD())
+	s.Path = []string{viper.GetString("storage.path"), s.Filename}
+
 	// https://github.com/ncruces/go-sqlite3/commit/7c820ede3caf7a861f53c700e188db59d9928d3b
-	dbPath := path.Join(viper.GetString("storage.path"), s.filename+"?"+strings.Join(SQLITE_PARAMS[:], "&"))
+	dbPath := path.Join(path.Join(s.Path...) + "?" + strings.Join(SQLITE_PARAMS[:], "&"))
 	// Create tables
 	db, err := sql.Open(SQLITE_DRIVER, "file:"+dbPath)
 	if err != nil {
-		panic("could not create database: " + s.filename)
+		panic("could not create database: " + s.Filename)
 	}
 	s.db = db
 
@@ -109,6 +112,6 @@ func (s *Storage) Unlock() {
 }
 
 func (s *Storage) Delete() {
-	path := path.Join(viper.GetString("storage.path"), s.filename)
+	path := path.Join(viper.GetString("storage.path"), s.Filename)
 	os.Remove(path)
 }

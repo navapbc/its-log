@@ -1,0 +1,62 @@
+services:
+  ministack:
+    image: nahuelnucera/ministack:latest
+    ports:
+      - "4566:4566"
+    environment:
+      PERSIST_STATE: 1
+      LOG_LEVEL: DEBUG
+      S3_PERSIST: 1
+      SERVICES: s3
+      GATEWAY_PORT: 4566
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      RDS_BASE_PORT: 15432
+      ELASTICACHE_BASE_PORT: 16379
+      S3_DATA_DIR: /tmp/ministack-data/s3
+      STATE_DIR: /tmp/ministack-state
+    volumes:
+      - "/tmp/ministack-s3:/tmp/ministack-data/s3"
+      - "/tmp/ministack-state:/tmp/ministack-state"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:4566/_ministack/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  redis:
+    image: redis:7-alpine
+    container_name: ministack-redis
+    ports:
+      - "127.0.0.1:6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  # Optional: Postgres for RDS (always-on, no Docker-in-Docker needed)
+  # Uncomment to have a persistent Postgres available at localhost:5432
+  # This is not strictly needed for its-log, but flagging it here as a ministack
+  # possibility if RDS emulation is desired later.
+  # postgres:
+  #   image: postgres:15-alpine
+  #   container_name: ministack-postgres
+  #   ports:
+  #     - "5432:5432"
+  #   environment:
+  #     POSTGRES_USER: admin
+  #     POSTGRES_PASSWORD: password
+  #     POSTGRES_DB: mydb
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U admin"]
+  #     interval: 5s
+  #     timeout: 3s
+  #     retries: 5
+  #   restart: unless-stopped

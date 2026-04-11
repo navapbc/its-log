@@ -12,6 +12,9 @@ k6-arm:
 k6-amd:
 	cd ops/containers ; make k6-amd
 
+storage:
+	cd ops/containers ; make storage
+
 itslog-arm:
 	cd ops/containers ; make itslog-arm
 

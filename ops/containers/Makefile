@@ -41,6 +41,10 @@ itslog-build:
 	-f docker-compose.yaml \
 	up --build
 
+storage:
+	docker compose \
+	-f docker-compose-s3.yaml \
+	up
 
 itslog-arm: arm itslog
 

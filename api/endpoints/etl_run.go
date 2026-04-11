@@ -89,15 +89,6 @@ func runEtl(etlP *types.RunEtlParams) error {
 	if err != nil {
 		msg := "could not find ETL step"
 		log.Println(msg)
-		if etlP.GinCtx != nil {
-			etlP.GinCtx.JSON(http.StatusNotFound, gin.H{
-				"status":  "error",
-				"method":  etlP.GinCtx.Request.Method,
-				"message": msg,
-				"date":    etlP.Storage.YYYYMMDD(),
-				"name":    etlP.EtlName,
-			})
-		}
 		return fmt.Errorf("%s: %s", msg, err.Error())
 	}
 
