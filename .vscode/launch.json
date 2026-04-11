@@ -23,7 +23,14 @@
                 "ITSLOG_GINMODE": "debug",
                 "ITSLOG_HASH_SEED": "42",
                 "ITSLOG_PROXIES_TRUSTED": "TBD",
-                "ITSLOG_STORAGE_PATH": "${workspaceFolder}/ops/containers/itslog/data"
+                "ITSLOG_STORAGE_PATH": "${workspaceFolder}/ops/containers/itslog/data",
+                "ITSLOG_BACKUP_BUCKET": "backup",
+                "ITSLOG_BACKUP_AWS_ENDPOINT_HOST": "0.0.0.0",
+                "ITSLOG_BACKUP_AWS_ENDPOINT_PORT": "4566",
+                "ITSLOG_BACKUP_AWS_ENDPOINT_SCHEME": "http",
+                "ITSLOG_BACKUP_AWS_KEYID": "000000000000",
+                "ITSLOG_BACKUP_AWS_ACCESSKEY": "anything",
+                "ITSLOG_BACKUP_AWS_REGION": "us-east-1",
             }
 
         }

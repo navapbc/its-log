@@ -6,6 +6,7 @@ import (
 
 	"github.com/navapbc/its-log/endpoints"
 	"github.com/navapbc/its-log/internal/base"
+	"github.com/navapbc/its-log/internal/objectstore"
 	"github.com/navapbc/its-log/internal/types"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -40,10 +41,22 @@ func serve_cmd(cmd *cobra.Command, args []string) {
 
 	log.Printf("storage path: %s", viper.GetString("storage.path"))
 
+	os := objectstore.NewObjectStore("aws")
+	os.SetBucket(viper.GetString("backup.bucket"))
+	os.SetEndpoint(
+		viper.GetString("backup.aws.endpoint.scheme"),
+		viper.GetString("backup.aws.endpoint.host"),
+		viper.GetString("backup.aws.endpoint.port"))
+	os.SetRegion(viper.GetString("backup.aws.region"))
+	os.SetKeyIdAndAccessKey(viper.GetString("backup.aws.keyid"), viper.GetString("backup.aws.accesskey"))
+	os.Init()
+	os.Write([]byte("hello"))
+
 	// FIXME: this should not default to debug
 	endpoints.Serve(types.ServeParams{
-		Mode: "debug",
+		Mode: viper.GetString("ginmode"),
 	})
+
 }
 
 func init() {

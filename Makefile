@@ -15,6 +15,9 @@ k6-amd:
 itslog-arm:
 	cd ops/containers ; make itslog-arm
 
+itslog-arm-build:
+	cd ops/containers ; make itslog-arm-build
+
 itslog-amd:
 	cmd ops/containers ; make itslog-amd
 
