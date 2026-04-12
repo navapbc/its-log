@@ -9,6 +9,7 @@ import (
 
 	"github.com/navapbc/its-log/internal/base"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 )
 
 func configureEnv() {
@@ -59,15 +60,17 @@ func TestE2E(t *testing.T) {
 		os.Exit(-1)
 	}
 
+	defer base.ConfigureLoggers("debug").Sync()
+
 	// Load the API keys from the environment
 	err = base.GetApiKeys()
-	log.Printf("found %d keys", len(base.LiveKeys))
+	zap.L().Debug("found API keys", zap.Int("length", len(base.LiveKeys)))
 	if err != nil {
 		log.Println(err.Error())
 		os.Exit(-2)
 	}
 
-	log.Printf("storage path: %s", viper.GetString("storage.path"))
+	zap.L().Info("storage path", zap.String("storage.path", viper.GetString("storage.path")))
 
 	RunTests(t)
 }

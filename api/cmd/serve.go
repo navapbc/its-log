@@ -9,6 +9,7 @@ import (
 	"github.com/navapbc/its-log/internal/types"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 )
 
 // serveCmd represents the serve command
@@ -23,6 +24,7 @@ via the application's 'config.yaml'.
 }
 
 func serve_cmd(cmd *cobra.Command, args []string) {
+
 	// This will panic if we don't have the tools we need.
 	err := base.ConfirmEnvVars()
 	if err != nil {
@@ -30,15 +32,17 @@ func serve_cmd(cmd *cobra.Command, args []string) {
 		os.Exit(-1)
 	}
 
+	defer base.ConfigureLoggers(viper.GetString("ginmode")).Sync()
+
 	// Load the API keys from the environment
 	err = base.GetApiKeys()
-	log.Printf("found %d keys", len(base.LiveKeys))
+	zap.L().Debug("found API keys", zap.Int("length", len(base.LiveKeys)))
 	if err != nil {
-		log.Println(err.Error())
+		zap.L().Error(err.Error())
 		os.Exit(-2)
 	}
 
-	log.Printf("storage path: %s", viper.GetString("storage.path"))
+	zap.L().Info("storage path", zap.String("storage.path", viper.GetString("storage.path")))
 
 	// FIXME: Need CTRL-C/OS signal handling
 	endpoints.Serve(types.ServeParams{
