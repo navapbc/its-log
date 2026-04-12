@@ -52,7 +52,10 @@ func setTimestamp(c *gin.Context, evt *types.Event, permission types.PermissionT
 		max := time.Date(timestamp.Year(), timestamp.Month(), timestamp.Day(), 23, 59, 59, 0, time.UTC).Unix()
 		delta := max - min
 		sec := rand.Int63n(delta) + min
-		timestamp = time.Unix(sec, 0)
+		revisedTimestamp := time.Unix(sec, 0).UTC()
+
+		// DEBUG LOG
+		// log.Printf("setTimestamp: %s <- %s\n", timestamp, revisedTimestamp)
 
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
@@ -62,7 +65,7 @@ func setTimestamp(c *gin.Context, evt *types.Event, permission types.PermissionT
 			return
 		}
 
-		evt.Timestamp = timestamp
+		evt.Timestamp = revisedTimestamp
 
 	case constants.Log:
 		evt.Timestamp = time.Now().UTC()

@@ -77,20 +77,19 @@ func loadFilesFromFS(s *types.Storage, dirName string) {
 
 }
 
-func LoadDefaultEtlFiles(s *types.Storage) error {
+func LoadDefaultEtlFiles(s *types.Storage, from string) error {
 
 	// If the file exists, check that there's something in the ETL.
 	_, err := s.Queries.GetETL(context.Background(), "sentinel")
 	if err != nil {
 		// If we can't find the table, it isn't initialized.
-		log.Println("Loading default ETL values")
+		log.Printf("LoadDefaultEtlFiles from: %s\n", from)
 		// Just log if we can't read from the embedded FS.
 		// Actually... panic? Yeah. This shouldn't fail.
 		loadFilesFromFS(s, "sql")
 		loadFilesFromFS(s, "sequence")
 		loadFilesFromFS(s, "golang")
 		loadFilesFromFS(s, "starlark")
-
 	}
 
 	return nil

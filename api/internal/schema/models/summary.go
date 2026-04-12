@@ -10,7 +10,7 @@ import (
 
 // ID        int64
 // LastRun   time.Time
-// Date      string
+// Date      int64
 // KeyID     string
 // Operation string
 // Tags      sql.NullString

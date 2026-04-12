@@ -18,6 +18,7 @@ services:
     volumes:
       - "/tmp/ministack-s3:/tmp/ministack-data/s3"
       - "/tmp/ministack-state:/tmp/ministack-state"
+      - "./ministack/ready.d:/docker-entrypoint-initaws.d/ready.d"
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:4566/_ministack/health')"]
       interval: 10s

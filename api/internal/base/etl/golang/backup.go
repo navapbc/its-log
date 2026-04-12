@@ -53,7 +53,7 @@ func Backup(etlP *types.RunEtlParams) error {
 		// Create a storage object, and close it.
 		date := d.(string)
 		storage := types.NewStorage(etlP.AppId)
-		err := storage.SetDate(date)
+		err := storage.SetDateYMD(date)
 		if err != nil {
 			return fmt.Errorf("could not parse date; must be YYYY-MM-DD: %s", date)
 		}

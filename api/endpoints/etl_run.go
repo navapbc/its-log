@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"runtime"
 	"strings"
 
 	"go.starlark.net/starlark"
@@ -41,7 +42,7 @@ func RunEtl(c *gin.Context) {
 	}
 
 	s := types.NewStorage(appId)
-	dateErr := s.SetDate(date)
+	dateErr := s.SetDateYMD(date)
 	if dateErr != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -53,7 +54,10 @@ func RunEtl(c *gin.Context) {
 		return
 	}
 	s.Init()
-	base.LoadDefaultEtlFiles(s)
+
+	pc, _, _, _ := runtime.Caller(0)
+	funcName := runtime.FuncForPC(pc).Name()
+	base.LoadDefaultEtlFiles(s, funcName)
 
 	etlErr := runEtl(&types.RunEtlParams{
 		AppId:   appId,
@@ -383,17 +387,12 @@ func etlRunStarlark(etlP *types.RunEtlParams, row models.GetETLRow, tx *sql.Tx) 
 		arr = append(arr, srjs)
 	}
 
-	// This is the array of structs we got back.
-	// They are types.SummaryRow, which is ready to be inserted into
-	// the itslog_summary table.
-	fmt.Println(arr)
-
 	// Now, write them to the summary table.
 	etlP.Storage.Lock()
 	for _, e := range arr {
 		summ := models.InsertSummaryParams{
 			KeyID:     etlP.KeyId,
-			Date:      etlP.Storage.YYYYMMDD(),
+			Date:      etlP.Storage.ILTime.AsYYYYMMDD(),
 			Operation: e.Operation,
 			Tags:      e.Tags,
 			Value:     e.Value,

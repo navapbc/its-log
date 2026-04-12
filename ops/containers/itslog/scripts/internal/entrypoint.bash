@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+
 # These values would be set in a secrets manager
 # in a deployment context.
 # https://stackoverflow.com/questions/45469133/create-json-file-using-jq
@@ -31,16 +32,12 @@ export ITSLOG_BACKUP_BUCKET="backup"
 export ITSLOG_BACKUP_AWS_ENDPOINT_HOST="ministack"
 export ITSLOG_BACKUP_AWS_ENDPOINT_PORT="4566"
 export ITSLOG_BACKUP_AWS_ENDPOINT_SCHEME="http"
+export ITSLOG_BACKUP_AWS_REGION="us-east-1"
 export ITSLOG_BACKUP_AWS_KEYID="000000000000"
 export ITSLOG_BACKUP_AWS_ACCESSKEY="anything"
-export ITSLOG_BACKUP_AWS_REGION="us-east-1"
 
 export AWS_ACCESS_KEY_ID=${ITSLOG_BACKUP_AWS_KEYID}
 export AWS_SECRET_ACCESS_KEY=${ITSLOG_BACKUP_AWS_ACCESSKEY}
-
-# Create a bucket for its-log to use
-aws --endpoint-url=http://ministack:4566 s3 mb s3://backup
-echo "Creating backup bucket: " $?
 
 chmod 755 its-log
 ./its-log serve

@@ -26,3 +26,6 @@ itslog-amd:
 
 generate:
 	cd api ; make generate
+
+test:
+	cd api ; make test

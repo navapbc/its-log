@@ -9,3 +9,4 @@ _base/*
 **.sqlite-wal
 **.sqlite-journal
 **.prof
+**.test

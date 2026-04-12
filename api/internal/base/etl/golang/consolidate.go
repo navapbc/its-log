@@ -18,19 +18,12 @@ func Consolidate(etlP *types.RunEtlParams) error {
 	// If we do this daily, we end up with the current table always having everything from the summary history.
 	// Or, today's summary includes all prior summaries.
 	// If we miss a day, we can always grab multiple prior DBs, and (again) rely on uniqueness.
-	//
-	// This will use the extended keys feature to allow us to specify the date(s) we want to pull
-	// forward into the current table.
-	var expectedConsolidateKeys = []string{
-		"prior-summary-dates-to-include",
+
+	if _, ok := etlP.Payload["dates-to-consolidate"]; !ok {
+		return nil
 	}
 
-	err := hasExpectedKeys("consolidate", etlP, expectedConsolidateKeys)
-	if err != nil {
-		return err
-	}
-
-	prior_dates_any := etlP.Payload["prior_summary_dates_to_include"]
+	prior_dates_any := etlP.Payload["dates-to-consolidate"]
 	if prior_dates_any == nil {
 		prior_dates_any = make([]any, 0)
 	}
@@ -40,7 +33,7 @@ func Consolidate(etlP *types.RunEtlParams) error {
 
 			// Init the past storage
 			past_storage := types.NewStorage(etlP.AppId)
-			err := past_storage.SetDate(past_date)
+			err := past_storage.SetDateYMD(past_date)
 			if err != nil {
 				return fmt.Errorf("could not parse date; must be YYYY-MM-DD: %s", past_date)
 			}
@@ -61,8 +54,6 @@ func Consolidate(etlP *types.RunEtlParams) error {
 				return fmt.Errorf("error fetching prior summaries: %s", err.Error())
 			}
 
-			// etlP.Storage.Lock()
-
 			for _, srow := range summaryRows {
 
 				err := etlP.Storage.Queries.InsertFullSummary(context.Background(), models.InsertFullSummaryParams{
@@ -75,14 +66,11 @@ func Consolidate(etlP *types.RunEtlParams) error {
 					Count:     srow.Count,
 				})
 				if err != nil {
-					// etlP.Storage.Unlock()
 					return fmt.Errorf("could not insert summary from %s: %s", past_date, err.Error())
 				}
 			}
 
-			// Deferred locks will be released.
 			past_storage.Close()
-			// etlP.Storage.Unlock()
 		} else {
 			return fmt.Errorf("could not convert: %v", prior_dates_any)
 		}

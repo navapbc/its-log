@@ -52,7 +52,7 @@ func Enqueue(ch_evt_in <-chan *types.Event, ch_flush_out chan<- types.EventBuffe
 		case <-timer.C:
 			// This will flush once at startup, because the timer fires.
 			// This has a side-effect of creating the DB.
-			log.Println("flushing stale buffers")
+			log.Printf("Enqueue: flushing stale buffers\n")
 			// Send the structure out for writing
 			ch_flush_out <- event_buffers
 			// Allocate a new structure here in this process

@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"runtime"
 	"sort"
 	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/navapbc/its-log/internal/base"
@@ -30,7 +30,7 @@ func SummaryCreate(c *gin.Context) {
 	keyId := base.GetOrPanic(c, "KeyId")
 
 	s := types.NewStorage(appId)
-	err := s.SetDate(body.Date)
+	err := s.SetDateYMD(body.Date)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -49,7 +49,9 @@ func SummaryCreate(c *gin.Context) {
 	}
 	// We cache whether this is loaded, so it is safe/fast to check every time
 	// we try and load another ETL into the table.
-	base.LoadDefaultEtlFiles(s)
+	pc, _, _, _ := runtime.Caller(0)
+	funcName := runtime.FuncForPC(pc).Name()
+	base.LoadDefaultEtlFiles(s, funcName)
 
 	// The tags field comes in as a JSON array. It needs to become
 	// a sorted, dot-separated string.
@@ -60,8 +62,10 @@ func SummaryCreate(c *gin.Context) {
 	// This has a hashing method that we can use to correctly hash
 	// the summary on insert. This saves calling `hash-summaries`
 	// after-the-fact.
+
 	ils := models.ItslogSummary{
-		LastRun:   time.Now(),
+		// NOTE: Let the sqlite engine insert the default
+		// LastRun:   time.Now().Unix(),
 		KeyID:     keyId,
 		Date:      body.Date,
 		Operation: body.Operation,
