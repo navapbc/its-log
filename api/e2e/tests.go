@@ -4,6 +4,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"sync"
 	"testing"
 	"time"
 
@@ -14,8 +15,8 @@ import (
 )
 
 const DETERMINISTIC_ITERATIONS = 3
-const SEQUENCE_NAME = "default" // or "default"
-const EXTRA_SLEEP_TIME = 5      // seconds
+const SEQUENCE_NAME = "full" // or "default"
+const EXTRA_SLEEP_TIME = 5   // seconds
 
 func ExpectedResults(iterations int) (int, map[string]int, map[string]int) {
 
@@ -69,7 +70,7 @@ func DeterministicTest(t *testing.T, iterations int, dateOffset int) {
 	total := gleCount + glevCount + gclCount
 	// Make sure we flush the logs.
 	sleepy()
-	RunSequence(dateOffset, SEQUENCE_NAME)
+	RunSequence(t, dateOffset, SEQUENCE_NAME)
 
 	countTotal, countByTags, countCombinations := ExpectedResults(iterations)
 	if !CheckSummaryValue("count.total", "%", countTotal, date) {
@@ -97,11 +98,11 @@ func StressTest(t *testing.T, iterations int, jitter int, dateOffset int) {
 
 	log.Printf("== Running stress test: %d ==\n", iterations)
 	gleCount := GenerateLogEvents(iterations, jitter, date)
-	// glevCount := GenerateLogEventsWithValues(iterations, jitter, date)
-	// gclCount := GenerateClusteredLogs(t, iterations, jitter, date)
-	total := gleCount // + glevCount + gclCount
+	glevCount := GenerateLogEventsWithValues(iterations, jitter, date)
+	gclCount := GenerateClusteredLogs(t, iterations, jitter, date)
+	total := gleCount + glevCount + gclCount
 	sleepy()
-	RunSequence(dateOffset, SEQUENCE_NAME)
+	RunSequence(t, dateOffset, SEQUENCE_NAME)
 	log.Printf("total events: %d\n", total)
 }
 
@@ -135,31 +136,32 @@ func RunTests(t *testing.T) {
 	t.Log("== Running deterministic tests ==")
 	Cleanup(Setup(t, 0))
 	DeterministicTest(t, DETERMINISTIC_ITERATIONS, 0)
-	// Cleanup(Setup(t, 0))
+	Cleanup(Setup(t, 0))
 
-	// t.Log("== Running a week of deterministic tests ==")
-	// // Offsets should be 1-5
-	// offsets := makeRange(1, 5)
-	// for offset := range offsets {
-	// 	Cleanup(Setup(t, offset))
-	// 	Setup(t, offset)
-	// 	DeterministicTest(t, DETERMINISTIC_ITERATIONS, offset)
-	// }
+	t.Log("== Running a week of deterministic tests ==")
+	// Offsets should be 1-5
+	offsets := makeRange(1, 5)
+	for offset := range offsets {
+		Cleanup(Setup(t, offset))
+		Setup(t, offset)
+		DeterministicTest(t, DETERMINISTIC_ITERATIONS, offset)
+		Cleanup(Setup(t, offset))
+	}
 
 	// This stresses the concurrent/parallel nature of the server, with
 	// multiple loggers at once, as well as running the ETL while under heavy
 	// logging load.
-	// t.Log("== Running parallel stress tests ==")
-	// var wg sync.WaitGroup
-	// for i := range 8 {
-	// 	wg.Add(1)
-	// 	go func() {
-	// 		StressTest(t, DETERMINISTIC_ITERATIONS*i+1, 10, 0)
-	// 		wg.Done()
-	// 	}()
-	// }
+	t.Log("== Running parallel stress tests ==")
+	var wg sync.WaitGroup
+	for i := range 8 {
+		wg.Add(1)
+		go func() {
+			StressTest(t, DETERMINISTIC_ITERATIONS*i+1, 10, 0)
+			wg.Done()
+		}()
+	}
 
-	// wg.Wait()
-	//Cleanup(Setup(t, 0))
+	wg.Wait()
+	Cleanup(Setup(t, 0))
 
 }

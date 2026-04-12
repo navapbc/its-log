@@ -21,12 +21,14 @@ func buildBase() string {
 	return fmt.Sprintf("http://%s:%s", viper.GetString("serve.host"), viper.GetString("serve.port"))
 }
 
-func checkRes(res map[string]any) {
+func checkRes(res map[string]any) bool {
 	if v, ok := res["status"].(string); ok {
 		if v != "ok" {
 			log.Println("POST ERROR: " + res["message"].(string))
+			return false
 		}
 	}
+	return true
 }
 
 func wiggle(jitter int) {

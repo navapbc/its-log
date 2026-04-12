@@ -4,13 +4,14 @@ import (
 	"log"
 	"runtime"
 	"strings"
+	"testing"
 
 	"github.com/navapbc/its-log/internal/base"
 	"github.com/navapbc/its-log/internal/constants"
 	"github.com/navapbc/its-log/internal/types"
 )
 
-func RunSequence(dateOffset int, sequenceName string) *types.Storage {
+func RunSequence(t *testing.T, dateOffset int, sequenceName string) *types.Storage {
 	date := types.NewILTimeToday()
 	date.SubtractDays(dateOffset)
 
@@ -37,6 +38,9 @@ func RunSequence(dateOffset int, sequenceName string) *types.Storage {
 	log.Printf("sequence target date: %s\n", date.AsYYYYMMDD())
 	bundle := make(map[string]any)
 	bundle["dates-to-backup"] = []string{date.AsYYYYMMDD()}
-	post(buildBase()+target, bundle, apiKey)
+	res := post(buildBase()+target, bundle, apiKey)
+	if !checkRes(res) {
+		t.Fail()
+	}
 	return s
 }
