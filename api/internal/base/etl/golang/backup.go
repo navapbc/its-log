@@ -3,8 +3,6 @@ package etl
 import (
 	"fmt"
 	"log"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/navapbc/its-log/internal/objectstore"
@@ -28,8 +26,9 @@ func copyToBackupBucket(s *types.Storage) (int, error) {
 
 	dest := []string{time.Now().UTC().Format("2006-01-02"), s.Filename}
 
-	log.Println("source: " + strings.Join(s.Path, "/"))
-	log.Println("dest: " + strings.Join(dest, "/"))
+	// DEBUG LOG
+	// log.Println("Backup source: " + strings.Join(s.Path, "/"))
+	// log.Println("Backup dest: " + strings.Join(dest, "/"))
 
 	written, err := os.CopyToS3(s.Path, dest)
 	if err != nil {
@@ -64,14 +63,18 @@ func Backup(etlP *types.RunEtlParams) error {
 		}
 
 		// Lock the DB while copying.
+		// Close it so that the WAL is committed.
 		storage.Lock()
 		storage.Close()
-		written, err := copyToBackupBucket(storage)
+		_, copyErr := copyToBackupBucket(storage)
 		storage.Unlock()
-		if err != nil {
-			return err
+
+		if copyErr != nil {
+			return copyErr
 		}
-		log.Println("wrote bytes: " + strconv.Itoa(written))
+
+		// DEBUG LOG
+		// log.Println("Backup wrote bytes: " + strconv.Itoa(written))
 	}
 	return nil
 }

@@ -85,7 +85,8 @@ func RunSequence(c *gin.Context) {
 		for k, v := range payload {
 			merged[k] = v
 		}
-		log.Printf("step params: %v\n", step.Params)
+		// DEBUG LOG
+		// log.Printf("step params: %v\n", step.Params)
 		if step.Params != nil {
 			for k, v := range step.Params {
 				merged[k] = v

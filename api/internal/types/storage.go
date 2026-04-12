@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"os"
 	"path"
 	"strings"
@@ -90,7 +89,8 @@ func (s *Storage) Init() error {
 	}
 	dbPath := path.Join(path.Join(s.Path...) + dbParams)
 	// Create tables
-	log.Printf("Storage.Init: opening %s\n", s.Filename)
+	// DEBUG LOG
+	// log.Printf("Storage.Init: opening %s\n", s.Filename)
 	db, err := sql.Open(SQLITE_DRIVER, "file:"+dbPath)
 	if err != nil {
 		panic("could not create database: " + s.Filename)
