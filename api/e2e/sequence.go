@@ -1,7 +1,6 @@
 package e2e
 
 import (
-	"log"
 	"runtime"
 	"strings"
 	"testing"
@@ -23,7 +22,8 @@ func RunSequence(t *testing.T, dateOffset int, sequenceName string) *types.Stora
 	s.SetDateILT(date)
 	s.Init()
 
-	log.Printf("RunSequence: %s<-%s\n", s.ILTime.AsYYYYMMDD(), s.Filename)
+	// DEBUG LOG
+	// log.Printf("RunSequence: %s <- %s\n", s.ILTime.AsYYYYMMDD(), s.Filename)
 
 	// If we don't do an insert, then nothing loads the
 	// default ETLs. For testing, we have to force the issue.
@@ -34,8 +34,11 @@ func RunSequence(t *testing.T, dateOffset int, sequenceName string) *types.Stora
 	target := "/v1" + constants.SEQUENCE_RUN
 	target = strings.Replace(target, ":date", date.AsYYYYMMDD(), -1)
 	target = strings.Replace(target, ":name", sequenceName, -1)
-	log.Println("running sequence: " + sequenceName)
-	log.Printf("sequence target date: %s\n", date.AsYYYYMMDD())
+
+	// DEBUG LOG
+	// log.Println("running sequence: " + sequenceName)
+	// log.Printf("sequence target date: %s\n", date.AsYYYYMMDD())
+
 	bundle := make(map[string]any)
 	bundle["dates-to-backup"] = []string{date.AsYYYYMMDD()}
 	res := post(buildBase()+target, bundle, apiKey)

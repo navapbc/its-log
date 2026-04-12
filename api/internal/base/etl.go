@@ -82,8 +82,9 @@ func LoadDefaultEtlFiles(s *types.Storage, from string) error {
 	// If the file exists, check that there's something in the ETL.
 	_, err := s.Queries.GetETL(context.Background(), "sentinel")
 	if err != nil {
-		// If we can't find the table, it isn't initialized.
-		log.Printf("LoadDefaultEtlFiles from: %s\n", from)
+		// DEBUG LOG
+		// log.Printf("LoadDefaultEtlFiles from: %s\n", from)
+
 		// Just log if we can't read from the embedded FS.
 		// Actually... panic? Yeah. This shouldn't fail.
 		loadFilesFromFS(s, "sql")

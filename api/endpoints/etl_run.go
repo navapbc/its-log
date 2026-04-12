@@ -161,7 +161,8 @@ func callWithParams(etlP *types.RunEtlParams, theSql string) *sql.Row {
 	args := make([]any, 0)
 	for param, val := range paramMap {
 		if strings.Contains(theSql, ":"+param) {
-			log.Println(etlP.EtlName + " replacing :" + param + " with " + val)
+			// DEBUG LOG
+			// log.Println(etlP.EtlName + " replacing :" + param + " with " + val)
 			args = append(args, sql.Named(param, val))
 		}
 	}
@@ -279,7 +280,9 @@ func queryFun(etlP *types.RunEtlParams) func(_ *starlark.Thread, _ *starlark.Bui
 			return starlark.None, err
 		}
 
-		log.Println("golang", queryString)
+		// DEBUG LOG
+		// log.Println("golang", queryString)
+
 		resultList := starlark.NewList([]starlark.Value{})
 		for rows.Next() {
 			var row types.EventRow

@@ -113,7 +113,8 @@ func Setup(t *testing.T, dateOffset int) *types.Storage {
 	s := types.NewStorage("pupper")
 	s.SetDateILT(date)
 	s.Init()
-	t.Log("setting up: " + s.Filename)
+	// DEBUG LOG
+	// t.Log("setting up: " + s.Filename)
 	return s
 }
 

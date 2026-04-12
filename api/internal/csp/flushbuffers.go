@@ -158,7 +158,8 @@ func ManyEvents(s *types.Storage, evt_buff []*types.Event) (int64, error) {
 		}
 	}
 
-	log.Printf("ManyEvents: %s <- %d events", s.ILTime.AsYYYYMMDD(), counter)
+	// DEBUG LOG
+	// log.Printf("ManyEvents: %s <- %d events", s.ILTime.AsYYYYMMDD(), counter)
 
 	return counter, nil
 }

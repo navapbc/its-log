@@ -63,7 +63,8 @@ func NewObjectClient(os *ObjectStore) (*ObjectClient, error) {
 		oclient.AwsS3Config = &cfg
 
 		if os.EndpointHost != "" {
-			log.Println("specifying custom endpoint: " + os.EndpointHost)
+			// DEBUG LOG
+			// log.Println("specifying custom endpoint: " + os.EndpointHost)
 
 			oclient.AwsS3Client = s3.NewFromConfig(cfg, func(o *s3.Options) {
 				o.BaseEndpoint = aws.String(fmt.Sprintf(
@@ -76,7 +77,8 @@ func NewObjectClient(os *ObjectStore) (*ObjectClient, error) {
 				o.UsePathStyle = true
 			})
 		} else {
-			log.Println("specifying default endpoint: " + os.EndpointHost)
+			// DEBUG LOG
+			// log.Println("specifying default endpoint: " + os.EndpointHost)
 			oclient.AwsS3Client = s3.NewFromConfig(cfg)
 		}
 

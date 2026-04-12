@@ -93,7 +93,9 @@ func RunSequence(c *gin.Context) {
 			}
 		}
 
-		log.Printf("date[%s] sequence[%s] step[%s]\n", s.YYYYMMDD(), sequenceName, step.Name)
+		// DEBUG LOG
+		// log.Printf("date[%s] sequence[%s] step[%s]\n", s.YYYYMMDD(), sequenceName, step.Name)
+
 		sequenceError := runEtl(&types.RunEtlParams{
 			AppId:   appId,
 			KeyId:   keyId,

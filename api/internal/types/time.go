@@ -1,7 +1,6 @@
 package types
 
 import (
-	"log"
 	"time"
 )
 
@@ -37,7 +36,8 @@ func (ilt *ILTime) offsetDays(days int) {
 
 func (ilt *ILTime) SubtractDays(days int) {
 	offset := -1 * days
-	log.Printf("SubtractDays: %d\n", offset)
+	// DEBUG LOG
+	// log.Printf("SubtractDays: %d\n", offset)
 	ilt.offsetDays(offset)
 }
 
