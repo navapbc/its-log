@@ -87,7 +87,7 @@ The ETL and analysis endpoints are
 | ---- | ------------------------- | ----------- | --------------------------------------------------------------------- |
 | POST | /etl/create               | admin       | Create an ETL action                                                  |
 | POST | /etl/run/:date/:name      | admin       | Run an ETL action. Takes optional params in the JSON body.            |
-| POST | /sequence/create/:date    | admin       | Create an ETL sequence                                                |
+| POST | /sequence/create          | admin       | Create an ETL sequence                                                |
 | POST | /sequence/run/:date/:name | admin       | Run a sequence for a given date. Takes optional params like /etl/run. |
 
 For working with the summary table directly
@@ -103,7 +103,7 @@ Administrative endpoints include
 | HTTP | Endpoint | Permissions | Desc                             |
 | ---- | -------- | ----------- | -------------------------------- |
 | GET  | /health  | any         | A standard healthcheck endpoint  |
-| GET  | /status  | any         | Get server stats (RAM, GC, etc.) |
+| GET  | /status  | admin         | Get server stats (RAM, GC, etc.) |
 
 
 ## extending its-log
