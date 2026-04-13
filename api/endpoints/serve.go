@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/gin-contrib/pprof"
+	ginzap "github.com/gin-contrib/zap"
+	"go.uber.org/zap"
 
 	status "github.com/appleboy/gin-status-api"
 	"github.com/gin-contrib/cors"
@@ -47,6 +49,11 @@ func Serve(params types.ServeParams) {
 func PourGin(ch_evt_out chan<- *types.Event) *gin.Engine {
 	router := gin.Default()
 
+	// Adding this will override the default logging in Gin.
+	// May be useful to flip entirely to zap.
+	// Also https://stackoverflow.com/questions/48780070/disable-request-logging-for-a-particular-go-gin-route
+	// gin.DefaultWriter = io.Discard
+
 	// We may want production mode.
 	// This is configured via the envrionment
 	if viper.GetString("ginmode") == "release" {
@@ -65,6 +72,9 @@ func PourGin(ch_evt_out chan<- *types.Event) *gin.Engine {
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}))
+
+	// https://github.com/gin-contrib/zap?tab=readme-ov-file#example
+	router.Use(ginzap.Ginzap(zap.L(), time.RFC3339, true))
 
 	apiV1 := router.Group("/v1")
 
@@ -86,7 +96,6 @@ func addLoggingEndpoints(rG *gin.RouterGroup, ch_evt_out chan<- *types.Event) {
 	auth_logV1.Use(AuthMiddleWare(permissions))
 	auth_logV1.POST(constants.LOG_CREATE, LogCreate(ch_evt_out, constants.Log))
 	auth_logV1.POST(constants.LOG_CREATE_DATE, LogCreate(ch_evt_out, constants.Test))
-
 }
 
 // ETL ENDPOINTS

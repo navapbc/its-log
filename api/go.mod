@@ -11,11 +11,13 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.99.0
 	github.com/gin-contrib/cors v1.7.6
 	github.com/gin-contrib/pprof v1.5.4
+	github.com/gin-contrib/zap v1.1.7
 	github.com/gin-gonic/gin v1.12.0
 	github.com/mxschmitt/golang-combinations v1.2.0
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0
 	go.starlark.net v0.0.0-20260326113308-fadfc96def35
+	go.uber.org/zap v1.27.1
 	gocloud.dev v0.45.0
 	modernc.org/sqlite v1.48.2
 )
@@ -88,7 +90,6 @@ require (
 	go.opentelemetry.io/otel/sdk/metric v1.40.0 // indirect
 	go.opentelemetry.io/otel/trace v1.40.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	go.uber.org/zap v1.27.1 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/arch v0.23.0 // indirect
 	golang.org/x/crypto v0.48.0 // indirect
