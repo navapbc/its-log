@@ -20,7 +20,6 @@
 package csp
 
 import (
-	"log"
 	"time"
 
 	"github.com/navapbc/its-log/internal/types"
@@ -45,14 +44,16 @@ func Enqueue(ch_evt_in <-chan *types.Event, ch_flush_out chan<- types.EventBuffe
 			// This lets us keep grabbing events from the API handler while we are
 			// writing this buffer to the DB.
 			if is_full {
-				log.Println("flushing full buffers")
+				// DEBUG LOG
+				// log.Println("flushing full buffers")
 				ch_flush_out <- event_buffers
 				event_buffers = types.NewEventBuffer(bufferLength)
 			}
 		case <-timer.C:
 			// This will flush once at startup, because the timer fires.
 			// This has a side-effect of creating the DB.
-			log.Println("flushing stale buffers")
+			// DEBUG LOG
+			// log.Printf("Enqueue: flushing stale buffers\n")
 			// Send the structure out for writing
 			ch_flush_out <- event_buffers
 			// Allocate a new structure here in this process

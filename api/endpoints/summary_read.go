@@ -32,7 +32,7 @@ func SummaryRead(c *gin.Context) {
 	appId := base.GetOrPanic(c, "AppId")
 
 	s := types.NewStorage(appId)
-	err := s.SetDate(body.Date)
+	err := s.SetDateYMD(body.Date)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",

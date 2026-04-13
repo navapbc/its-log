@@ -1,34 +1,49 @@
 package e2e
 
 import (
-	"log"
+	"runtime"
 	"strings"
-	"time"
+	"testing"
 
 	"github.com/navapbc/its-log/internal/base"
 	"github.com/navapbc/its-log/internal/constants"
 	"github.com/navapbc/its-log/internal/types"
 )
 
-func RunDefaultSequence(dateOffset int) *types.Storage {
-	date := time.Now().AddDate(0, 0, dateOffset).Format("2006-01-02")
-	log.Println("running for date: " + date)
+func RunSequence(t *testing.T, dateOffset int, sequenceName string) *types.Storage {
+	date := types.NewILTimeToday()
+	date.SubtractDays(dateOffset)
 
 	apiKey, err := base.GetKeyBundle("pupper", "pup_admin")
 	if err != nil {
 		panic("could not find key for pupper/pup_admin")
 	}
 	s := types.NewStorage(apiKey.AppId)
-	s.SetDate(date)
+	s.SetDateILT(date)
 	s.Init()
+
+	// DEBUG LOG
+	// log.Printf("RunSequence: %s <- %s\n", s.ILTime.AsYYYYMMDD(), s.Filename)
+
 	// If we don't do an insert, then nothing loads the
 	// default ETLs. For testing, we have to force the issue.
-	base.LoadDefaultEtlFiles(s)
+	pc, _, _, _ := runtime.Caller(0)
+	funcName := runtime.FuncForPC(pc).Name()
+	base.LoadDefaultEtlFiles(s, funcName)
 
 	target := "/v1" + constants.SEQUENCE_RUN
-	target = strings.Replace(target, ":date", date, -1)
-	target = strings.Replace(target, ":name", "default", -1)
-	log.Println("running default sequence")
-	post(buildBase()+target, make(map[string]any), apiKey)
+	target = strings.Replace(target, ":date", date.AsYYYYMMDD(), -1)
+	target = strings.Replace(target, ":name", sequenceName, -1)
+
+	// DEBUG LOG
+	// log.Println("running sequence: " + sequenceName)
+	// log.Printf("sequence target date: %s\n", date.AsYYYYMMDD())
+
+	bundle := make(map[string]any)
+	bundle["dates-to-backup"] = []string{date.AsYYYYMMDD()}
+	res := post(buildBase()+target, bundle, apiKey)
+	if !checkRes(res) {
+		t.Fail()
+	}
 	return s
 }

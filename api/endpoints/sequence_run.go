@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"runtime"
 
 	"github.com/gin-gonic/gin"
 	"github.com/navapbc/its-log/internal/base"
@@ -32,7 +33,7 @@ func RunSequence(c *gin.Context) {
 	}
 
 	s := types.NewStorage(appId)
-	dateErr := s.SetDate(sequenceDate)
+	dateErr := s.SetDateYMD(sequenceDate)
 	if dateErr != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -44,7 +45,10 @@ func RunSequence(c *gin.Context) {
 		return
 	}
 	s.Init()
-	base.LoadDefaultEtlFiles(s)
+
+	pc, _, _, _ := runtime.Caller(0)
+	funcName := runtime.FuncForPC(pc).Name()
+	base.LoadDefaultEtlFiles(s, funcName)
 
 	seq, err := s.Queries.GetETL(context.Background(), sequenceName)
 	if err != nil {
@@ -76,14 +80,21 @@ func RunSequence(c *gin.Context) {
 	}
 
 	for _, step := range seqEntries {
-		// If there is a payload in the sequence, use that.
-		// Otherwise, use the payload passed via the API
-		useThisOne := make(map[string]any)
-		if len(payload) > 0 {
-			useThisOne = payload
-		} else {
-			useThisOne = step.Params
+		// Merge the passed-in payload with whatever is defined for this step.
+		merged := make(map[string]any)
+		for k, v := range payload {
+			merged[k] = v
 		}
+		// DEBUG LOG
+		// log.Printf("step params: %v\n", step.Params)
+		if step.Params != nil {
+			for k, v := range step.Params {
+				merged[k] = v
+			}
+		}
+
+		// DEBUG LOG
+		// log.Printf("date[%s] sequence[%s] step[%s]\n", s.YYYYMMDD(), sequenceName, step.Name)
 
 		sequenceError := runEtl(&types.RunEtlParams{
 			AppId:   appId,
@@ -91,7 +102,7 @@ func RunSequence(c *gin.Context) {
 			GinCtx:  nil,
 			Storage: s,
 			EtlName: step.Name,
-			Payload: useThisOne,
+			Payload: merged,
 		})
 
 		if sequenceError != nil {

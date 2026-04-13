@@ -104,10 +104,10 @@ func CountAllCombinations(etlP *types.RunEtlParams) error {
 			// FIXME: sqlc can do this insert.
 			_, err := etlP.Storage.GetDB().ExecContext(context.Background(),
 				`INSERT OR REPLACE INTO itslog_summary 
-				(key_id, operation, tags, value, count)
+				(key_id, date, operation, tags, value, count)
 				VALUES
-				(?, 'count.combinations', ?, '', ?)`,
-				etlP.KeyId, tag, count)
+				(?, ?, 'count.combinations', ?, '', ?)`,
+				etlP.KeyId, etlP.Storage.ILTime.AsYYYYMMDD(), tag, count)
 			if err != nil {
 				log.Println("combinations SQL insert err: " + err.Error())
 				return err

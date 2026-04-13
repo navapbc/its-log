@@ -6,5 +6,6 @@
     { "name": "assert-source-and-total" },
     { "name": "count-vowels-and-consonants" },
     { "name": "hash-summaries" },
-    { "name": "consolidate" }
+    { "name": "consolidate" },
+    { "name": "backup" }
 ]

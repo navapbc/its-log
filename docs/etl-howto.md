@@ -78,7 +78,7 @@ Following the UNIX convention, we return 0 on success.
 `its-log` embeds this ETL under the name `sentinel`. It is used as a sentinel value in the database, and can be looked for/executed to make sure that the ETL table is present, populated, and working.
 
 ```sql
-RETURNING 0;
+SELECT 0;
 ```
 
 ### sql ETL assertions
@@ -105,32 +105,6 @@ Because the `count` column is a `FLOAT`, we actually check that the result of th
 
 The purpose of this ETL action is to pass quietly if the previous actions did the right thing, or to fail if they did not. In this way, we can assert the correctness of an ETL pipeline as it is executing.
 
-## ETL steps in Golang
-
-It is also possible to write ETL steps in Golang. These can work in the same way as an SQL step, analyzing the `events` table and inserting one or more `summary` rows, or they can manipulate the database and external systems (e.g. converting the DB from SQlite to CSV, or copying the database file to another storage medium like S3).
-
-An ETL written in Go must have the following signature:
-
-```golang
-func FunName(etlP *types.RunEtlParams) error
-```
-
-The RunEtlParams struct contains the following values:
-
-```golang
-type RunEtlParams struct {
-	AppId   string
-	GinCtx  *gin.Context
-	EtlName string
-	KeyId   string
-	Storage *Storage
-	Payload map[string]any
-}
-```
-
-The most important thing to note is the `Payload` dictionary. When an ETL is called, an arbitrary JSON document can be included in the body of the `POST`. In this way, Golang ETLs can be parameterized. It is up to the ETL author to check the correctness of the JSON, and make sure that the params are expected are present. This payload is also available and checked when a `sequence` of ETL actions is called.
-
-Golang ETLs must be compiled into the application, and should generally be considered when 1) the complexity of the ETL exceeds all other approaches, 2) an external system needs to be used as part of the ETL action, or 3) it is of common enough value that it should be provided to all users of `its-log`.
 
 ## writing ETL steps in Starlark
 
@@ -168,3 +142,30 @@ def summarize():
 The above example demonstrates a query that returns all of t he rows in `events`, counts the vowels and consonants in the `tags` in those rows, and returns two summary rows.
 
 You can install the `starlark` interpeter and test Starlark programs locally. You will need to mock results from query, and call the function directly, but it is possible. In time, it may be that `summarize()` will take parameters, including a parameter that allows you to know whether it is being called in a test or production context. For now, see examples in the codebase for how a developer can comment/uncomment code to make the ETL actions "testable."
+
+## ETL steps in Golang
+
+It is also possible to write ETL steps in Golang. These can work in the same way as an SQL step, analyzing the `events` table and inserting one or more `summary` rows, or they can manipulate the database and external systems (e.g. converting the DB from SQlite to CSV, or copying the database file to another storage medium like S3).
+
+An ETL written in Go must have the following signature:
+
+```golang
+func FunName(etlP *types.RunEtlParams) error
+```
+
+The RunEtlParams struct contains the following values:
+
+```golang
+type RunEtlParams struct {
+	AppId   string
+	GinCtx  *gin.Context
+	EtlName string
+	KeyId   string
+	Storage *Storage
+	Payload map[string]any
+}
+```
+
+The most important thing to note is the `Payload` dictionary. When an ETL is called, an arbitrary JSON document can be included in the body of the `POST`. In this way, Golang ETLs can be parameterized. It is up to the ETL author to check the correctness of the JSON, and make sure that the params are expected are present. This payload is also available and checked when a `sequence` of ETL actions is called.
+
+Golang ETLs must be compiled into the application, and should generally be considered when 1) the complexity of the ETL exceeds all other approaches, 2) an external system needs to be used as part of the ETL action, or 3) it is of common enough value that it should be provided to all users of `its-log`.

@@ -6,13 +6,12 @@ package models
 
 import (
 	"database/sql"
-	"time"
 )
 
 type ItslogEtl struct {
 	ID       int64
-	Inserted time.Time
-	LastRun  sql.NullTime
+	Inserted int64
+	LastRun  sql.NullInt64
 	KeyID    string
 	Name     string
 	Kind     string
@@ -21,7 +20,7 @@ type ItslogEtl struct {
 
 type ItslogEvent struct {
 	ID        int64
-	Timestamp string
+	Timestamp sql.NullInt64
 	KeyID     string
 	Cluster   sql.NullString
 	Tags      string
@@ -30,7 +29,7 @@ type ItslogEvent struct {
 
 type ItslogSummary struct {
 	ID        int64
-	LastRun   time.Time
+	LastRun   int64
 	Date      string
 	KeyID     string
 	Operation string

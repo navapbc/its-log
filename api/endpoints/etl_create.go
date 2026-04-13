@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"runtime"
 
 	"github.com/gin-gonic/gin"
 	"github.com/navapbc/its-log/internal/base"
@@ -76,7 +77,7 @@ func CreateEtl(c *gin.Context) {
 	keyId := base.GetOrPanic(c, "KeyId")
 
 	s := types.NewStorage(appId)
-	err := s.SetDate(body.Date)
+	err := s.SetDateYMD(body.Date)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -95,7 +96,9 @@ func CreateEtl(c *gin.Context) {
 	}
 	// We cache whether this is loaded, so it is safe/fast to check every time
 	// we try and load another ETL into the table.
-	base.LoadDefaultEtlFiles(s)
+	pc, _, _, _ := runtime.Caller(0)
+	funcName := runtime.FuncForPC(pc).Name()
+	base.LoadDefaultEtlFiles(s, funcName)
 
 	theBody, err := checkTheBody(body)
 	if err != nil {

@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/navapbc/its-log/internal/types"
+	"go.uber.org/zap"
 )
 
 var LiveKeys types.ApiKeys
@@ -23,6 +24,10 @@ var minimum = []string{
 	"ITSLOG_SERVE_HOST",
 	"ITSLOG_SERVE_PORT",
 	"ITSLOG_STORAGE_PATH",
+	"ITSLOG_BACKUP_BUCKET",
+	"ITSLOG_BACKUP_AWS_KEYID",
+	"ITSLOG_BACKUP_AWS_ACCESSKEY",
+	"ITSLOG_BACKUP_AWS_REGION",
 }
 
 func ConfirmEnvVars() error {
@@ -110,4 +115,17 @@ func GetKeyBundle(appId, keyId string) (*types.ApiKey, error) {
 		}
 	}
 	return nil, errors.New("could not find key for " + appId + ", " + keyId)
+}
+
+func ConfigureLoggers(mode string) *zap.Logger {
+	if mode == "debug" {
+		logger := zap.Must(zap.NewDevelopment())
+		zap.ReplaceGlobals(logger)
+		return logger
+	} else {
+		logger := zap.Must(zap.NewProduction())
+		zap.RedirectStdLog(logger)
+		zap.ReplaceGlobals(logger)
+		return logger
+	}
 }

@@ -8,7 +8,6 @@ package models
 import (
 	"context"
 	"database/sql"
-	"time"
 )
 
 const getAllSummaries = `-- name: GetAllSummaries :many
@@ -91,7 +90,7 @@ type GetETLRow struct {
 	Name    string
 	Kind    string
 	Body    sql.NullString
-	LastRun sql.NullTime
+	LastRun sql.NullInt64
 }
 
 func (q *Queries) GetETL(ctx context.Context, name string) (GetETLRow, error) {
@@ -147,7 +146,7 @@ INSERT OR REPLACE INTO itslog_summary (
 `
 
 type InsertFullSummaryParams struct {
-	LastRun   time.Time
+	LastRun   int64
 	KeyID     string
 	Date      string
 	Operation string
@@ -213,7 +212,7 @@ RETURNING id
 `
 
 type LogEventParams struct {
-	Timestamp string
+	Timestamp sql.NullInt64
 	KeyID     string
 	Cluster   sql.NullString
 	Tags      string

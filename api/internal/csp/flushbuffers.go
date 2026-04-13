@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"log"
-	"time"
+	"runtime"
 
 	"github.com/navapbc/its-log/internal/base"
 	"github.com/navapbc/its-log/internal/schema/models"
@@ -53,6 +53,9 @@ func organizeEvents(eventBuffer types.EventBuffer) BufferTree {
 
 			// We're ready; append the event
 			org[evt.AppId][formatted_date] = append(org[evt.AppId][formatted_date], evt)
+
+			// DEBUG LOG
+			// log.Printf("organizeEvents: %s[%s] <- %s", evt.AppId, formatted_date, evt)
 		}
 	}
 
@@ -69,7 +72,7 @@ func FlushBuffersOnce(ch_flush_in <-chan types.EventBuffer) {
 	for appId, dateMap := range org {
 		for formattedDate, events := range dateMap {
 			s := types.NewStorage(appId)
-			err := s.SetDate(formattedDate)
+			err := s.SetDateYMD(formattedDate)
 			if err != nil {
 				panic("failed to parse date in FlushBuffersOnce")
 			}
@@ -96,7 +99,9 @@ func FlushBuffersOnce(ch_flush_in <-chan types.EventBuffer) {
 			// of the defaults. (Or, there could be, but it would have to be an API call.)
 			// I think this keeps us from hitting the DB too often, so I'm going to leave it.
 			if _, ok := isEtlLoaded[formattedDate]; !ok {
-				err := base.LoadDefaultEtlFiles(s)
+				pc, _, _, _ := runtime.Caller(0)
+				funcName := runtime.FuncForPC(pc).Name()
+				err := base.LoadDefaultEtlFiles(s, funcName)
 				if err != nil {
 					log.Println("could not load default ETL files for " + formattedDate + ": " + err.Error())
 				} else {
@@ -138,7 +143,7 @@ func ManyEvents(s *types.Storage, evt_buff []*types.Event) (int64, error) {
 			}
 
 			_, err := s.Queries.LogEvent(context.Background(), models.LogEventParams{
-				Timestamp: e.Timestamp.Format(time.RFC3339),
+				Timestamp: sql.NullInt64{Int64: e.Timestamp.Unix(), Valid: true},
 				KeyID:     e.KeyId,
 				Cluster:   sql.NullString{String: e.Cluster, Valid: valid_cluster},
 				Tags:      e.TagString,
@@ -152,6 +157,9 @@ func ManyEvents(s *types.Storage, evt_buff []*types.Event) (int64, error) {
 			counter += 1
 		}
 	}
+
+	// DEBUG LOG
+	// log.Printf("ManyEvents: %s <- %d events", s.ILTime.AsYYYYMMDD(), counter)
 
 	return counter, nil
 }
