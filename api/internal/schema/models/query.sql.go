@@ -340,7 +340,7 @@ func (q *Queries) ReadSummary(ctx context.Context, arg ReadSummaryParams) (ReadS
 const updateLastRun = `-- name: UpdateLastRun :exec
 UPDATE itslog_etl
   SET 
-    last_run = CURRENT_TIMESTAMP 
+    last_run = unixepoch() 
 WHERE 
   name = ?
 `
