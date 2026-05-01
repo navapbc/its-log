@@ -103,7 +103,7 @@ Administrative endpoints include
 | HTTP | Endpoint | Permissions | Desc                             |
 | ---- | -------- | ----------- | -------------------------------- |
 | GET  | /health  | any         | A standard healthcheck endpoint  |
-| GET  | /status  | admin         | Get server stats (RAM, GC, etc.) |
+| GET  | /status  | admin       | Get server stats (RAM, GC, etc.) |
 
 
 ## extending its-log

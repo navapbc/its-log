@@ -148,11 +148,15 @@ func addSequenceEndpoints(rG *gin.RouterGroup) {
 
 // SUMMARY ENDPOINTS
 func addSummaryEndpoints(rG *gin.RouterGroup) {
-	auth_adminV1 := rG.Group("/")
-	permissions := []types.PermissionType{constants.Admin, constants.Test}
-	auth_adminV1.Use(AuthMiddleWare(permissions))
+	auth_adminV1ReadOnly := rG.Group("/")
+	auth_adminV1ReadWrite := rG.Group("/")
 
-	auth_adminV1.POST(constants.SUMMARY_READ, SummaryRead)
-	auth_adminV1.POST(constants.SUMMARY_CREATE, SummaryCreate)
+	permsRO := []types.PermissionType{constants.Admin, constants.ReadOnly, constants.Test}
+	permsRW := []types.PermissionType{constants.Admin, constants.Test}
+	auth_adminV1ReadOnly.Use(AuthMiddleWare(permsRO))
+	auth_adminV1ReadWrite.Use(AuthMiddleWare(permsRW))
+
+	auth_adminV1ReadOnly.POST(constants.SUMMARY_READ, SummaryRead)
+	auth_adminV1ReadWrite.POST(constants.SUMMARY_CREATE, SummaryCreate)
 
 }

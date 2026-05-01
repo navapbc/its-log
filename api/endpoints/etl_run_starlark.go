@@ -19,10 +19,11 @@ import (
 
 func queryFun(etlP *types.RunEtlParams) func(_ *starlark.Thread, _ *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
 	return func(_ *starlark.Thread, _ *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
+		var queryTable string
 		var queryString string
 		if err := starlark.UnpackArgs(
 			"config", args, kwargs,
-			"query", &queryString,
+			"table", &queryTable, "query", &queryString,
 		); err != nil {
 			return starlark.None, fmt.Errorf("config: %s", err)
 		}
@@ -53,18 +54,38 @@ func queryFun(etlP *types.RunEtlParams) func(_ *starlark.Thread, _ *starlark.Bui
 
 		resultList := starlark.NewList([]starlark.Value{})
 		for rows.Next() {
-			var row types.EventRow
-			if err := rows.Scan(&row.ID, &row.Timestamp, &row.KeyId, &row.Cluster, &row.Tags, &row.Value); err != nil {
-				return starlark.None, err
-			} else {
-				d := starlark.NewDict(10)
-				d.SetKey(starlark.String("id"), starlark.String(row.ID))
-				d.SetKey(starlark.String("timestamp"), starlark.String(row.Timestamp))
-				d.SetKey(starlark.String("key_id"), starlark.String(row.KeyId))
-				d.SetKey(starlark.String("cluster"), starlark.String(row.Cluster.String))
-				d.SetKey(starlark.String("tags"), starlark.String(row.Tags))
-				d.SetKey(starlark.String("value"), starlark.String(row.Value.String))
-				resultList.Append(d)
+			switch queryTable {
+			case "events":
+				var row types.EventRow
+				if err := rows.Scan(&row.ID, &row.Timestamp, &row.KeyId, &row.Cluster, &row.Tags, &row.Value); err != nil {
+					return starlark.None, err
+				} else {
+					d := starlark.NewDict(10)
+					d.SetKey(starlark.String("id"), starlark.String(row.ID))
+					d.SetKey(starlark.String("timestamp"), starlark.String(row.Timestamp))
+					d.SetKey(starlark.String("key_id"), starlark.String(row.KeyId))
+					d.SetKey(starlark.String("cluster"), starlark.String(row.Cluster.String))
+					d.SetKey(starlark.String("tags"), starlark.String(row.Tags))
+					d.SetKey(starlark.String("value"), starlark.String(row.Value.String))
+					resultList.Append(d)
+				}
+			case "summary":
+				var row types.SummaryRow
+				if err := rows.Scan(&row.ID, &row.LastRun, &row.Date, &row.KeyId, &row.Operation, &row.Tags, &row.Value, &row.Count, &row.Hash); err != nil {
+					return starlark.None, err
+				} else {
+					d := starlark.NewDict(10)
+					d.SetKey(starlark.String("id"), starlark.String(row.ID))
+					d.SetKey(starlark.String("last_run"), starlark.MakeInt64(row.LastRun))
+					d.SetKey(starlark.String("date"), starlark.String(row.KeyId))
+					d.SetKey(starlark.String("key_id"), starlark.String(row.KeyId))
+					d.SetKey(starlark.String("operation"), starlark.String(row.Operation))
+					d.SetKey(starlark.String("tags"), starlark.String(row.Tags.String))
+					d.SetKey(starlark.String("value"), starlark.String(row.Value.String))
+					d.SetKey(starlark.String("count"), starlark.Float(row.Count))
+					d.SetKey(starlark.String("hash"), starlark.String(row.Hash.String))
+					resultList.Append(d)
+				}
 			}
 		}
 
@@ -140,9 +161,9 @@ func etlRunStarlark(etlP *types.RunEtlParams, row models.GetETLRow, tx *sql.Tx) 
 			case "count":
 				v, found, _ := elem.(*starlark.Dict).Get(k)
 				if found {
-					var i int
-					_ = starlark.AsInt(v, &i)
-					srjs.Count = float64(i)
+					var f float64
+					f, _ = starlark.AsFloat(v)
+					srjs.Count = float64(f)
 
 				}
 			}

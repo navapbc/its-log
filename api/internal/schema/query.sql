@@ -86,7 +86,7 @@ LIMIT 1;
 -- name: UpdateLastRun :exec
 UPDATE itslog_etl
   SET 
-    last_run = CURRENT_TIMESTAMP 
+    last_run = unixepoch() 
 WHERE 
   name = ?;
 

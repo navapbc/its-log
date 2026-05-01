@@ -114,7 +114,9 @@ The purpose of this ETL action is to pass quietly if the previous actions did th
 2. It is hermetic. Starlark programs cannot write to disk, talk to the network, or generally break out of their sandbox.
 3. It is Python-like. Starlark looks like and generally behaves like a subset of Python.
 
-All Starlark ETL actions have access to one magic function: `query()`. This function takes a string and returns a list of dictionaries. The string is an SQL statement that will be executed in the context of the current database, and the dictionaries have keys matching the columns of of the table queried; all values come back as strings. (FIXME: currently, this *only* works on the `events` table; `its-log` needs to be updated so that queries can be run against `events` or `summary`.)
+All Starlark ETL actions have access to one magic function: `query()`. This function takes two string arguments. The first is the table you want to query (either `"events"` or `"summary"`), and an SQL query appropriate for that table. The `query(table, sql)` function returns a list of dictionaries.
+
+The string is an SQL statement that will be executed in the context of the current database against the table specified, and the dictionaries have keys matching the columns of of the table queried; all values come back as either strings or integers, depending on the column type in the table schema. 
 
 The data returned can be analyzed/processed arbitrarily, and it is expected that a list of dictionaries will be returned matching the shape of `summary` rows. That data will be processed and inserted after the Starlark code executes.
 

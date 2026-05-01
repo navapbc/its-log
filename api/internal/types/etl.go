@@ -1,6 +1,8 @@
 package types
 
 import (
+	"database/sql"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -21,8 +23,13 @@ type RunEtlParams struct {
 }
 
 type SummaryRow struct {
-	Operation string `json:"operation"`
-	Tags      string `json:"tags"`
-	Value     string `json:"value"`
-	Count     int64  `json:"count"`
+	ID        int64          `json:"id"`
+	LastRun   int64          `json:"last_run"`
+	Date      string         `json:"date"`
+	KeyId     string         `json:"key_id"`
+	Operation string         `json:"operation"`
+	Tags      sql.NullString `json:"tags"`
+	Value     sql.NullString `json:"value"`
+	Count     float64        `json:"count"`
+	Hash      sql.NullString `json:"hash"`
 }
