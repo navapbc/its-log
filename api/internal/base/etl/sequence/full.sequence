@@ -5,6 +5,8 @@
     { "name": "count-all-combinations" },
     { "name": "assert-source-and-total" },
     { "name": "count-vowels-and-consonants" },
+    { "name": "total-summary-count" },
+    { "name": "assert-event-summary-summation" },
     { "name": "hash-summaries" },
     { "name": "consolidate" },
     { "name": "backup" }

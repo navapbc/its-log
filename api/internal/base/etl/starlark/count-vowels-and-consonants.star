@@ -11,7 +11,7 @@
 #     return [{"tags": "something.v3"}, {"tags": "another.v2"}]
 
 def summarize():
-    query_rows = query("SELECT * from itslog_events")
+    query_rows = query("events", "SELECT * from itslog_events")
     summaries = []
     total_vowels = 0
     total_consonants = 0
