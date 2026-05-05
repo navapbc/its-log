@@ -10,6 +10,9 @@ import (
 
 	"github.com/navapbc/its-log/internal/schema/models"
 	"github.com/navapbc/its-log/internal/types"
+	"go.starlark.net/lib/json"
+	"go.starlark.net/lib/math"
+	"go.starlark.net/lib/time"
 	"go.starlark.net/starlark"
 	"go.starlark.net/syntax"
 )
@@ -104,12 +107,18 @@ func etlRunStarlark(etlP *types.RunEtlParams, row models.GetETLRow, tx *sql.Tx) 
 		return err
 	}
 
+	// The thread we'll execute the code in.
+	thread := &starlark.Thread{Name: row.Name + "-starlark-thread"}
+	// This loads standard modules, including JSON manipulation.
+	// See
+	// https://github.com/google/starlark-go/blob/fadfc96def35ea95e7f2bd9952256d4db1d80d91/cmd/starlark/starlark.go#L98
+	starlark.Universe["json"] = json.Module
+	starlark.Universe["time"] = time.Module
+	starlark.Universe["math"] = math.Module
+
 	// Register a query function
 	// This lets Starlark code call out and query the itslog_events table
 	registrar := starlark.StringDict{"query": starlark.NewBuiltin("query", queryFun(etlP))}
-
-	// The thread we'll execute the code in.
-	thread := &starlark.Thread{Name: row.Name + "-starlark-thread"}
 
 	// This evals the file, which does not *yet* execute the code.
 	// Note we register "query" as a function in the interpreted namespace.
