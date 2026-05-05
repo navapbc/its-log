@@ -49,23 +49,33 @@ func queryFun(etlP *types.RunEtlParams) func(_ *starlark.Thread, _ *starlark.Bui
 		}
 
 		// DEBUG LOG
-		// log.Println("golang", queryString)
 
 		resultList := starlark.NewList([]starlark.Value{})
 		for rows.Next() {
 			var row types.EventRow
-			if err := rows.Scan(&row.ID, &row.Timestamp, &row.KeyId, &row.Cluster, &row.Tags, &row.Value); err != nil {
-				return starlark.None, err
+			if strings.Contains("itslog_event", queryString) {
+				if err := rows.Scan(&row.ID, &row.Timestamp, &row.KeyId, &row.Cluster, &row.Tags, &row.Value); err != nil {
+					return starlark.None, err
+				} else {
+					d := starlark.NewDict(10)
+					d.SetKey(starlark.String("id"), starlark.String(row.ID))
+					d.SetKey(starlark.String("timestamp"), starlark.String(row.Timestamp))
+					d.SetKey(starlark.String("key_id"), starlark.String(row.KeyId))
+					d.SetKey(starlark.String("cluster"), starlark.String(row.Cluster.String))
+					d.SetKey(starlark.String("tags"), starlark.String(row.Tags))
+					d.SetKey(starlark.String("value"), starlark.String(row.Value.String))
+					resultList.Append(d)
+				}
 			} else {
-				d := starlark.NewDict(10)
-				d.SetKey(starlark.String("id"), starlark.String(row.ID))
-				d.SetKey(starlark.String("timestamp"), starlark.String(row.Timestamp))
-				d.SetKey(starlark.String("key_id"), starlark.String(row.KeyId))
-				d.SetKey(starlark.String("cluster"), starlark.String(row.Cluster.String))
-				d.SetKey(starlark.String("tags"), starlark.String(row.Tags))
-				d.SetKey(starlark.String("value"), starlark.String(row.Value.String))
-				resultList.Append(d)
+				if err := rows.Scan(&row.Value); err != nil {
+					return starlark.None, err
+				} else {
+					d := starlark.NewDict(10)
+					d.SetKey(starlark.String("value"), starlark.String(row.Value.String))
+					resultList.Append(d)
+				}
 			}
+
 		}
 
 		return resultList, nil
@@ -135,7 +145,7 @@ func etlRunStarlark(etlP *types.RunEtlParams, row models.GetETLRow, tx *sql.Tx) 
 			case "value":
 				v, found, _ := elem.(*starlark.Dict).Get(k)
 				if found {
-					srjs.Tags, _ = starlark.AsString(v)
+					srjs.Value, _ = starlark.AsString(v)
 				}
 			case "count":
 				v, found, _ := elem.(*starlark.Dict).Get(k)

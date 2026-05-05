@@ -3,7 +3,7 @@ FROM golang:1.26.0-trixie AS builder
 RUN apt-get update && apt-get install -y make unzip awscli
 ENV GOPROXY=direct
 
-RUN go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
+RUN go install github.com/sqlc-dev/sqlc/cmd/sqlc@v1.30.0
 
 # WORKDIR /tmp
 # RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
