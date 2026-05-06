@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"log"
-	"runtime"
 
 	"github.com/navapbc/its-log/internal/base"
 	"github.com/navapbc/its-log/internal/schema/models"
@@ -99,9 +98,7 @@ func FlushBuffersOnce(ch_flush_in <-chan types.EventBuffer) {
 			// of the defaults. (Or, there could be, but it would have to be an API call.)
 			// I think this keeps us from hitting the DB too often, so I'm going to leave it.
 			if _, ok := isEtlLoaded[formattedDate]; !ok {
-				pc, _, _, _ := runtime.Caller(0)
-				funcName := runtime.FuncForPC(pc).Name()
-				err := base.LoadDefaultEtlFiles(s, funcName)
+				err := base.LoadDefaultEtlFiles(s)
 				if err != nil {
 					log.Println("could not load default ETL files for " + formattedDate + ": " + err.Error())
 				} else {
@@ -143,7 +140,7 @@ func ManyEvents(s *types.Storage, evt_buff []*types.Event) (int64, error) {
 			}
 
 			_, err := s.Queries.LogEvent(context.Background(), models.LogEventParams{
-				Timestamp: sql.NullInt64{Int64: e.Timestamp.Unix(), Valid: true},
+				Timestamp: e.Timestamp.Unix(),
 				KeyID:     e.KeyId,
 				Cluster:   sql.NullString{String: e.Cluster, Valid: valid_cluster},
 				Tags:      e.TagString,

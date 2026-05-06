@@ -20,14 +20,14 @@ func HashSummaries(etlP *types.RunEtlParams) error {
 		// If we re-run a sequence, we'll wipe out hashes. They have to be recomputed.
 		srow.UpdateHash()
 		err := etlP.Storage.Queries.InsertFullSummary(context.Background(), models.InsertFullSummaryParams{
-			KeyID:     srow.KeyID,
-			LastRun:   srow.LastRun,
-			Date:      srow.Date,
-			Operation: srow.Operation,
-			Tags:      srow.Tags,
-			Value:     srow.Value,
-			Count:     srow.Count,
-			Hash:      srow.Hash,
+			KeyID:       srow.KeyID,
+			LastUpdated: srow.LastUpdated,
+			Date:        srow.Date,
+			Operation:   srow.Operation,
+			Tags:        srow.Tags,
+			Value:       srow.Value,
+			Count:       srow.Count,
+			Hash:        srow.Hash,
 		})
 		if err != nil {
 			return fmt.Errorf("could not update hash for %s: %s", etlP.Storage.YYYYMMDD(), err.Error())

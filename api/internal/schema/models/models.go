@@ -20,7 +20,7 @@ type ItslogEtl struct {
 
 type ItslogEvent struct {
 	ID        int64
-	Timestamp sql.NullInt64
+	Timestamp int64
 	KeyID     string
 	Cluster   sql.NullString
 	Tags      string
@@ -28,13 +28,13 @@ type ItslogEvent struct {
 }
 
 type ItslogSummary struct {
-	ID        int64
-	LastRun   int64
-	Date      string
-	KeyID     string
-	Operation string
-	Tags      string
-	Value     string
-	Count     float64
-	Hash      sql.NullString
+	ID          int64
+	LastUpdated int64
+	Date        string
+	KeyID       string
+	Operation   string
+	Tags        string
+	Value       string
+	Count       float64
+	Hash        sql.NullString
 }

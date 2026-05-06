@@ -7,7 +7,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"runtime"
 
 	"github.com/gin-gonic/gin"
 	"github.com/navapbc/its-log/internal/base"
@@ -46,9 +45,7 @@ func RunSequence(c *gin.Context) {
 	}
 	s.Init()
 
-	pc, _, _, _ := runtime.Caller(0)
-	funcName := runtime.FuncForPC(pc).Name()
-	base.LoadDefaultEtlFiles(s, funcName)
+	base.LoadDefaultEtlFiles(s)
 
 	seq, err := s.Queries.GetETL(context.Background(), sequenceName)
 	if err != nil {

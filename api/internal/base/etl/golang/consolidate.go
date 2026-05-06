@@ -57,13 +57,13 @@ func Consolidate(etlP *types.RunEtlParams) error {
 			for _, srow := range summaryRows {
 
 				err := etlP.Storage.Queries.InsertFullSummary(context.Background(), models.InsertFullSummaryParams{
-					KeyID:     etlP.KeyId,
-					LastRun:   srow.LastRun,
-					Date:      srow.Date,
-					Operation: srow.Operation,
-					Tags:      srow.Tags,
-					Value:     srow.Value,
-					Count:     srow.Count,
+					KeyID:       etlP.KeyId,
+					LastUpdated: srow.LastUpdated,
+					Date:        srow.Date,
+					Operation:   srow.Operation,
+					Tags:        srow.Tags,
+					Value:       srow.Value,
+					Count:       srow.Count,
 				})
 				if err != nil {
 					return fmt.Errorf("could not insert summary from %s: %s", past_date, err.Error())

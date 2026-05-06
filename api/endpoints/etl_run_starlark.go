@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/navapbc/its-log/internal/schema/models"
 	"github.com/navapbc/its-log/internal/types"
@@ -174,17 +175,18 @@ func etlRunStarlark(etlP *types.RunEtlParams, row models.GetETLRow, tx *sql.Tx) 
 	// Now, write them to the summary table.
 	etlP.Storage.Lock()
 	for _, e := range arr {
-		summ := models.InsertSummaryParams{
-			KeyID:     etlP.KeyId,
-			Date:      etlP.Storage.ILTime.AsYYYYMMDD(),
-			Operation: e.Operation,
-			Tags:      e.Tags,
-			Value:     e.Value,
-			Count:     float64(e.Count),
+		summ := models.InsertFullSummaryParams{
+			LastUpdated: time.Now().Unix(),
+			KeyID:       etlP.KeyId,
+			Date:        etlP.Storage.ILTime.AsYYYYMMDD(),
+			Operation:   e.Operation,
+			Tags:        e.Tags,
+			Value:       e.Value,
+			Count:       float64(e.Count),
 		}
 		summ.Hash = sql.NullString{String: e.ReturnHash(), Valid: true}
 
-		err := etlP.Storage.Queries.InsertSummary(context.Background(), summ)
+		err := etlP.Storage.Queries.InsertFullSummary(context.Background(), summ)
 		if err != nil {
 			etlP.Storage.Unlock()
 			return err

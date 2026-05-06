@@ -1,7 +1,6 @@
 package e2e
 
 import (
-	"runtime"
 	"strings"
 	"testing"
 
@@ -27,9 +26,7 @@ func RunSequence(t *testing.T, dateOffset int, sequenceName string) *types.Stora
 
 	// If we don't do an insert, then nothing loads the
 	// default ETLs. For testing, we have to force the issue.
-	pc, _, _, _ := runtime.Caller(0)
-	funcName := runtime.FuncForPC(pc).Name()
-	base.LoadDefaultEtlFiles(s, funcName)
+	base.LoadDefaultEtlFiles(s)
 
 	target := "/v1" + constants.SEQUENCE_RUN
 	target = strings.Replace(target, ":date", date.AsYYYYMMDD(), -1)

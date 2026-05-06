@@ -11,7 +11,7 @@ import (
 )
 
 const getAllSummaries = `-- name: GetAllSummaries :many
-SELECT id, last_run, date, key_id, operation, tags, value, count, hash FROM itslog_summary
+SELECT id, last_updated, date, key_id, operation, tags, value, count, hash FROM itslog_summary
 `
 
 // ------------------------------------------------------
@@ -28,7 +28,7 @@ func (q *Queries) GetAllSummaries(ctx context.Context) ([]ItslogSummary, error) 
 		var i ItslogSummary
 		if err := rows.Scan(
 			&i.ID,
-			&i.LastRun,
+			&i.LastUpdated,
 			&i.Date,
 			&i.KeyID,
 			&i.Operation,
@@ -139,26 +139,26 @@ func (q *Queries) InsertETL(ctx context.Context, arg InsertETLParams) error {
 
 const insertFullSummary = `-- name: InsertFullSummary :exec
 INSERT OR REPLACE INTO itslog_summary (
-  last_run, key_id, date, operation, tags, value, count, hash
+  last_updated, key_id, date, operation, tags, value, count, hash
   ) VALUES (
   ?, ?, ?, ?, ?, ?, ?, ?
   )
 `
 
 type InsertFullSummaryParams struct {
-	LastRun   int64
-	KeyID     string
-	Date      string
-	Operation string
-	Tags      string
-	Value     string
-	Count     float64
-	Hash      sql.NullString
+	LastUpdated int64
+	KeyID       string
+	Date        string
+	Operation   string
+	Tags        string
+	Value       string
+	Count       float64
+	Hash        sql.NullString
 }
 
 func (q *Queries) InsertFullSummary(ctx context.Context, arg InsertFullSummaryParams) error {
 	_, err := q.db.ExecContext(ctx, insertFullSummary,
-		arg.LastRun,
+		arg.LastUpdated,
 		arg.KeyID,
 		arg.Date,
 		arg.Operation,
@@ -212,7 +212,7 @@ RETURNING id
 `
 
 type LogEventParams struct {
-	Timestamp sql.NullInt64
+	Timestamp int64
 	KeyID     string
 	Cluster   sql.NullString
 	Tags      string

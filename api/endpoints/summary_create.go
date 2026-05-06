@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"runtime"
 	"sort"
 	"strings"
 
@@ -49,9 +48,7 @@ func SummaryCreate(c *gin.Context) {
 	}
 	// We cache whether this is loaded, so it is safe/fast to check every time
 	// we try and load another ETL into the table.
-	pc, _, _, _ := runtime.Caller(0)
-	funcName := runtime.FuncForPC(pc).Name()
-	base.LoadDefaultEtlFiles(s, funcName)
+	base.LoadDefaultEtlFiles(s)
 
 	// The tags field comes in as a JSON array. It needs to become
 	// a sorted, dot-separated string.
@@ -75,16 +72,18 @@ func SummaryCreate(c *gin.Context) {
 	}
 	ils.UpdateHash()
 
+	s.Lock()
 	if err := s.Queries.InsertFullSummary(context.Background(), models.InsertFullSummaryParams{
-		LastRun:   ils.LastRun,
-		KeyID:     ils.KeyID,
-		Date:      ils.Date,
-		Operation: ils.Operation,
-		Tags:      ils.Tags,
-		Value:     ils.Value,
-		Count:     ils.Count,
-		Hash:      ils.Hash,
+		LastUpdated: ils.LastUpdated,
+		KeyID:       ils.KeyID,
+		Date:        ils.Date,
+		Operation:   ils.Operation,
+		Tags:        ils.Tags,
+		Value:       ils.Value,
+		Count:       ils.Count,
+		Hash:        ils.Hash,
 	}); err != nil {
+		s.Unlock()
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
 			"method":  c.Request.Method,
@@ -95,6 +94,7 @@ func SummaryCreate(c *gin.Context) {
 		return
 	}
 
+	s.Unlock()
 	c.JSON(http.StatusCreated, gin.H{
 		"status": "ok",
 		"method": c.Request.Method,

@@ -30,6 +30,7 @@ func fileNameWithoutExtension(fileName string) string {
 }
 
 func insertEtl(s *types.Storage, key, name, kind, body string) {
+	s.Lock()
 	err := s.Queries.InsertETL(context.Background(), models.InsertETLParams{
 		KeyID: key,
 		Name:  name,
@@ -37,6 +38,7 @@ func insertEtl(s *types.Storage, key, name, kind, body string) {
 		// A golang entry will not have a body.
 		Body: sql.NullString{String: body, Valid: true},
 	})
+	s.Unlock()
 	if err != nil {
 		log.Printf("could not store SQL in ETL table: %s, %s\n", s.AppId, name)
 		log.Printf("err: %s", err.Error())
@@ -77,13 +79,11 @@ func loadFilesFromFS(s *types.Storage, dirName string) {
 
 }
 
-func LoadDefaultEtlFiles(s *types.Storage, from string) error {
+func LoadDefaultEtlFiles(s *types.Storage) error {
 
 	// If the file exists, check that there's something in the ETL.
 	_, err := s.Queries.GetETL(context.Background(), "sentinel")
 	if err != nil {
-		// DEBUG LOG
-		// log.Printf("LoadDefaultEtlFiles from: %s\n", from)
 
 		// Just log if we can't read from the embedded FS.
 		// Actually... panic? Yeah. This shouldn't fail.

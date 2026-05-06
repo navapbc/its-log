@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"runtime"
 
 	"github.com/gin-gonic/gin"
 	"github.com/navapbc/its-log/internal/base"
@@ -96,9 +95,7 @@ func CreateEtl(c *gin.Context) {
 	}
 	// We cache whether this is loaded, so it is safe/fast to check every time
 	// we try and load another ETL into the table.
-	pc, _, _, _ := runtime.Caller(0)
-	funcName := runtime.FuncForPC(pc).Name()
-	base.LoadDefaultEtlFiles(s, funcName)
+	base.LoadDefaultEtlFiles(s)
 
 	theBody, err := checkTheBody(body)
 	if err != nil {
@@ -112,12 +109,14 @@ func CreateEtl(c *gin.Context) {
 		return
 	}
 
+	s.Lock()
 	if err := s.Queries.InsertETL(context.Background(), models.InsertETLParams{
 		KeyID: keyId,
 		Name:  body.Name,
 		Kind:  body.Kind,
 		Body:  sql.NullString{String: string(theBody), Valid: true},
 	}); err != nil {
+		s.Unlock()
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
 			"method":  c.Request.Method,
@@ -128,6 +127,7 @@ func CreateEtl(c *gin.Context) {
 		return
 	}
 
+	s.Unlock()
 	c.JSON(http.StatusCreated, gin.H{
 		"status": "ok",
 		"method": c.Request.Method,

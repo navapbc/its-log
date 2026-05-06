@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS itslog_events (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     -- automatically provided by the SQLite engine
-    timestamp INTEGER DEFAULT (unixepoch()), 
+    timestamp INTEGER NOT NULL DEFAULT (unixepoch()), 
     -- so we know what key performed the operation
     key_id TEXT NOT NULL,
     -- cluster is useful for a related set of events
@@ -19,20 +19,9 @@ BEGIN
     SELECT RAISE(ABORT, 'no deletion from events allowed');
 END;
 
--- -- For mapping hashes back to strings
--- CREATE TABLE IF NOT EXISTS itslog_lookup (
---     id INTEGER PRIMARY KEY AUTOINCREMENT,
---     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
---     key_id TEXT NOT NULL,
---     kind TEXT NOT NULL,
---     hash INTEGER NOT NULL,
---     name TEXT NOT NULL
--- );
--- CREATE UNIQUE INDEX IF NOT EXISTS lookup_hashes_ndx ON itslog_lookup (hash);
-
 CREATE TABLE IF NOT EXISTS itslog_summary (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    last_run INTEGER DEFAULT (unixepoch()) NOT NULL, -- DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    last_updated INTEGER DEFAULT (unixepoch()) NOT NULL,
     date TEXT NOT NULL,
     key_id TEXT NOT NULL,
     operation TEXT NOT NULL,
