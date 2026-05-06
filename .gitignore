@@ -10,3 +10,4 @@ _base/*
 **.sqlite-journal
 **.prof
 **.test
+**.venv
