@@ -47,14 +47,15 @@ storage:
 	up
 
 jupyterlite: arm
+	docker build -t jupyterlite -f jupyterlite/Dockerfile jupyterlite
 	docker compose \
 	-f docker-compose-jupyterlite.yaml \
 	up
 
-jupyterlite-build: itslog-build
+jupyterlite-build: arm
 	docker compose \
 	-f docker-compose-jupyterlite.yaml \
-	up
+	up --build
 
 itslog-arm: arm itslog
 

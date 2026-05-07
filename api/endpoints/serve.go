@@ -64,14 +64,15 @@ func PourGin(ch_evt_out chan<- *types.Event) *gin.Engine {
 	router.SetTrustedProxies(strings.Split(viper.GetString("proxies"), ","))
 
 	log.Println("Setting default CORS handling")
-	router.Use(cors.New(cors.Config{
-		AllowMethods:     []string{"PUT", "GET", "POST", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "X-Api-Key"},
-		ExposeHeaders:    []string{"Content-Length"},
-		AllowAllOrigins:  true,
-		AllowCredentials: true,
-		MaxAge:           12 * time.Hour,
-	}))
+	// router.Use(cors.New(cors.Config{
+	// 	AllowMethods:     []string{"PUT", "GET", "POST", "OPTIONS"},
+	// 	AllowHeaders:     []string{"Origin", "X-Api-Key"},
+	// 	ExposeHeaders:    []string{"Content-Length"},
+	// 	AllowAllOrigins:  true,
+	// 	AllowCredentials: true,
+	// 	MaxAge:           12 * time.Hour,
+	// }))
+	router.Use(cors.Default()) // Allows all origins by default
 
 	// https://github.com/gin-contrib/zap?tab=readme-ov-file#example
 	router.Use(ginzap.Ginzap(zap.L(), time.RFC3339, true))
@@ -154,7 +155,9 @@ func addSummaryEndpoints(rG *gin.RouterGroup) {
 	permsRO := []types.PermissionType{constants.Admin, constants.ReadOnly, constants.Test}
 	permsRW := []types.PermissionType{constants.Admin, constants.Test}
 	auth_adminV1ReadOnly.Use(AuthMiddleWare(permsRO))
+	// auth_adminV1ReadOnly.Use(CORSMiddleware())
 	auth_adminV1ReadWrite.Use(AuthMiddleWare(permsRW))
+	// auth_adminV1ReadWrite.Use(CORSMiddleware())
 
 	auth_adminV1ReadOnly.POST(constants.SUMMARY_READ, SummaryRead)
 	auth_adminV1ReadWrite.POST(constants.SUMMARY_CREATE, SummaryCreate)

@@ -11,9 +11,9 @@ RUN pip install --no-cache-dir \
     numpy \
     requests
 
-COPY jupyterlite/content /build/content
+COPY content /build/content
 
-RUN jupyter lite build --contents content --output-dir _output
+RUN jupyter lite build --contents content --output-dir /build/_output
 
 FROM nginx:alpine
 
