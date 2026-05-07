@@ -46,8 +46,11 @@ storage:
 	-f docker-compose-s3.yaml \
 	up
 
-jupyterlite: arm
+jupyterlite-build:
+	-docker rmi jupyterlite
 	docker build -t jupyterlite -f jupyterlite/Dockerfile jupyterlite
+
+jupyterlite: arm jupyterlite-build
 	docker compose \
 	-f docker-compose-jupyterlite.yaml \
 	up
