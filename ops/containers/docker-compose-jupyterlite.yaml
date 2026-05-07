@@ -1,0 +1,14 @@
+include:
+  - path: ./docker-compose.yaml
+services:
+  jupyterlite:
+    build:
+      context: .
+      dockerfile: jupyterlite/Dockerfile
+    # volumes:
+    #   # If I use nginx
+    #   # - ./sqliteviz/inquiries.json:/usr/share/nginx/html/inquiries.json
+    #   # If I use Python
+    #   # - ./jupyterlite/content:/build/content
+    ports:
+      - "9999:80"

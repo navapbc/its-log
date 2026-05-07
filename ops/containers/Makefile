@@ -1,4 +1,4 @@
-.PHONY: e2e amd arm k6 kd-arm k6-amd itslog itslog-arm itslog-amd 
+.PHONY: e2e amd arm k6 kd-arm k6-amd itslog itslog-arm itslog-amd jupyterlite
 
 e2e:
 	docker compose \
@@ -44,6 +44,16 @@ itslog-build:
 storage:
 	docker compose \
 	-f docker-compose-s3.yaml \
+	up
+
+jupyterlite: arm
+	docker compose \
+	-f docker-compose-jupyterlite.yaml \
+	up
+
+jupyterlite-build: itslog-build
+	docker compose \
+	-f docker-compose-jupyterlite.yaml \
 	up
 
 itslog-arm: arm itslog

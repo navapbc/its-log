@@ -33,7 +33,8 @@ CREATE TABLE IF NOT EXISTS itslog_summary (
 
 -- See https://stackoverflow.com/questions/22699409/sqlite-null-and-unique
 -- We want NULL values to count towards uniqueness here.
-CREATE UNIQUE INDEX IF NOT EXISTS summary_ndx ON itslog_summary (date, operation, IFNULL(tags, 0), IFNULL(value, 0));
+CREATE UNIQUE INDEX IF NOT EXISTS summary_ndx 
+ON itslog_summary (date, operation, IFNULL(tags, 0), IFNULL(value, 0));
 
 CREATE TABLE IF NOT EXISTS itslog_etl (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
