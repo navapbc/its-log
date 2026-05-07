@@ -1,4 +1,4 @@
-.PHONY: amd native
+.PHONY: amd native jupyterlite
 
 native:
 	cd api ; make native
@@ -29,3 +29,6 @@ generate:
 
 test:
 	cd api ; make test
+
+jupyterlite:
+	cd ops/containers ; make jupyterlite

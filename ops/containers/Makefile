@@ -52,10 +52,6 @@ jupyterlite: arm
 	-f docker-compose-jupyterlite.yaml \
 	up
 
-jupyterlite-build: arm
-	docker compose \
-	-f docker-compose-jupyterlite.yaml \
-	up --build
 
 itslog-arm: arm itslog
 
