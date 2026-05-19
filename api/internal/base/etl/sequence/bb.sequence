@@ -1,0 +1,6 @@
+[
+    { "name": "app-summary" },
+    { "name": "global-metrics" },
+    { "name": "remove-outdated-summaries" },
+    { "name": "db-to-csv" }
+]

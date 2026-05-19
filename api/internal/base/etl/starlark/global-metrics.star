@@ -107,7 +107,6 @@ def summarize():
     summaries = []
     for key, value in APP_GLOBAL_PAIRS.items():
         # Grab all summary records for specific app-level value
-        print('key/value: ', key, value)
         # Starlark does not support string formatting, hence concatenation
         # We only need the value back
         summary_query = 'SELECT * from itslog_summary WHERE operation = \'' + value + '\';'
@@ -115,11 +114,8 @@ def summarize():
 
         # Only grab the value from the retrieved summaries
         summary_values_for_specific_metric = [s['value'] for s in summary_rows]
-        print('summary_values_for_specific_metric: ', summary_values_for_specific_metric)
 
         total = sum_total(summary_values_for_specific_metric)
-        print('value: ', value)
-        print('total: ', total)
         # Construct the global summary record and append it to the list that will be returned
         global_summary = {
             'operation': key,
@@ -128,8 +124,6 @@ def summarize():
         }
         summaries.append(global_summary)
 
-    for row in summaries:
-        print('ROW: ', row)
     return summaries
 
 summarize()

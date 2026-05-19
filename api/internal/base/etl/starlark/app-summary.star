@@ -612,120 +612,6 @@ def evaluate_audit_metrics(tags):
 
     return matched
 
-def parse_simple_json(s):
-    """
-    Parse a flat JSON object string into a Starlark dict.
-    Starlark does not support while loops, so for loops are used instead
-    """
-    result = {}
-
-    s = s.strip()
-    if s.startswith("{"):
-        s = s[1:]
-    if s.endswith("}"):
-        s = s[:-1]
-    s = s.strip()
-
-    if not s:
-        return result
-
-    n = len(s)
-    pos = [0]  # Use a list so we can mutate it inside helpers
-
-    def skip_whitespace():
-        for _ in range(n):
-            if pos[0] >= n or s[pos[0]] != " ":
-                break
-            pos[0] += 1
-
-    def parse_string():
-        pos[0] += 1  # skip opening quote
-        val = ""
-        for _ in range(n):
-            if pos[0] >= n:
-                break
-            c = s[pos[0]]
-            if c == '"':
-                pos[0] += 1  # skip closing quote
-                break
-            if c == '\\' and pos[0] + 1 < n:
-                pos[0] += 1
-                val += s[pos[0]]
-            else:
-                val += c
-            pos[0] += 1
-        return val
-
-    def parse_primitive():
-        # Check for null, true, false
-        if s[pos[0]:pos[0]+4] == "null":
-            pos[0] += 4
-            return None
-        if s[pos[0]:pos[0]+4] == "true":
-            pos[0] += 4
-            return True
-        if s[pos[0]:pos[0]+5] == "false":
-            pos[0] += 5
-            return False
-        # Numeric — read until comma, space, or end
-        num_str = ""
-        for _ in range(n):
-            if pos[0] >= n:
-                break
-            c = s[pos[0]]
-            if c == "," or c == " " or c == "}":
-                break
-            num_str += c
-            pos[0] += 1
-        return num_str
-
-    # Main parse loop — iterate up to n times (one per key-value pair max)
-    for _ in range(n):
-        if pos[0] >= n:
-            break
-
-        skip_whitespace()
-        if pos[0] >= n:
-            break
-
-        # Expect a quoted key
-        if s[pos[0]] != '"':
-            break
-
-        key = parse_string()
-
-        # Skip whitespace and colon
-        for _ in range(n):
-            if pos[0] >= n:
-                break
-            c = s[pos[0]]
-            if c != " " and c != ":":
-                break
-            pos[0] += 1
-
-        if pos[0] >= n:
-            break
-
-        # Parse value
-        if s[pos[0]] == '"':
-            val = parse_string()
-        else:
-            val = parse_primitive()
-
-        result[key] = val
-
-        # Skip whitespace and comma
-        for _ in range(n):
-            if pos[0] >= n:
-                break
-            c = s[pos[0]]
-            if c != " " and c != ",":
-                break
-            pos[0] += 1
-
-    return result
-
-
 def summarize():
     # Entry point for app-summary ETL
 
@@ -741,8 +627,7 @@ def summarize():
 
     for event in events:
     # for event in EVENTS:
-        # json_event = json.decode(event.value)
-        event_dict = parse_simple_json(event.get('value'))
+        event_dict = json.decode(event.get('value'))
 
         app_name = event_dict.get('app_name')
         app_id = event_dict.get('app_id')
