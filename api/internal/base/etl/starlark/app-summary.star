@@ -737,7 +737,7 @@ def summarize():
     # List that will contain the summary rows that will be returned/written to itslog_summary
     returning_summary_rows = []
 
-    events = query('SELECT * FROM itslog_events')
+    events = query('events', 'SELECT * FROM itslog_events')
 
     for event in events:
     # for event in EVENTS:
@@ -750,15 +750,14 @@ def summarize():
         if not app_name or not app_id:
             continue
 
-        tag = str(app_id) + '.' + app_name
         if event_dict.get('type') == REQUEST_RESPONSE_MIDDLEWARE_TYPE:
             for metric in evaluate_request_response_metrics(event_dict):
-                key = (metric, tag)
+                key = (metric, app_name)
                 accumulator[key] = accumulator.get(key, 0) + 1
 
         if event_dict.get('type') in AUDIT_EVENT_TYPES:
             for metric in evaluate_audit_metrics(event_dict):
-                key = (metric, tag)
+                key = (metric, app_name)
                 accumulator[key] = accumulator.get(key, 0) + 1
 
     for (metric_tag, tag), count in accumulator.items():

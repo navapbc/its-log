@@ -110,10 +110,8 @@ def summarize():
         print('key/value: ', key, value)
         # Starlark does not support string formatting, hence concatenation
         # We only need the value back
-        summary_query = 'SELECT value from itslog_summary WHERE operation = \'' + value + '\';'
-        print('summary_query: ', summary_query)
-        summary_rows = query(summary_query)
-        print('summary_rows: ', summary_rows)
+        summary_query = 'SELECT * from itslog_summary WHERE operation = \'' + value + '\';'
+        summary_rows = query('summary', summary_query)
 
         # Only grab the value from the retrieved summaries
         summary_values_for_specific_metric = [s['value'] for s in summary_rows]
