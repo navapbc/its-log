@@ -10,6 +10,7 @@ import (
 	"database/sql"
 
 	_ "github.com/duckdb/duckdb-go/v2"
+	"go.uber.org/zap"
 )
 
 // const getAllSummaries = `-- name: GetAllSummaries :many
@@ -362,7 +363,15 @@ func (q *Queries) ReadSummary(ctx context.Context, arg ReadSummaryParams) (ReadS
 	if err != nil {
 		return ReadSummaryRow{}, err
 	}
-	row := q.db.QueryRowContext(ctx, string(readSummary), arg.Tags, arg.Operation)
+
+	zap.L().Debug("ReadSummary",
+		zap.String("operation", arg.Operation),
+		zap.String("tags", arg.Tags))
+
+	row := q.db.QueryRowContext(ctx, string(readSummary),
+		sql.Named("tags", arg.Tags),
+		sql.Named("operation", arg.Operation),
+	)
 	var i ReadSummaryRow
 	err = row.Scan(
 		&i.Date,

@@ -8,6 +8,7 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 
+	"github.com/navapbc/its-log/internal/etl"
 	"github.com/navapbc/its-log/internal/types"
 
 	// "gonum.org/v1/gonum/stat/combin"
@@ -98,15 +99,12 @@ func CountAllCombinations(etlP *types.RunEtlParams) error {
 		counts[joined] = the_count
 	}
 
+	cacSql := etl.LoadEtlSQLAsString("internal_count-all-combinations.sql")
 	for tag, count := range counts {
 		// Expect all ETLs to return 0 or 1.
 		if count > 0 && !slices.Contains(allTags, tag) {
-			// FIXME: sqlc can do this insert.
 			_, err := etlP.Storage.GetDB().ExecContext(context.Background(),
-				`INSERT OR REPLACE INTO itslog_summary 
-				(key_id, date, operation, tags, value, count)
-				VALUES
-				(?, ?, 'count.combinations', ?, '', ?)`,
+				cacSql,
 				etlP.KeyId, etlP.Storage.ILTime.AsYYYYMMDD(), tag, count)
 			if err != nil {
 				log.Println("combinations SQL insert err: " + err.Error())

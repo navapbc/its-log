@@ -16,6 +16,8 @@ import (
 	"github.com/navapbc/its-log/internal/types"
 )
 
+const SQL_NAMED_PARAM_SYMBOL = "$"
+
 func callWithParams(etlP *types.RunEtlParams, theSql string) *sql.Row {
 	paramMap := map[string]string{
 		"key_id": etlP.KeyId,
@@ -25,9 +27,7 @@ func callWithParams(etlP *types.RunEtlParams, theSql string) *sql.Row {
 
 	args := make([]any, 0)
 	for param, val := range paramMap {
-		if strings.Contains(theSql, ":"+param) {
-			// DEBUG LOG
-			// log.Println(etlP.EtlName + " replacing :" + param + " with " + val)
+		if strings.Contains(theSql, SQL_NAMED_PARAM_SYMBOL+param) {
 			args = append(args, sql.Named(param, val))
 		}
 	}
@@ -73,7 +73,7 @@ func etlRunSql(etlP *types.RunEtlParams, row schema.GetETLRow, tx *sql.Tx) error
 			ser := types.NewStandardErrorResponse(etlP, err)
 			ser.SetStatus(http.StatusInternalServerError).Send(msg)
 		}
-		log.Println(msg)
+		//log.Println(msg)
 		return fmt.Errorf("%s: %s", msg, http.StatusText(http.StatusInternalServerError))
 	}
 

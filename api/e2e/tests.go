@@ -137,6 +137,7 @@ func RunTests(t *testing.T) {
 	// This is a deterministic test.
 	// We should be able to get the same results every time it runs.
 	// This can run blocking.
+	Cleanup(Setup(t, 0))
 	log.Printf("== Running deterministic tests ==")
 	Cleanup(Setup(t, 0))
 	Setup(t, 0)

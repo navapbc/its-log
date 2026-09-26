@@ -69,10 +69,10 @@ func SummaryRead(c *gin.Context) {
 	row, err := s.Queries.ReadSummary(context.Background(), params)
 	if err != nil {
 		log.Println("err: " + err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{
+		c.JSON(http.StatusNotFound, gin.H{
 			"status":  "error",
 			"method":  c.Request.Method,
-			"message": "read summary err: " + err.Error(),
+			"message": fmt.Sprintf("no values found for operation[%s], tags[%s]", body.Operation, body.Tags),
 			"date":    body.Date,
 			"name":    body.Operation,
 		})

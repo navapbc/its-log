@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"fmt"
+	"log"
 	"os"
 	"path"
 
@@ -102,5 +103,6 @@ func (s *Storage) Unlock() {
 func (s *Storage) Delete() {
 	s.db.Close()
 	path := path.Join(viper.GetString("storage.path"), s.Filename)
+	log.Printf("Deleting database: %s", path)
 	os.Remove(path)
 }

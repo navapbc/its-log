@@ -6,6 +6,7 @@ import (
 	"embed"
 	"io/fs"
 	"log"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -24,6 +25,14 @@ var defaultGolang embed.FS
 
 //go:embed starlark
 var defaultStarlark embed.FS
+
+func LoadEtlSQLAsString(filename string) string {
+	sql, err := defaultSql.ReadFile(path.Join("sql", filename))
+	if err != nil {
+		panic(err)
+	}
+	return string(sql)
+}
 
 func fileNameWithoutExtension(fileName string) string {
 	return strings.TrimSuffix(fileName, filepath.Ext(fileName))
@@ -81,12 +90,15 @@ func LoadDefaultEtlFiles(s *types.Storage, from string) error {
 
 	// If the file exists, check that there's something in the ETL.
 	_, err := s.Queries.GetETL(context.Background(), "sentinel")
+	// If there is nothing in the table, we need to load the ETL
+	// into the DB. It is a fresh DB.
 	if err != nil {
 		// DEBUG LOG
 		// log.Printf("LoadDefaultEtlFiles from: %s\n", from)
 
-		// Just log if we can't read from the embedded FS.
-		// Actually... panic? Yeah. This shouldn't fail.
+		// These files are embedded in the app's
+		// magic filesystem. If we can't read these,
+		// we panic. It shouldn't happen.
 		loadFilesFromFS(s, "sql")
 		loadFilesFromFS(s, "sequence")
 		loadFilesFromFS(s, "golang")

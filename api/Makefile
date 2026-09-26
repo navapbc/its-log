@@ -26,5 +26,4 @@ up: build-amd
 e2e:
 	go test -cpuprofile cpu.prof -memprofile mem.prof -bench -v ./e2e
 
-test:
-	go test -test.fullpath=true -timeout 300s -run ^TestE2E$ github.com/navapbc/its-log/e2e
+test: e2e
