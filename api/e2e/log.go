@@ -111,7 +111,7 @@ func GenerateClusteredLogs(t *testing.T, iterations int, jitter int, date *types
 
 	counter := 0
 	for _, version := range _versions {
-		for _ = range iterations {
+		for range iterations {
 			wiggle(jitter)
 			cluster := generatePatientId(8)
 			for _, endpoint := range _endpoints {

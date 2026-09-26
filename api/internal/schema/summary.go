@@ -1,4 +1,4 @@
-package models
+package schema
 
 import (
 	"crypto/sha1"

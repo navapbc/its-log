@@ -110,11 +110,14 @@ func Setup(t *testing.T, dateOffset int) *types.Storage {
 	date := types.NewILTimeToday()
 	date.SubtractDays(dateOffset)
 
-	s := types.NewStorage("pupper")
+	s, err := types.NewStorage("pupper")
+	if err != nil {
+		t.Error(err)
+	}
 	s.SetDateILT(date)
-	s.Init()
-	// DEBUG LOG
-	// t.Log("setting up: " + s.Filename)
+
+	s.InitDB()
+
 	return s
 }
 
@@ -134,12 +137,13 @@ func RunTests(t *testing.T) {
 	// This is a deterministic test.
 	// We should be able to get the same results every time it runs.
 	// This can run blocking.
-	t.Log("== Running deterministic tests ==")
+	log.Printf("== Running deterministic tests ==")
 	Cleanup(Setup(t, 0))
+	Setup(t, 0)
 	DeterministicTest(t, DETERMINISTIC_ITERATIONS, 0)
 	Cleanup(Setup(t, 0))
 
-	t.Log("== Running a week of deterministic tests ==")
+	log.Printf("== Running a week of deterministic tests ==")
 	// Offsets should be 1-5
 	offsets := makeRange(1, 5)
 	for offset := range offsets {
@@ -152,7 +156,7 @@ func RunTests(t *testing.T) {
 	// This stresses the concurrent/parallel nature of the server, with
 	// multiple loggers at once, as well as running the ETL while under heavy
 	// logging load.
-	t.Log("== Running parallel stress tests ==")
+	log.Printf("== Running parallel stress tests ==")
 	var wg sync.WaitGroup
 	for i := range 8 {
 		wg.Add(1)

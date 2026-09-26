@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/navapbc/its-log/internal/schema/models"
+	"github.com/navapbc/its-log/internal/schema"
 	"github.com/navapbc/its-log/internal/types"
 )
 
@@ -19,7 +19,7 @@ func HashSummaries(etlP *types.RunEtlParams) error {
 		// Always update the hash.
 		// If we re-run a sequence, we'll wipe out hashes. They have to be recomputed.
 		srow.UpdateHash()
-		err := etlP.Storage.Queries.InsertFullSummary(context.Background(), models.InsertFullSummaryParams{
+		err := etlP.Storage.Queries.InsertFullSummary(context.Background(), schema.InsertFullSummaryParams{
 			KeyID:     srow.KeyID,
 			LastRun:   srow.LastRun,
 			Date:      srow.Date,

@@ -11,6 +11,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/navapbc/its-log/internal/base"
+	"github.com/navapbc/its-log/internal/etl"
 	"github.com/navapbc/its-log/internal/types"
 )
 
@@ -32,7 +33,18 @@ func RunSequence(c *gin.Context) {
 		payload = make(map[string]any)
 	}
 
-	s := types.NewStorage(appId)
+	s, err := types.NewStorage(appId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "error",
+			"method":  c.Request.Method,
+			"message": "could not initialize storage backend",
+			"date":    sequenceDate,
+			"name":    sequenceName,
+		})
+		return
+	}
+
 	dateErr := s.SetDateYMD(sequenceDate)
 	if dateErr != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -44,11 +56,11 @@ func RunSequence(c *gin.Context) {
 		})
 		return
 	}
-	s.Init()
+	s.InitDB()
 
 	pc, _, _, _ := runtime.Caller(0)
 	funcName := runtime.FuncForPC(pc).Name()
-	base.LoadDefaultEtlFiles(s, funcName)
+	etl.LoadDefaultEtlFiles(s, funcName)
 
 	seq, err := s.Queries.GetETL(context.Background(), sequenceName)
 	if err != nil {

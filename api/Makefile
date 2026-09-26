@@ -16,7 +16,9 @@ run: native
 	./local.bash
 
 generate:
-	cd internal/schema ; sqlc generate
+	go clean -modcache
+	go get -u ./...
+#	cd internal/schema ; sqlc generate
 
 up: build-amd
 	cd ../containers ; docker compose up itslog lite

@@ -1,4 +1,4 @@
-package base
+package etl
 
 import (
 	"context"
@@ -9,20 +9,20 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/navapbc/its-log/internal/schema/models"
+	"github.com/navapbc/its-log/internal/schema"
 	"github.com/navapbc/its-log/internal/types"
 )
 
-//go:embed etl/sql
+//go:embed sql
 var defaultSql embed.FS
 
-//go:embed etl/sequence
+//go:embed sequence
 var defaultSeq embed.FS
 
-//go:embed etl/golang
+//go:embed golang
 var defaultGolang embed.FS
 
-//go:embed etl/starlark
+//go:embed starlark
 var defaultStarlark embed.FS
 
 func fileNameWithoutExtension(fileName string) string {
@@ -30,7 +30,7 @@ func fileNameWithoutExtension(fileName string) string {
 }
 
 func insertEtl(s *types.Storage, key, name, kind, body string) {
-	err := s.Queries.InsertETL(context.Background(), models.InsertETLParams{
+	err := s.Queries.InsertETL(context.Background(), schema.InsertETLParams{
 		KeyID: key,
 		Name:  name,
 		Kind:  kind,
@@ -55,7 +55,7 @@ func loadFilesFromFS(s *types.Storage, dirName string) {
 	case "starlark":
 		filesystem = defaultStarlark
 	}
-	dirEntries, err := fs.ReadDir(filesystem, filepath.Join("etl", dirName))
+	dirEntries, err := fs.ReadDir(filesystem, filepath.Join(dirName))
 	if err != nil {
 		panic("cannot read embedded directory: " + dirName)
 	}
@@ -64,7 +64,7 @@ func loadFilesFromFS(s *types.Storage, dirName string) {
 	for _, entry := range dirEntries {
 		filename := entry.Name()
 		if !strings.HasPrefix(filename, "internal_") {
-			asBytes, err := fs.ReadFile(filesystem, filepath.Join("etl", dirName, filename))
+			asBytes, err := fs.ReadFile(filesystem, filepath.Join(dirName, filename))
 			if err != nil {
 				log.Printf("unable to read file: %v\n", err)
 				panic("failed to read file from embedded FS")

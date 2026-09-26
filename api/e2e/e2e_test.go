@@ -3,7 +3,6 @@ package e2e
 import (
 	"log"
 	"os"
-	"path"
 	"strings"
 	"testing"
 
@@ -23,7 +22,7 @@ func configureEnv() {
 		"ITSLOG_BUFFER_LENGTH":              "100",
 		"ITSLOG_GINMODE":                    "debug", // "debug" or "production"
 		"ITSLOG_PROXIES_TRUSTED":            "TBD",
-		"ITSLOG_STORAGE_PATH":               path.Join(os.TempDir()),
+		"ITSLOG_STORAGE_PATH":               "/tmp/duckdb", //path.Join(os.TempDir()),
 		"ITSLOG_BACKUP_BUCKET":              "backup",
 		"ITSLOG_BACKUP_AWS_ENDPOINT_HOST":   "0.0.0.0",
 		"ITSLOG_BACKUP_AWS_ENDPOINT_PORT":   "4566",

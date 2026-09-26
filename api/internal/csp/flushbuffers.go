@@ -6,8 +6,8 @@ import (
 	"log"
 	"runtime"
 
-	"github.com/navapbc/its-log/internal/base"
-	"github.com/navapbc/its-log/internal/schema/models"
+	"github.com/navapbc/its-log/internal/etl"
+	"github.com/navapbc/its-log/internal/schema"
 	"github.com/navapbc/its-log/internal/types"
 )
 
@@ -71,13 +71,16 @@ func FlushBuffersOnce(ch_flush_in <-chan types.EventBuffer) {
 
 	for appId, dateMap := range org {
 		for formattedDate, events := range dateMap {
-			s := types.NewStorage(appId)
-			err := s.SetDateYMD(formattedDate)
+			s, err := types.NewStorage(appId)
+			if err != nil {
+				panic("failed to create storage backend")
+			}
+			err = s.SetDateYMD(formattedDate)
 			if err != nil {
 				panic("failed to parse date in FlushBuffersOnce")
 			}
 
-			err = s.Init()
+			err = s.InitDB()
 			if err != nil {
 				log.Println("storage init error: " + err.Error())
 				panic(err)
@@ -101,7 +104,7 @@ func FlushBuffersOnce(ch_flush_in <-chan types.EventBuffer) {
 			if _, ok := isEtlLoaded[formattedDate]; !ok {
 				pc, _, _, _ := runtime.Caller(0)
 				funcName := runtime.FuncForPC(pc).Name()
-				err := base.LoadDefaultEtlFiles(s, funcName)
+				err := etl.LoadDefaultEtlFiles(s, funcName)
 				if err != nil {
 					log.Println("could not load default ETL files for " + formattedDate + ": " + err.Error())
 				} else {
@@ -142,7 +145,7 @@ func ManyEvents(s *types.Storage, evt_buff []*types.Event) (int64, error) {
 				valid_value = true
 			}
 
-			_, err := s.Queries.LogEvent(context.Background(), models.LogEventParams{
+			_, err := s.Queries.LogEvent(context.Background(), schema.LogEventParams{
 				Timestamp: sql.NullInt64{Int64: e.Timestamp.Unix(), Valid: true},
 				KeyID:     e.KeyId,
 				Cluster:   sql.NullString{String: e.Cluster, Valid: valid_cluster},

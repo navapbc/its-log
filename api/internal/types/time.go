@@ -17,16 +17,16 @@ func NewILTimeToday() *ILTime {
 	return &ILTime{theTime: truncateToDay(t)}
 }
 
-func ILTimeFromTime(t time.Time) *ILTime {
+func NewILTimeFromTime(t time.Time) *ILTime {
 	return &ILTime{theTime: t}
 }
 
-func ILTimeFromYMD(ymd string) (*ILTime, error) {
+func NewILTimeFromYMD(ymd string) (*ILTime, error) {
 	d, e := time.Parse("2006-01-02", ymd)
 	if e != nil {
 		return nil, e
 	}
-	ilt := ILTimeFromTime(d)
+	ilt := NewILTimeFromTime(d)
 	return ilt, nil
 }
 

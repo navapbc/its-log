@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/navapbc/its-log/internal/schema/models"
+	"github.com/navapbc/its-log/internal/schema"
 	"github.com/navapbc/its-log/internal/types"
 )
 
@@ -32,12 +32,15 @@ func Consolidate(etlP *types.RunEtlParams) error {
 		if past_date, ok := past_date_any.(string); ok {
 
 			// Init the past storage
-			past_storage := types.NewStorage(etlP.AppId)
-			err := past_storage.SetDateYMD(past_date)
+			past_storage, err := types.NewStorage(etlP.AppId)
+			if err != nil {
+				return fmt.Errorf("could not initialize storage: %s", etlP.AppId)
+			}
+			err = past_storage.SetDateYMD(past_date)
 			if err != nil {
 				return fmt.Errorf("could not parse date; must be YYYY-MM-DD: %s", past_date)
 			}
-			err = past_storage.Init()
+			err = past_storage.InitDB()
 			if err != nil {
 				log.Println("past storage init error: " + err.Error())
 				panic(err)
@@ -56,7 +59,7 @@ func Consolidate(etlP *types.RunEtlParams) error {
 
 			for _, srow := range summaryRows {
 
-				err := etlP.Storage.Queries.InsertFullSummary(context.Background(), models.InsertFullSummaryParams{
+				err := etlP.Storage.Queries.InsertFullSummary(context.Background(), schema.InsertFullSummaryParams{
 					KeyID:     etlP.KeyId,
 					LastRun:   srow.LastRun,
 					Date:      srow.Date,

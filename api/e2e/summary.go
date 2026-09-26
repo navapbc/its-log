@@ -14,9 +14,13 @@ func CheckSummaryValue(operation string, tags string, expected int, date *types.
 	if err != nil {
 		panic("could not find key for pupper/pup_admin")
 	}
-	s := types.NewStorage(apiKey.AppId)
+	s, err := types.NewStorage(apiKey.AppId)
+	if err != nil {
+		panic(err)
+	}
+
 	s.SetDateILT(date)
-	s.Init()
+	s.InitDB()
 	target := "/v1" + constants.SUMMARY_READ
 
 	bundle := map[string]any{

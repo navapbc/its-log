@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 
-	"github.com/navapbc/its-log/internal/schema/models"
+	"github.com/navapbc/its-log/internal/schema"
 	"github.com/navapbc/its-log/internal/types"
 	"go.starlark.net/lib/json"
 	"go.starlark.net/lib/math"
@@ -78,7 +79,8 @@ func queryFun(etlP *types.RunEtlParams) func(_ *starlark.Thread, _ *starlark.Bui
 					return starlark.None, err
 				} else {
 					d := starlark.NewDict(10)
-					d.SetKey(starlark.String("id"), starlark.String(row.ID))
+					id := strconv.FormatInt(row.ID, 10)
+					d.SetKey(starlark.String("id"), starlark.String(id))
 					d.SetKey(starlark.String("last_run"), starlark.MakeInt64(row.LastRun))
 					d.SetKey(starlark.String("date"), starlark.String(row.KeyId))
 					d.SetKey(starlark.String("key_id"), starlark.String(row.KeyId))
@@ -97,7 +99,7 @@ func queryFun(etlP *types.RunEtlParams) func(_ *starlark.Thread, _ *starlark.Bui
 	}
 }
 
-func etlRunStarlark(etlP *types.RunEtlParams, row models.GetETLRow, tx *sql.Tx) error {
+func etlRunStarlark(etlP *types.RunEtlParams, row schema.GetETLRow, tx *sql.Tx) error {
 	// Run the query
 	if !row.Body.Valid {
 		msg := "sql is null for ETL step"
@@ -146,9 +148,9 @@ func etlRunStarlark(etlP *types.RunEtlParams, row models.GetETLRow, tx *sql.Tx) 
 	// contain starlark dictionaries. These need to be turned into Golang structs.
 	// FIXME: what if someone wants `summary` rows? This does not work.
 	// consider using map[string]any instead.
-	arr := make([]models.ItslogSummary, 0)
+	arr := make([]schema.ItslogSummary, 0)
 	for elem := range v.(*starlark.List).Elements() {
-		srjs := models.ItslogSummary{}
+		srjs := schema.ItslogSummary{}
 		for _, k := range elem.(*starlark.Dict).Keys() {
 			s, _ := starlark.AsString(k)
 			switch s {
@@ -183,7 +185,7 @@ func etlRunStarlark(etlP *types.RunEtlParams, row models.GetETLRow, tx *sql.Tx) 
 	// Now, write them to the summary table.
 	etlP.Storage.Lock()
 	for _, e := range arr {
-		summ := models.InsertSummaryParams{
+		summ := schema.InsertSummaryParams{
 			KeyID:     etlP.KeyId,
 			Date:      etlP.Storage.ILTime.AsYYYYMMDD(),
 			Operation: e.Operation,

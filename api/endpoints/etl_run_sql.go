@@ -9,9 +9,10 @@ import (
 	"net/http"
 	"strings"
 
-	etl "github.com/navapbc/its-log/internal/base/etl/golang"
 	"github.com/navapbc/its-log/internal/constants"
-	"github.com/navapbc/its-log/internal/schema/models"
+	etl "github.com/navapbc/its-log/internal/etl/golang"
+	"github.com/navapbc/its-log/internal/schema"
+
 	"github.com/navapbc/its-log/internal/types"
 )
 
@@ -40,7 +41,7 @@ func callWithParams(etlP *types.RunEtlParams, theSql string) *sql.Row {
 	return etlRow
 }
 
-func etlRunSql(etlP *types.RunEtlParams, row models.GetETLRow, tx *sql.Tx) error {
+func etlRunSql(etlP *types.RunEtlParams, row schema.GetETLRow, tx *sql.Tx) error {
 	// Run the query
 	if !row.Body.Valid {
 		msg := "sql is null for ETL step"
@@ -79,7 +80,7 @@ func etlRunSql(etlP *types.RunEtlParams, row models.GetETLRow, tx *sql.Tx) error
 	return nil
 }
 
-func etlRunGolang(etlP *types.RunEtlParams, row models.GetETLRow, tx *sql.Tx) error {
+func etlRunGolang(etlP *types.RunEtlParams, row schema.GetETLRow, tx *sql.Tx) error {
 	functionName := row.Name
 	if function, ok := etl.GolangETLMap[functionName]; ok {
 		// Like the SQL actions, lock/unlock around what we do.

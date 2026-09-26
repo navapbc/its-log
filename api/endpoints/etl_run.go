@@ -11,6 +11,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/navapbc/its-log/internal/base"
+	"github.com/navapbc/its-log/internal/etl"
 	"github.com/navapbc/its-log/internal/types"
 )
 
@@ -34,7 +35,18 @@ func RunEtl(c *gin.Context) {
 		payload = make(map[string]any)
 	}
 
-	s := types.NewStorage(appId)
+	s, err := types.NewStorage(appId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "error",
+			"method":  c.Request.Method,
+			"message": "could not initialize storage backend",
+			"date":    date,
+			"name":    name,
+		})
+		return
+	}
+
 	dateErr := s.SetDateYMD(date)
 	etlP := &types.RunEtlParams{
 		AppId:   appId,
@@ -50,11 +62,11 @@ func RunEtl(c *gin.Context) {
 		ser.SetStatus(http.StatusInternalServerError).Send("could not parse date; must be YYYY-MM-DD")
 		return
 	}
-	s.Init()
+	s.InitDB()
 
 	pc, _, _, _ := runtime.Caller(0)
 	funcName := runtime.FuncForPC(pc).Name()
-	base.LoadDefaultEtlFiles(s, funcName)
+	etl.LoadDefaultEtlFiles(s, funcName)
 
 	etlErr := runEtl(etlP)
 
@@ -114,7 +126,7 @@ func runEtl(etlP *types.RunEtlParams) error {
 			ser := types.NewStandardErrorResponse(etlP, nil)
 			ser.SetStatus(http.StatusInternalServerError).Send(msg)
 		}
-		return fmt.Errorf("%s: %s", msg, err.Error())
+		return fmt.Errorf("%s: %s", msg, updateErr.Error())
 	}
 
 	return nil

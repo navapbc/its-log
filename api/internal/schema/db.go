@@ -2,11 +2,13 @@
 // versions:
 //   sqlc v1.30.0
 
-package models
+package schema
 
 import (
 	"context"
 	"database/sql"
+
+	_ "github.com/duckdb/duckdb-go/v2"
 )
 
 type DBTX interface {

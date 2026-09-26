@@ -11,7 +11,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/navapbc/its-log/internal/base"
-	"github.com/navapbc/its-log/internal/schema/models"
+	"github.com/navapbc/its-log/internal/etl"
+	"github.com/navapbc/its-log/internal/schema"
 	"github.com/navapbc/its-log/internal/types"
 )
 
@@ -29,8 +30,19 @@ func SummaryCreate(c *gin.Context) {
 	appId := base.GetOrPanic(c, "AppId")
 	keyId := base.GetOrPanic(c, "KeyId")
 
-	s := types.NewStorage(appId)
-	err := s.SetDateYMD(body.Date)
+	s, err := types.NewStorage(appId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "error",
+			"method":  c.Request.Method,
+			"message": "could not initialize storage backend",
+			"date":    body.Date,
+			"name":    appId,
+		})
+		return
+	}
+
+	err = s.SetDateYMD(body.Date)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -42,16 +54,17 @@ func SummaryCreate(c *gin.Context) {
 		return
 	}
 
-	err = s.Init()
+	err = s.InitDB()
 	if err != nil {
 		log.Println("storage init error: " + err.Error())
 		panic(err)
 	}
+
 	// We cache whether this is loaded, so it is safe/fast to check every time
 	// we try and load another ETL into the table.
 	pc, _, _, _ := runtime.Caller(0)
 	funcName := runtime.FuncForPC(pc).Name()
-	base.LoadDefaultEtlFiles(s, funcName)
+	etl.LoadDefaultEtlFiles(s, funcName)
 
 	// The tags field comes in as a JSON array. It needs to become
 	// a sorted, dot-separated string.
@@ -63,7 +76,7 @@ func SummaryCreate(c *gin.Context) {
 	// the summary on insert. This saves calling `hash-summaries`
 	// after-the-fact.
 
-	ils := models.ItslogSummary{
+	ils := schema.ItslogSummary{
 		// NOTE: Let the sqlite engine insert the default
 		// LastRun:   time.Now().Unix(),
 		KeyID:     keyId,
@@ -75,7 +88,7 @@ func SummaryCreate(c *gin.Context) {
 	}
 	ils.UpdateHash()
 
-	if err := s.Queries.InsertFullSummary(context.Background(), models.InsertFullSummaryParams{
+	if err := s.Queries.InsertFullSummary(context.Background(), schema.InsertFullSummaryParams{
 		LastRun:   ils.LastRun,
 		KeyID:     ils.KeyID,
 		Date:      ils.Date,

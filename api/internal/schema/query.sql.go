@@ -3,22 +3,29 @@
 //   sqlc v1.30.0
 // source: query.sql
 
-package models
+package schema
 
 import (
 	"context"
 	"database/sql"
+
+	_ "github.com/duckdb/duckdb-go/v2"
 )
 
-const getAllSummaries = `-- name: GetAllSummaries :many
-SELECT id, last_run, date, key_id, operation, tags, value, count, hash FROM itslog_summary
-`
+// const getAllSummaries = `-- name: GetAllSummaries :many
+// SELECT id, last_run, date, key_id, operation, tags, value, count, hash FROM itslog_summary
+// `
 
 // ------------------------------------------------------
 // SUMMARY
 // ------------------------------------------------------
 func (q *Queries) GetAllSummaries(ctx context.Context) ([]ItslogSummary, error) {
-	rows, err := q.db.QueryContext(ctx, getAllSummaries)
+	getAllSummaries, err := SQLDir.ReadFile("sql/get_all_summaries.sql")
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := q.db.QueryContext(ctx, string(getAllSummaries))
 	if err != nil {
 		return nil, err
 	}
@@ -50,13 +57,18 @@ func (q *Queries) GetAllSummaries(ctx context.Context) ([]ItslogSummary, error) 
 	return items, nil
 }
 
-const getDistinctTags = `-- name: GetDistinctTags :many
-SELECT DISTINCT tags
-FROM itslog_events
-`
+// const getDistinctTags = `-- name: GetDistinctTags :many
+// SELECT DISTINCT tags
+// FROM itslog_events
+// `
 
 func (q *Queries) GetDistinctTags(ctx context.Context) ([]string, error) {
-	rows, err := q.db.QueryContext(ctx, getDistinctTags)
+	getDistinctTags, err := SQLDir.ReadFile("sql/get_distinct_tags.sql")
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := q.db.QueryContext(ctx, string(getDistinctTags))
 	if err != nil {
 		return nil, err
 	}
@@ -78,13 +90,13 @@ func (q *Queries) GetDistinctTags(ctx context.Context) ([]string, error) {
 	return items, nil
 }
 
-const getETL = `-- name: GetETL :one
-SELECT name, kind, body, last_run
-FROM itslog_etl
-WHERE
-  name = ?
-LIMIT 1
-`
+// const getETL = `-- name: GetETL :one
+// SELECT name, kind, body, last_run
+// FROM itslog_etl
+// WHERE
+//   name = ?
+// LIMIT 1
+// `
 
 type GetETLRow struct {
 	Name    string
@@ -94,9 +106,14 @@ type GetETLRow struct {
 }
 
 func (q *Queries) GetETL(ctx context.Context, name string) (GetETLRow, error) {
-	row := q.db.QueryRowContext(ctx, getETL, name)
+	getETL, err := SQLDir.ReadFile("sql/get_etl.sql")
+	if err != nil {
+		return GetETLRow{}, err
+	}
+
+	row := q.db.QueryRowContext(ctx, string(getETL), name)
 	var i GetETLRow
-	err := row.Scan(
+	err = row.Scan(
 		&i.Name,
 		&i.Kind,
 		&i.Body,
@@ -105,17 +122,13 @@ func (q *Queries) GetETL(ctx context.Context, name string) (GetETLRow, error) {
 	return i, err
 }
 
-const insertETL = `-- name: InsertETL :exec
-;
-
-
-
-INSERT OR REPLACE INTO itslog_etl (
-  key_id, name, kind, body
-) VALUES (
-  ?, ?, ?, ?
-)
-`
+// const insertETL = `-- name: InsertETL :exec
+// INSERT OR REPLACE INTO itslog_etl (
+//   key_id, name, kind, body
+// ) VALUES (
+//   ?, ?, ?, ?
+// )
+// `
 
 type InsertETLParams struct {
 	KeyID string
@@ -128,7 +141,11 @@ type InsertETLParams struct {
 // ETL
 // ------------------------------------------------------
 func (q *Queries) InsertETL(ctx context.Context, arg InsertETLParams) error {
-	_, err := q.db.ExecContext(ctx, insertETL,
+	insertETL, err := SQLDir.ReadFile("sql/insert_etl.sql")
+	if err != nil {
+		return err
+	}
+	_, err = q.db.ExecContext(ctx, string(insertETL),
 		arg.KeyID,
 		arg.Name,
 		arg.Kind,
@@ -137,13 +154,13 @@ func (q *Queries) InsertETL(ctx context.Context, arg InsertETLParams) error {
 	return err
 }
 
-const insertFullSummary = `-- name: InsertFullSummary :exec
-INSERT OR REPLACE INTO itslog_summary (
-  last_run, key_id, date, operation, tags, value, count, hash
-  ) VALUES (
-  ?, ?, ?, ?, ?, ?, ?, ?
-  )
-`
+// const insertFullSummary = `-- name: InsertFullSummary :exec
+// INSERT OR REPLACE INTO itslog_summary (
+//   last_run, key_id, date, operation, tags, value, count, hash
+//   ) VALUES (
+//   ?, ?, ?, ?, ?, ?, ?, ?
+//   )
+// `
 
 type InsertFullSummaryParams struct {
 	LastRun   int64
@@ -157,7 +174,11 @@ type InsertFullSummaryParams struct {
 }
 
 func (q *Queries) InsertFullSummary(ctx context.Context, arg InsertFullSummaryParams) error {
-	_, err := q.db.ExecContext(ctx, insertFullSummary,
+	insertFullSummary, err := SQLDir.ReadFile("sql/insert_full_summary.sql")
+	if err != nil {
+		return err
+	}
+	_, err = q.db.ExecContext(ctx, string(insertFullSummary),
 		arg.LastRun,
 		arg.KeyID,
 		arg.Date,
@@ -170,13 +191,13 @@ func (q *Queries) InsertFullSummary(ctx context.Context, arg InsertFullSummaryPa
 	return err
 }
 
-const insertSummary = `-- name: InsertSummary :exec
-INSERT OR REPLACE INTO itslog_summary (
-  key_id, date, operation, tags, value, count, hash
-  ) VALUES (
-  ?, ?, ?, ?, ?, ?, ?
-  )
-`
+// const insertSummary = `-- name: InsertSummary :exec
+// INSERT OR REPLACE INTO itslog_summary (
+//   key_id, date, operation, tags, value, count, hash
+//   ) VALUES (
+//   ?, ?, ?, ?, ?, ?, ?
+//   )
+// `
 
 type InsertSummaryParams struct {
 	KeyID     string
@@ -189,7 +210,11 @@ type InsertSummaryParams struct {
 }
 
 func (q *Queries) InsertSummary(ctx context.Context, arg InsertSummaryParams) error {
-	_, err := q.db.ExecContext(ctx, insertSummary,
+	insertSummary, err := SQLDir.ReadFile("sql/insert_summary.sql")
+	if err != nil {
+		return err
+	}
+	_, err = q.db.ExecContext(ctx, string(insertSummary),
 		arg.KeyID,
 		arg.Date,
 		arg.Operation,
@@ -201,15 +226,14 @@ func (q *Queries) InsertSummary(ctx context.Context, arg InsertSummaryParams) er
 	return err
 }
 
-const logEvent = `-- name: LogEvent :one
-
-INSERT INTO itslog_events (
-  timestamp, key_id, cluster, tags, value
-) VALUES (
-  ?, ?, ?, ?, ?
-)
-RETURNING id
-`
+// const logEvent = `-- name: LogEvent :one
+// INSERT INTO itslog_events (
+//   timestamp, key_id, cluster, tags, value
+// ) VALUES (
+//   ?, ?, ?, ?, ?
+// )
+// RETURNING id
+// `
 
 type LogEventParams struct {
 	Timestamp sql.NullInt64
@@ -224,7 +248,12 @@ type LogEventParams struct {
 // LOGGING
 // ------------------------------------------------------
 func (q *Queries) LogEvent(ctx context.Context, arg LogEventParams) (int64, error) {
-	row := q.db.QueryRowContext(ctx, logEvent,
+	logEvent, err := SQLDir.ReadFile("sql/log_event.sql")
+	if err != nil {
+		return -1, err
+	}
+
+	row := q.db.QueryRowContext(ctx, string(logEvent),
 		arg.Timestamp,
 		arg.KeyID,
 		arg.Cluster,
@@ -232,26 +261,26 @@ func (q *Queries) LogEvent(ctx context.Context, arg LogEventParams) (int64, erro
 		arg.Value,
 	)
 	var id int64
-	err := row.Scan(&id)
+	err = row.Scan(&id)
 	return id, err
 }
 
-const readSummaries = `-- name: ReadSummaries :many
-;
+// const readSummaries = `-- name: ReadSummaries :many
+// ;
 
-SELECT 
-  date, 
-  operation, 
-  COALESCE(tags, '') as tags, 
-  value,
-  count
-FROM itslog_summary
-WHERE 
-  tags LIKE COALESCE(?, '%')
-  AND
-  operation LIKE ?
-ORDER BY id
-`
+// SELECT
+//   date,
+//   operation,
+//   COALESCE(tags, '') as tags,
+//   value,
+//   count
+// FROM itslog_summary
+// WHERE
+//   tags LIKE COALESCE(?, '%')
+//   AND
+//   operation LIKE ?
+// ORDER BY id
+// `
 
 type ReadSummariesParams struct {
 	Tags      string
@@ -267,7 +296,11 @@ type ReadSummariesRow struct {
 }
 
 func (q *Queries) ReadSummaries(ctx context.Context, arg ReadSummariesParams) ([]ReadSummariesRow, error) {
-	rows, err := q.db.QueryContext(ctx, readSummaries, arg.Tags, arg.Operation)
+	readSummaries, err := SQLDir.ReadFile("sql/read_summaries.sql")
+	if err != nil {
+		return nil, err
+	}
+	rows, err := q.db.QueryContext(ctx, string(readSummaries), arg.Tags, arg.Operation)
 	if err != nil {
 		return nil, err
 	}
@@ -295,21 +328,21 @@ func (q *Queries) ReadSummaries(ctx context.Context, arg ReadSummariesParams) ([
 	return items, nil
 }
 
-const readSummary = `-- name: ReadSummary :one
-SELECT 
-  date, 
-  operation, 
-  tags, 
-  value,
-  count
-FROM itslog_summary
-WHERE 
-  tags LIKE ?
-  AND
-  operation LIKE ?
-ORDER BY id
-LIMIT 1
-`
+// const readSummary = `-- name: ReadSummary :one
+// SELECT
+//   date,
+//   operation,
+//   tags,
+//   value,
+//   count
+// FROM itslog_summary
+// WHERE
+//   tags LIKE ?
+//   AND
+//   operation LIKE ?
+// ORDER BY id
+// LIMIT 1
+// `
 
 type ReadSummaryParams struct {
 	Tags      string
@@ -325,9 +358,13 @@ type ReadSummaryRow struct {
 }
 
 func (q *Queries) ReadSummary(ctx context.Context, arg ReadSummaryParams) (ReadSummaryRow, error) {
-	row := q.db.QueryRowContext(ctx, readSummary, arg.Tags, arg.Operation)
+	readSummary, err := SQLDir.ReadFile("sql/read_summary.sql")
+	if err != nil {
+		return ReadSummaryRow{}, err
+	}
+	row := q.db.QueryRowContext(ctx, string(readSummary), arg.Tags, arg.Operation)
 	var i ReadSummaryRow
-	err := row.Scan(
+	err = row.Scan(
 		&i.Date,
 		&i.Operation,
 		&i.Tags,
@@ -337,15 +374,19 @@ func (q *Queries) ReadSummary(ctx context.Context, arg ReadSummaryParams) (ReadS
 	return i, err
 }
 
-const updateLastRun = `-- name: UpdateLastRun :exec
-UPDATE itslog_etl
-  SET 
-    last_run = unixepoch() 
-WHERE 
-  name = ?
-`
+// const updateLastRun = `-- name: UpdateLastRun :exec
+// UPDATE itslog_etl
+//   SET
+//     last_run = unixepoch()
+// WHERE
+//   name = ?
+// `
 
 func (q *Queries) UpdateLastRun(ctx context.Context, name string) error {
-	_, err := q.db.ExecContext(ctx, updateLastRun, name)
+	updateLastRun, err := SQLDir.ReadFile("sql/update_last_run.sql")
+	if err != nil {
+		return err
+	}
+	_, err = q.db.ExecContext(ctx, string(updateLastRun), name)
 	return err
 }

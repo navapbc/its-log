@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/navapbc/its-log/internal/base"
 	"github.com/navapbc/its-log/internal/constants"
-	"github.com/navapbc/its-log/internal/schema/models"
+	"github.com/navapbc/its-log/internal/schema"
 	"github.com/navapbc/its-log/internal/types"
 )
 
@@ -31,8 +31,19 @@ func SummaryRead(c *gin.Context) {
 
 	appId := base.GetOrPanic(c, "AppId")
 
-	s := types.NewStorage(appId)
-	err := s.SetDateYMD(body.Date)
+	s, err := types.NewStorage(appId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "error",
+			"method":  c.Request.Method,
+			"message": "could not initialize storage backend",
+			"date":    body.Date,
+			"name":    appId,
+		})
+		return
+	}
+
+	err = s.SetDateYMD(body.Date)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -44,13 +55,13 @@ func SummaryRead(c *gin.Context) {
 		return
 	}
 
-	err = s.Init()
+	err = s.InitDB()
 	if err != nil {
 		log.Println("storage init error: " + err.Error())
 		panic(err)
 	}
 
-	params := models.ReadSummaryParams{
+	params := schema.ReadSummaryParams{
 		Tags:      body.Tags,
 		Operation: body.Operation,
 	}

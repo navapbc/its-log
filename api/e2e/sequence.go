@@ -7,6 +7,7 @@ import (
 
 	"github.com/navapbc/its-log/internal/base"
 	"github.com/navapbc/its-log/internal/constants"
+	"github.com/navapbc/its-log/internal/etl"
 	"github.com/navapbc/its-log/internal/types"
 )
 
@@ -18,9 +19,15 @@ func RunSequence(t *testing.T, dateOffset int, sequenceName string) *types.Stora
 	if err != nil {
 		panic("could not find key for pupper/pup_admin")
 	}
-	s := types.NewStorage(apiKey.AppId)
+	s, err := types.NewStorage(apiKey.AppId)
+	if err != nil {
+		t.Error(err)
+	}
 	s.SetDateILT(date)
-	s.Init()
+	err = s.InitDB()
+	if err != nil {
+		t.Error(err)
+	}
 
 	// DEBUG LOG
 	// log.Printf("RunSequence: %s <- %s\n", s.ILTime.AsYYYYMMDD(), s.Filename)
@@ -29,7 +36,7 @@ func RunSequence(t *testing.T, dateOffset int, sequenceName string) *types.Stora
 	// default ETLs. For testing, we have to force the issue.
 	pc, _, _, _ := runtime.Caller(0)
 	funcName := runtime.FuncForPC(pc).Name()
-	base.LoadDefaultEtlFiles(s, funcName)
+	etl.LoadDefaultEtlFiles(s, funcName)
 
 	target := "/v1" + constants.SEQUENCE_RUN
 	target = strings.Replace(target, ":date", date.AsYYYYMMDD(), -1)

@@ -51,14 +51,17 @@ func Backup(etlP *types.RunEtlParams) error {
 		// We want to copy a database file at a given location.
 		// Create a storage object, and close it.
 		date := d.(string)
-		storage := types.NewStorage(etlP.AppId)
-		err := storage.SetDateYMD(date)
+		storage, err := types.NewStorage(etlP.AppId)
+		if err != nil {
+			return fmt.Errorf("could not initialize storage: %s", etlP.AppId)
+		}
+		err = storage.SetDateYMD(date)
 		if err != nil {
 			return fmt.Errorf("could not parse date; must be YYYY-MM-DD: %s", date)
 		}
-		err = storage.Init()
+		err = storage.InitDB()
 		if err != nil {
-			log.Println("storage init error: " + err.Error())
+			log.Println("past storage init error: " + err.Error())
 			panic(err)
 		}
 
