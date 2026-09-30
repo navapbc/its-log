@@ -53,7 +53,6 @@ func queryFun(etlP *types.RunEtlParams) func(_ *starlark.Thread, _ *starlark.Bui
 		}
 
 		// DEBUG LOG
-		// log.Println("golang", queryString)
 
 		resultList := starlark.NewList([]starlark.Value{})
 		for rows.Next() {
@@ -90,6 +89,7 @@ func queryFun(etlP *types.RunEtlParams) func(_ *starlark.Thread, _ *starlark.Bui
 					resultList.Append(d)
 				}
 			}
+
 		}
 
 		return resultList, nil
@@ -165,7 +165,7 @@ func etlRunStarlark(etlP *types.RunEtlParams, row models.GetETLRow, tx *sql.Tx) 
 			case "value":
 				v, found, _ := elem.(*starlark.Dict).Get(k)
 				if found {
-					srjs.Tags, _ = starlark.AsString(v)
+					srjs.Value, _ = starlark.AsString(v)
 				}
 			case "count":
 				v, found, _ := elem.(*starlark.Dict).Get(k)
