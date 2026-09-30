@@ -1,3 +1,6 @@
+# We do not want to track metrics for the following app names
+APP_NAMES_TO_IGNORE = ['TestApp', 'BlueButton Client (Test - Internal Use Only)', 'MyMedicare PROD', 'new-relic', 'datadog']
+
 REQUEST_RESPONSE_MIDDLEWARE_TYPE = 'request_response_middleware'
 
 AUDIT_EVENT_TYPES = [
@@ -403,7 +406,7 @@ def evaluate_audit_metrics(tags):
         if auth_status == "OK" and (allow == "True" or allow == True) and auth_share_samhsa_data == "":
             if is_real(crosswalk_fhir_id, crosswalk_fhir_id_v3):
                 matched.append("app_auth_samhsa_not_presented_real_bene_count")
-            else:               
+            else:           
                 matched.append("app_auth_samhsa_not_presented_synthetic_bene_count")
 
     if event_type == "AccessToken":
@@ -465,6 +468,7 @@ def summarize():
     for event in events:
     # for event_dict in EVENTS:
         event_dict = json.decode(event.get('value'))
+        print("THE EVENT: ", event_dict)
 
         app_name = event_dict.get('app_name')
         app_id = event_dict.get('app_id')
