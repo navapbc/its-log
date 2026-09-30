@@ -1,50 +1,3 @@
-SUMMARIES = [
-    {'operation': 'app_fhir_v3_patient_call_synthetic_count', 'tags': '2.local postman', 'value': '6'},
-    {'operation': 'app_fhir_v2_patient_call_synthetic_count', 'tags': '2.local postman', 'value': '1'},
-    {'operation': 'app_fhir_v1_patient_call_synthetic_count', 'tags': '2.local postman', 'value': '1'},
-    {'operation': 'app_fhir_v1_coverage_call_synthetic_count', 'tags': '2.local postman', 'value': '1'},
-    {'operation': 'app_fhir_v3_coverage_call_synthetic_count', 'tags': '2.local postman', 'value': '4'},
-    {'operation': 'app_fhir_v2_coverage_call_synthetic_count', 'tags': '2.local postman', 'value': '3'},
-    {'operation': 'app_fhir_v1_eob_call_synthetic_count', 'tags': '2.local postman', 'value': '6'},
-    {'operation': 'app_fhir_v1_call_synthetic_count', 'tags': '2.local postman', 'value': '8'},
-    {'operation': 'app_fhir_v2_eob_call_synthetic_count', 'tags': '2.local postman', 'value': '9'},
-    {'operation': 'app_fhir_v2_call_synthetic_count', 'tags': '2.local postman', 'value': '13'},
-    {'operation': 'app_fhir_v3_eob_call_synthetic_count', 'tags': '2.local postman', 'value': '2'},
-    {'operation': 'app_fhir_v3_call_synthetic_count', 'tags': '2.local postman', 'value': '12'},
-    {'operation': 'app_token_refresh_response_2xx_count', 'tags': '2.local postman', 'value': '2'},
-    {'operation': 'app_token_authorization_code_2xx_count', 'tags': '2.local postman', 'value': '4'},
-    {'operation': 'app_token_authorization_code_for_synthetic_bene_count', 'tags': '2.local postman', 'value': '4'},
-    {'operation': 'app_approval_view_post_ok_synthetic_count', 'tags': '2.local postman', 'value': '4'},
-    {'operation': 'app_auth_demoscope_required_choice_sharing_synthetic_bene_count', 'tags': '2.local postman', 'value': '4'},
-    {'operation': 'app_auth_ok_synthetic_bene_distinct_count', 'tags': '2.local postman', 'value': '4'},
-    {'operation': 'app_auth_ok_synthetic_bene_count', 'tags': '2.local postman', 'value': '4'},
-    {'operation': 'app_approval_view_get_ok_synthetic_count', 'tags': '2.local postman', 'value': '4'},
-    {'operation': 'app_sls_callback_ok_synthetic_count', 'tags': '2.local postman', 'value': '4'},
-    {'operation': 'app_authentication_matched_new_bene_synthetic_count', 'tags': '2.local postman', 'value': '4'},
-    {'operation': 'app_authentication_start_ok_count', 'tags': '2.local postman', 'value': '4'},
-    {'operation': 'app_medicare_login_redirect_ok_count', 'tags': '2.local postman', 'value': '4'},
-    {'operation': 'app_authorize_initial_count', 'tags': '2.local postman', 'value': '12'},
-    {'operation': 'app_fhir_v3_coverage_call_synthetic_count', 'tags': '1.TestApp', 'value': '1'},
-    {'operation': 'app_fhir_v3_patient_call_synthetic_count', 'tags': '1.TestApp', 'value': '1'},
-    {'operation': 'app_fhir_v3_eob_call_synthetic_count',	'tags': '1.TestApp', 'value': '1'},
-    {'operation': 'app_fhir_v3_call_synthetic_count', 'tags': '1.TestApp', 'value': '3'},
-    {'operation': 'app_fhir_v2_coverage_call_synthetic_count', 'tags': '1.TestApp', 'value': '1'},
-    {'operation': 'app_fhir_v2_patient_call_synthetic_count', 'tags': '1.TestApp', 'value': '1'},
-    {'operation': 'app_fhir_v2_eob_call_synthetic_count', 'tags': '1.TestApp', 'value': '1'},
-    {'operation': 'app_fhir_v2_call_synthetic_count', 'tags': '1.TestApp', 'value': 	'3'},
-    {'operation': 'app_token_authorization_code_for_synthetic_bene_count', 'tags': '1.TestApp', 'value': '2'},
-    {'operation': 'app_approval_view_post_ok_synthetic_count', 'tags': '1.TestApp', 'value': '2'},
-    {'operation': 'app_auth_demoscope_required_choice_sharing_synthetic_bene_count', 'tags': '1.TestApp', 'value': '2'},
-    {'operation': 'app_auth_ok_synthetic_bene_distinct_count', 'tags': '1.TestApp', 'value': '2'},
-    {'operation': 'app_auth_ok_synthetic_bene_count', 'tags': '1.TestApp', 'value': '2'},
-    {'operation': 'app_approval_view_get_ok_synthetic_count', 'tags': '1.TestApp', 'value': '2'},
-    {'operation': 'app_sls_callback_ok_synthetic_count', 'tags': '1.TestApp', 'value': '2'},
-    {'operation': 'app_authentication_matched_new_bene_synthetic_count', 'tags': '1.TestApp', 'value': '2'},
-    {'operation': 'app_authentication_start_ok_count', 'tags': '1.TestApp', 'value': '2'},
-    {'operation': 'app_medicare_login_redirect_ok_count', 'tags': '1.TestApp', 'value': '2'},
-    {'operation': 'app_authorize_initial_count', 'tags': '1.TestApp', 'value': '6'}
-]
-
 APP_GLOBAL_PAIRS = {
     'fhir_v1_patient_call_synthetic_count': 'app_fhir_v1_patient_call_synthetic_count',
     'fhir_v1_coverage_call_synthetic_count': 'app_fhir_v1_coverage_call_synthetic_count',
@@ -90,11 +43,27 @@ APP_GLOBAL_PAIRS = {
     'fhir_v3_eob_since_call_synthetic_count': 'app_fhir_v3_eob_since_call_synthetic_count',
     'fhir_v3_eob_since_call_real_count': 'app_fhir_v3_eob_since_call_real_count',
 
+    'app_all_fhir_v3_eob_shared_systems_call_real_count': 'app_fhir_v3_eob_shared_systems_call_real_count',
+    'app_all_fhir_v3_eob_shared_systems_call_synthetic_count': 'app_fhir_v3_eob_shared_systems_call_synthetic_count',
+
     'auth_v1_v2_user_makes_it_to_permission_screen_bene_count': 'app_auth_v1_v2_user_makes_it_to_permission_screen_bene_count',
     'auth_v1_v2_user_clicks_connect_bene_count': 'app_auth_v1_v2_user_clicks_connect_bene_count',
     'auth_v3_user_makes_it_to_permission_screen_bene_count': 'app_auth_v3_user_makes_it_to_permission_screen_bene_count',
-    'auth_v3_user_clicks_connect_bene_count': 'app_auth_v3_user_clicks_connect_bene_count'
+    'auth_v3_user_clicks_connect_bene_count': 'app_auth_v3_user_clicks_connect_bene_count',
+
+    'auth_samhsa_presented_sharing_real_bene_count': 'app_auth_samhsa_presented_sharing_real_bene_count',
+    'auth_samhsa_presented_sharing_synthetic_bene_count': 'app_auth_samhsa_presented_sharing_synthetic_bene_count',
+    'auth_samhsa_presented_not_sharing_real_bene_count': 'app_auth_samhsa_presented_not_sharing_real_bene_count',
+    'auth_samhsa_presented_not_sharing_synthetic_bene_count': 'app_auth_samhsa_presented_not_sharing_synthetic_bene_count',
+    'auth_samhsa_not_presented_real_bene_count': 'app_auth_samhsa_not_presented_real_bene_count',
+    'auth_samhsa_not_presented_synthetic_bene_count': 'app_auth_samhsa_not_presented_synthetic_bene_count',
+
+    'app_all_successful_client_credentials_call': 'app_successful_client_credentials_call',
+    'app_all_unsuccessful_client_credentials_call': 'app_unsuccessful_client_credentials_call',
+    'app_all_successful_patient_match_call': 'app_successful_patient_match_call',
+    'app_all_unsuccessful_patient_match_call': 'app_unsuccessful_patient_match_call'
 }
+
 
 # needed this function as starlark does not seem to have a sum function
 def sum_total(list_of_summary_values):

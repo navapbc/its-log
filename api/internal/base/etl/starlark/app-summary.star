@@ -1,223 +1,3 @@
-# Sample of actual itslog_event records. Used in testing
-# To use in testing, uncomment out the summarize() call at the bottom of the file,
-# comment out the query where events is set.
-# And in summarize, rather than for event in events, comment that line out and uncomment the
-# for event in EVENTS line
-EVENTS = [
-    {"app_id": 2, "app_name": "local postman", "fhir_id_v2": "-10000010257297", "fhir_id_v3": "-279722155", "path": "/v3/fhir/Patient/-279722155", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": 2, "app_name": "local postman", "fhir_id_v2": "-10000010257297", "fhir_id_v3": "-279722155", "path": "/v3/fhir/Patient/-279722155", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": 2, "app_name": "local postman", "fhir_id_v2": "-10000010257297", "fhir_id_v3": "-279722155", "path": "/v3/fhir/Patient/-279722155", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": 2, "app_name": "local postman", "fhir_id_v2": "-10000010257297", "fhir_id_v3": "-279722155", "path": "/v3/fhir/Patient/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": 2, "app_name": "local postman", "fhir_id_v2": "-10000010257297", "fhir_id_v3": "-279722155", "path": "/v3/fhir/Patient/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": 2, "app_name": "local postman", "fhir_id_v2": "-10000010257297", "fhir_id_v3": "-279722155", "path": "/v3/fhir/Patient/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": 2, "app_name": "local postman", "fhir_id_v2": "-10000010257297", "fhir_id_v3": "-279722155", "path": "/v2/fhir/Patient/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": 2, "app_name": "local postman", "fhir_id_v2": "-10000010257297", "fhir_id_v3": "-279722155", "path": "/v1/fhir/Patient/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": 2, "app_name": "local postman", "fhir_id_v2": "-10000010257297", "fhir_id_v3": "-279722155", "path": "/v3/fhir/Coverage/dual--279722155", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": 2, "app_name": "local postman", "fhir_id_v2": "-10000010257297", "fhir_id_v3": "-279722155", "path": "/v3/fhir/Coverage/dual--279722155", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": 2, "app_name": "local postman", "fhir_id_v2": "-10000010257297", "fhir_id_v3": "-279722155", "path": "/v3/fhir/Coverage/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": 2, "app_name": "local postman", "fhir_id_v2": "-10000010257297", "fhir_id_v3": "-279722155", "path": "/v1/fhir/Coverage/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": 2, "app_name": "local postman", "fhir_id_v2": "-10000010257297", "fhir_id_v3": "-279722155", "path": "/v3/fhir/Coverage/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": 2, "app_name": "local postman", "fhir_id_v2": "-10000010257297", "fhir_id_v3": "-279722155", "path": "/v2/fhir/Coverage/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": 2, "app_name": "local postman", "fhir_id_v2": "-10000010257297", "fhir_id_v3": "-279722155", "path": "/v2/fhir/Coverage/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": 2, "app_name": "local postman", "fhir_id_v2": "-10000010257297", "fhir_id_v3": "-279722155", "path": "/v2/fhir/Coverage/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": "2", "app_name": "local postman", "auth_crosswalk_action": "C", "auth_grant_type": "authorization_code", "auth_require_demographic_scopes": "True", "path": "/v2/o/token/", "request_method": "POST", "response_code": 200, "type": "request_response_middleware"},
-    {"action": "authorized", "auth_crosswalk_action": "C", "auth_grant_type": "authorization_code", "auth_require_demographic_scopes": "True", "path": "/v2/o/token/", "type": "AccessToken", "fhir_id_v2": "-10000010257297", "app_id": "2", "app_name": "local postman"},
-    {"app_id": "2", "app_name": "local postman", "auth_crosswalk_action": "C", "auth_require_demographic_scopes": "True", "fhir_id_v2": "-10000010257297", "fhir_id_v3": "-279722155", "path": "/v2/o/authorize/cd8c4e8d-5c61-4ee0-86b1-53258e016d51/", "request_method": "POST", "response_code": 302, "type": "request_response_middleware"},
-    {"allow": "True", "auth_crosswalk_action": "C", "auth_require_demographic_scopes": "True", "auth_status": "OK", "path": "/v2/o/authorize/cd8c4e8d-5c61-4ee0-86b1-53258e016d51/", "share_demographic_scopes": "True", "type": "Authorization", "fhir_id_v2": "-10000010257297", "fhir_id_v3": "-279722155", "app_id": "2", "app_name": "local postman"},
-    {"app_id": "2", "app_name": "local postman", "auth_crosswalk_action": "C", "auth_require_demographic_scopes": "True", "fhir_id_v2": "-10000010257297", "fhir_id_v3": "-279722155", "path": "/v2/o/authorize/cd8c4e8d-5c61-4ee0-86b1-53258e016d51/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": "2", "app_name": "local postman", "auth_crosswalk_action": "C", "auth_require_demographic_scopes": "True", "fhir_id_v2": "-10000010257297", "fhir_id_v3": "-279722155", "path": "/mymedicare/sls-callback", "request_method": "GET", "response_code": 302, "type": "request_response_middleware", "auth_path": "/v2/o/authorize/cd8c4e8d-5c61-4ee0-86b1-53258e016d51/"},
-    {"auth_require_demographic_scopes": "True", "fhir_id_v2": "-10000010257297", "fhir_id_v3": "-279722155", "type": "mymedicare_cb:get_and_update_user_initial_auth", "app_id": "2", "app_name": "local postman"},
-    {"auth_crosswalk_action": "C", "auth_require_demographic_scopes": "True", "path": "v2/mymedicare/sls-callback", "type": "Authentication:success", "fhir_id_v2": "-10000010257297", "fhir_id_v3": "-279722155", "app_id": "2", "app_name": "local postman"},
-    {"auth_require_demographic_scopes": "True", "fhir_id_v2": "-10000010257297", "fhir_id_v3": "-279722155", "type": "mymedicare_cb:create_beneficiary_record", "app_id": "2", "app_name": "local postman"},
-    {"auth_require_demographic_scopes": "True", "fhir_id_v2": "-279722155", "type": "fhir.server.authentication.match_fhir_id", "app_id": "2", "app_name": "local postman"},
-    {"auth_require_demographic_scopes": "True", "path": "patient search", "type": "fhir_auth_pre_fetch", "app_id": "2", "app_name": "local postman"},
-    {"auth_require_demographic_scopes": "True", "fhir_id_v2": "-10000010257297", "type": "fhir.server.authentication.match_fhir_id", "app_id": "2", "app_name": "local postman"},
-    {"auth_require_demographic_scopes": "True", "path": "patient search", "type": "fhir_auth_pre_fetch", "app_id": "2", "app_name": "local postman"},
-    {"auth_require_demographic_scopes": "True", "path": "v2/mymedicare/sls-callback", "sls_userinfo_status_code": 200, "type": "Authentication:start", "app_id": "2", "app_name": "local postman"},
-    {"auth_require_demographic_scopes": "True", "path": "/v1/users/0854b464-cb92-40f2-8897-414c79fcd62f", "type": "SLSx_userinfo", "response_code": 403, "app_id": "2", "app_name": "local postman"},
-    {"auth_require_demographic_scopes": "True", "path": "/v1/users/0854b464-cb92-40f2-8897-414c79fcd62f", "type": "SLSx_userinfo", "response_code": 200, "app_id": "2", "app_name": "local postman"},
-    {"auth_require_demographic_scopes": "True", "path": "/sso/session", "type": "SLSx_token", "response_code": 200, "app_id": "2", "app_name": "local postman"},
-    {"app_id": "2", "app_name": "local postman", "auth_require_demographic_scopes": "True", "path": "/mymedicare/login", "request_method": "GET", "response_code": 302, "type": "request_response_middleware"},
-    {"app_id": "2", "app_name": "local postman", "auth_require_demographic_scopes": "True", "path": "/v2/o/authorize/", "request_method": "GET", "response_code": 302, "type": "request_response_middleware"},
-    {"app_id": 2, "app_name": "local postman", "fhir_id_v2": "-10000010257292", "fhir_id_v3": "-982745970", "path": "/v2/fhir/ExplanationOfBenefit/carrier--10000930145217", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": 2, "app_name": "local postman", "fhir_id_v2": "-10000010257292", "fhir_id_v3": "-982745970", "path": "/v1/fhir/ExplanationOfBenefit/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": 2, "app_name": "local postman", "fhir_id_v2": "-10000010257292", "fhir_id_v3": "-982745970", "path": "/v2/fhir/ExplanationOfBenefit/carrier--10000930145217", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": 2, "app_name": "local postman", "fhir_id_v2": "-10000010257292", "fhir_id_v3": "-982745970", "path": "/v2/fhir/Coverage/", "request_method": "GET", "response_code": 403, "type": "request_response_middleware"},
-    {"app_id": 2, "app_name": "local postman", "fhir_id_v2": "-10000010257292", "fhir_id_v3": "-982745970", "path": "/v3/fhir/Coverage/:resource_id", "request_method": "GET", "response_code": 403, "type": "request_response_middleware"},
-    {"app_id": 2, "app_name": "local postman", "fhir_id_v2": "-10000010257292", "fhir_id_v3": "-982745970", "path": "/v1/fhir/Patient/", "request_method": "GET", "response_code": 403, "type": "request_response_middleware"},
-    {"app_id": "2", "app_name": "local postman", "auth_crosswalk_action": "C", "auth_grant_type": "authorization_code", "auth_require_demographic_scopes": "True", "path": "/v2/o/token/", "request_method": "POST", "response_code": 200, "type": "request_response_middleware"},
-    {"action": "authorized", "auth_crosswalk_action": "C", "auth_grant_type": "authorization_code", "auth_require_demographic_scopes": "True", "path": "/v2/o/token/", "type": "AccessToken", "fhir_id_v2": "-10000010256655", "app_id": "2", "app_name": "local postman"},
-    {"app_id": "2", "app_name": "local postman", "auth_crosswalk_action": "C", "auth_require_demographic_scopes": "True", "fhir_id_v2": "-10000010256655", "fhir_id_v3": "-555129999", "path": "/v2/o/authorize/d476a6bd-d146-47f9-bf2b-147d69dd79f1/", "request_method": "POST", "response_code": 302, "type": "request_response_middleware"},
-    {"allow": "True", "auth_crosswalk_action": "C", "auth_require_demographic_scopes": "True", "auth_status": "OK", "path": "/v2/o/authorize/d476a6bd-d146-47f9-bf2b-147d69dd79f1/", "share_demographic_scopes": "True", "type": "Authorization", "fhir_id_v2": "-10000010256655", "fhir_id_v3": "-555129999", "app_id": "2", "app_name": "local postman"},
-    {"app_id": "2", "app_name": "local postman", "auth_crosswalk_action": "C", "auth_require_demographic_scopes": "True", "fhir_id_v2": "-10000010256655", "fhir_id_v3": "-555129999", "path": "/v2/o/authorize/d476a6bd-d146-47f9-bf2b-147d69dd79f1/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": "2", "app_name": "local postman", "auth_crosswalk_action": "C", "auth_require_demographic_scopes": "True", "fhir_id_v2": "-10000010256655", "fhir_id_v3": "-555129999", "path": "/mymedicare/sls-callback", "request_method": "GET", "response_code": 302, "type": "request_response_middleware", "auth_path": "/v2/o/authorize/d476a6bd-d146-47f9-bf2b-147d69dd79f1/"},
-    {"auth_require_demographic_scopes": "True", "fhir_id_v2": "-10000010256655", "fhir_id_v3": "-555129999", "type": "mymedicare_cb:get_and_update_user_initial_auth", "app_id": "2", "app_name": "local postman"},
-    {"auth_crosswalk_action": "C", "auth_require_demographic_scopes": "True", "path": "v2/mymedicare/sls-callback", "type": "Authentication:success", "fhir_id_v2": "-10000010256655", "fhir_id_v3": "-555129999", "app_id": "2", "app_name": "local postman"},
-    {"auth_require_demographic_scopes": "True", "fhir_id_v2": "-10000010256655", "fhir_id_v3": "-555129999", "type": "mymedicare_cb:create_beneficiary_record", "app_id": "2", "app_name": "local postman"},
-    {"auth_require_demographic_scopes": "True", "fhir_id_v2": "-555129999", "type": "fhir.server.authentication.match_fhir_id", "app_id": "2", "app_name": "local postman"},
-    {"auth_require_demographic_scopes": "True", "fhir_id_v2": "-10000010256655", "type": "fhir.server.authentication.match_fhir_id", "app_id": "2", "app_name": "local postman"},
-    {"auth_require_demographic_scopes": "True", "path": "patient search", "type": "fhir_auth_pre_fetch", "app_id": "2", "app_name": "local postman"},
-    {"auth_require_demographic_scopes": "True", "path": "patient search", "type": "fhir_auth_pre_fetch", "app_id": "2", "app_name": "local postman"},
-    {"auth_require_demographic_scopes": "True", "path": "v2/mymedicare/sls-callback", "sls_userinfo_status_code": 200, "type": "Authentication:start", "app_id": "2", "app_name": "local postman"},
-    {"auth_require_demographic_scopes": "True", "path": "/v1/users/0854b45f-4812-4789-a1bc-2ea791eed6ed", "type": "SLSx_userinfo", "response_code": 403, "app_id": "2", "app_name": "local postman"},
-    {"auth_require_demographic_scopes": "True", "path": "/v1/users/0854b45f-4812-4789-a1bc-2ea791eed6ed", "type": "SLSx_userinfo", "response_code": 200, "app_id": "2", "app_name": "local postman"},
-    {"auth_require_demographic_scopes": "True", "path": "/sso/session", "type": "SLSx_token", "response_code": 200, "app_id": "2", "app_name": "local postman"},
-    {"app_id": "2", "app_name": "local postman", "auth_require_demographic_scopes": "True", "path": "/mymedicare/login", "request_method": "GET", "response_code": 302, "type": "request_response_middleware"},
-    {"app_id": "2", "app_name": "local postman", "auth_require_demographic_scopes": "True", "path": "/v2/o/authorize/", "request_method": "GET", "response_code": 302, "type": "request_response_middleware"},
-    {"app_id": "", "app_name": "", "path": "/admin/jsi18n/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": "", "app_name": "", "path": "/admin/bluebutton/myapplication/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": "", "app_name": "", "path": "/admin/bluebutton/myapplication/2/change/", "request_method": "POST", "response_code": 302, "type": "request_response_middleware"},
-    {"app_id": "", "app_name": "", "path": "/admin/jsi18n/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": "", "app_name": "", "path": "/admin/bluebutton/myapplication/2/change/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": "", "app_name": "", "path": "/admin/jsi18n/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": "", "app_name": "", "path": "/admin/bluebutton/myapplication/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": "", "app_name": "", "path": "/admin/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": "", "app_name": "", "path": "/admin/login/", "request_method": "POST", "response_code": 302, "type": "request_response_middleware"},
-    {"app_id": "", "app_name": "", "path": "/admin/login/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": "", "app_name": "", "path": "/admin/", "request_method": "GET", "response_code": 302, "type": "request_response_middleware"},
-    {"app_id": "", "app_name": "", "path": "/admin", "request_method": "GET", "response_code": 301, "type": "request_response_middleware"},
-    {"app_id": 2, "app_name": "local postman", "path": "/v3/o/token/", "request_method": "POST", "response_code": 200, "type": "request_response_middleware", "auth_grant_type": "refresh_token"},
-    {"fhir_id_v2": "-10000010257292", "fhir_id_v3": "-982745970", "type": "mymedicare_cb:get_and_update_user_refresh"},
-    {"fhir_id_v2": "-982745970", "type": "fhir.server.authentication.match_fhir_id"},
-    {"path": "patient search", "type": "fhir_auth_pre_fetch"},
-    {"fhir_id_v2": "-10000010257292", "type": "fhir.server.authentication.match_fhir_id"},
-    {"path": "patient search", "type": "fhir_auth_pre_fetch"},
-    {"action": "authorized", "path": "/v3/o/token/", "type": "AccessToken", "fhir_id_v2": "-10000010257292", "app_id": 2, "app_name": "local postman"},
-    {"action": "revoked", "type": "AccessToken", "fhir_id_v2": "-10000010257292", "app_id": 2, "app_name": "local postman"},
-    {"app_id": 2, "app_name": "local postman", "fhir_id_v2": "-10000010257292", "fhir_id_v3": "-982745970", "path": "/v1/fhir/Patient/", "request_method": "GET", "response_code": 403, "type": "request_response_middleware"},
-    {"app_id": 2, "app_name": "local postman", "path": "/v/fhir/Coverage/", "request_method": "GET", "response_code": 404, "type": "request_response_middleware"},
-    {"app_id": 2, "app_name": "local postman", "fhir_id_v2": "-10000010257292", "fhir_id_v3": "-982745970", "path": "/v3/fhir/Coverage/", "request_method": "GET", "response_code": 403, "type": "request_response_middleware"},
-    {"app_id": 2, "app_name": "local postman", "fhir_id_v2": "-10000010257292", "fhir_id_v3": "-982745970", "path": "/v3/fhir/Coverage/", "request_method": "GET", "response_code": 403, "type": "request_response_middleware"},
-    {"app_id": 2, "app_name": "local postman", "fhir_id_v2": "-10000010257292", "fhir_id_v3": "-982745970", "path": "/v1/fhir/ExplanationOfBenefit/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": "2", "app_name": "local postman", "auth_crosswalk_action": "C", "auth_grant_type": "authorization_code", "auth_require_demographic_scopes": "True", "path": "/v2/o/token/", "request_method": "POST", "response_code": 200, "type": "request_response_middleware"},
-    {"action": "authorized", "auth_crosswalk_action": "C", "auth_grant_type": "authorization_code", "auth_require_demographic_scopes": "True", "path": "/v2/o/token/", "type": "AccessToken", "fhir_id_v2": "-10000010255002", "app_id": "2", "app_name": "local postman"},
-    {"app_id": "2", "app_name": "local postman", "auth_crosswalk_action": "C", "auth_require_demographic_scopes": "True", "fhir_id_v2": "-10000010255002", "fhir_id_v3": "-866682817", "path": "/v2/o/authorize/f7c4d629-74e6-4451-88b1-3846648a4f29/", "request_method": "POST", "response_code": 302, "type": "request_response_middleware"},
-    {"allow": "True", "auth_crosswalk_action": "C", "auth_require_demographic_scopes": "True", "auth_status": "OK", "path": "/v2/o/authorize/f7c4d629-74e6-4451-88b1-3846648a4f29/", "share_demographic_scopes": "True", "type": "Authorization", "fhir_id_v2": "-10000010255002", "fhir_id_v3": "-866682817", "app_id": "2", "app_name": "local postman"},
-    {"app_id": "2", "app_name": "local postman", "auth_crosswalk_action": "C", "auth_require_demographic_scopes": "True", "fhir_id_v2": "-10000010255002", "fhir_id_v3": "-866682817", "path": "/v2/o/authorize/f7c4d629-74e6-4451-88b1-3846648a4f29/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": "2", "app_name": "local postman", "auth_crosswalk_action": "C", "auth_require_demographic_scopes": "True", "fhir_id_v2": "-10000010255002", "fhir_id_v3": "-866682817", "path": "/mymedicare/sls-callback", "request_method": "GET", "response_code": 302, "type": "request_response_middleware", "auth_path": "/v2/o/authorize/f7c4d629-74e6-4451-88b1-3846648a4f29/"},
-    {"auth_crosswalk_action": "C", "auth_require_demographic_scopes": "True", "path": "v2/mymedicare/sls-callback", "type": "Authentication:success", "fhir_id_v2": "-10000010255002", "fhir_id_v3": "-866682817", "app_id": "2", "app_name": "local postman"},
-    {"auth_require_demographic_scopes": "True", "fhir_id_v2": "-10000010255002", "fhir_id_v3": "-866682817", "type": "mymedicare_cb:get_and_update_user_initial_auth", "app_id": "2", "app_name": "local postman"},
-    {"auth_require_demographic_scopes": "True", "fhir_id_v2": "-10000010255002", "fhir_id_v3": "-866682817", "type": "mymedicare_cb:create_beneficiary_record", "app_id": "2", "app_name": "local postman"},
-    {"auth_require_demographic_scopes": "True", "fhir_id_v2": "-866682817", "type": "fhir.server.authentication.match_fhir_id", "app_id": "2", "app_name": "local postman"},
-    {"auth_require_demographic_scopes": "True", "fhir_id_v2": "-10000010255002", "type": "fhir.server.authentication.match_fhir_id", "app_id": "2", "app_name": "local postman"},
-    {"auth_require_demographic_scopes": "True", "path": "patient search", "type": "fhir_auth_pre_fetch", "app_id": "2", "app_name": "local postman"},
-    {"auth_require_demographic_scopes": "True", "path": "patient search", "type": "fhir_auth_pre_fetch", "app_id": "2", "app_name": "local postman"},
-    {"auth_require_demographic_scopes": "True", "path": "v2/mymedicare/sls-callback", "sls_userinfo_status_code": 200, "type": "Authentication:start", "app_id": "2", "app_name": "local postman"},
-    {"auth_require_demographic_scopes": "True", "path": "/v1/users/0854b44f-1246-40d6-a723-e347a58fb0a1", "type": "SLSx_userinfo", "response_code": 403, "app_id": "2", "app_name": "local postman"},
-    {"auth_require_demographic_scopes": "True", "path": "/v1/users/0854b44f-1246-40d6-a723-e347a58fb0a1", "type": "SLSx_userinfo", "response_code": 200, "app_id": "2", "app_name": "local postman"},
-    {"auth_require_demographic_scopes": "True", "path": "/sso/session", "type": "SLSx_token", "response_code": 200, "app_id": "2", "app_name": "local postman"},
-    {"app_id": "2", "app_name": "local postman", "auth_require_demographic_scopes": "True", "path": "/mymedicare/login", "request_method": "GET", "response_code": 302, "type": "request_response_middleware"},
-    {"app_id": "2", "app_name": "local postman", "auth_require_demographic_scopes": "True", "path": "/v2/o/authorize/", "request_method": "GET", "response_code": 302, "type": "request_response_middleware"},
-    {"app_id": 2, "app_name": "local postman", "fhir_id_v2": "-10000010257292", "fhir_id_v3": "-982745970", "path": "/v3/fhir/Coverage/", "request_method": "GET", "response_code": 403, "type": "request_response_middleware"},
-    {"app_id": 2, "app_name": "local postman", "fhir_id_v2": "-10000010257292", "fhir_id_v3": "-982745970", "path": "/v3/fhir/Coverage/", "request_method": "GET", "response_code": 403, "type": "request_response_middleware"},
-    {"app_id": 2, "app_name": "local postman", "fhir_id_v2": "-10000010257292", "fhir_id_v3": "-982745970", "path": "/v2/fhir/ExplanationOfBenefit/carrier--10000930145217", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": 2, "app_name": "local postman", "fhir_id_v2": "-10000010257292", "fhir_id_v3": "-982745970", "path": "/v2/fhir/ExplanationOfBenefit/carrier--10000930145217", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": 2, "app_name": "local postman", "fhir_id_v2": "-10000010257292", "fhir_id_v3": "-982745970", "path": "/v2/fhir/ExplanationOfBenefit/carrier--10000930145217", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": 2, "app_name": "local postman", "fhir_id_v2": "-10000010257292", "fhir_id_v3": "-982745970", "path": "/v1/fhir/ExplanationOfBenefit/carrier--10000930145217", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": 2, "app_name": "local postman", "fhir_id_v2": "-10000010257292", "fhir_id_v3": "-982745970", "path": "/v1/fhir/ExplanationOfBenefit/carrier--10000930145217", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": 2, "app_name": "local postman", "fhir_id_v2": "-10000010257292", "fhir_id_v3": "-982745970", "path": "/v1/fhir/ExplanationOfBenefit/carrier--10000930145217", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": 2, "app_name": "local postman", "fhir_id_v2": "-10000010257292", "fhir_id_v3": "-982745970", "path": "/v1/fhir/ExplanationOfBenefit/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": 2, "app_name": "local postman", "fhir_id_v2": "-10000010257292", "fhir_id_v3": "-982745970", "path": "/v2/fhir/ExplanationOfBenefit/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": 2, "app_name": "local postman", "fhir_id_v2": "-10000010257292", "fhir_id_v3": "-982745970", "path": "/v2/fhir/ExplanationOfBenefit/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": 2, "app_name": "local postman", "fhir_id_v2": "-10000010257292", "fhir_id_v3": "-982745970", "path": "/v2/fhir/ExplanationOfBenefit/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": 2, "app_name": "local postman", "fhir_id_v2": "-10000010257292", "fhir_id_v3": "-982745970", "path": "/v2/fhir/ExplanationOfBenefit/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": 2, "app_name": "local postman", "fhir_id_v2": "-10000010257292", "fhir_id_v3": "-982745970", "path": "/v3/fhir/ExplanationOfBenefit/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": 2, "app_name": "local postman", "fhir_id_v2": "-10000010257292", "fhir_id_v3": "-982745970", "path": "/v3/fhir/ExplanationOfBenefit/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": 2, "app_name": "local postman", "path": "/v3/o/token/", "request_method": "POST", "response_code": 200, "type": "request_response_middleware", "auth_grant_type": "refresh_token"},
-    {"fhir_id_v2": "-10000010257292", "fhir_id_v3": "-982745970", "type": "mymedicare_cb:get_and_update_user_refresh"},
-    {"fhir_id_v2": "-982745970", "type": "fhir.server.authentication.match_fhir_id"},
-    {"path": "patient search", "type": "fhir_auth_pre_fetch"},
-    {"fhir_id_v2": "-10000010257292", "type": "fhir.server.authentication.match_fhir_id"},
-    {"path": "patient search", "type": "fhir_auth_pre_fetch"},
-    {"action": "authorized", "path": "/v3/o/token/", "type": "AccessToken", "fhir_id_v2": "-10000010257292", "app_id": 2, "app_name": "local postman"},
-    {"action": "revoked", "type": "AccessToken", "fhir_id_v2": "-10000010257292", "app_id": 2, "app_name": "local postman"},
-    {"app_id": "2", "app_name": "local postman", "auth_crosswalk_action": "C", "auth_grant_type": "authorization_code", "auth_require_demographic_scopes": "True", "path": "/v3/o/token/", "request_method": "POST", "response_code": 200, "type": "request_response_middleware"},
-    {"action": "authorized", "auth_crosswalk_action": "C", "auth_grant_type": "authorization_code", "auth_require_demographic_scopes": "True", "path": "/v3/o/token/", "type": "AccessToken", "fhir_id_v2": "-10000010257292", "app_id": "2", "app_name": "local postman"},
-    {"app_id": "2", "app_name": "local postman", "auth_crosswalk_action": "C", "auth_require_demographic_scopes": "True", "fhir_id_v2": "-10000010257292", "fhir_id_v3": "-982745970", "path": "/v3/o/authorize/b4733b07-0a7d-41a7-99f2-2f6c1b3a942e/", "request_method": "POST", "response_code": 302, "type": "request_response_middleware"},
-    {"allow": "True", "auth_crosswalk_action": "C", "auth_require_demographic_scopes": "True", "auth_status": "OK", "path": "/v3/o/authorize/b4733b07-0a7d-41a7-99f2-2f6c1b3a942e/", "share_demographic_scopes": "True", "type": "Authorization", "fhir_id_v2": "-10000010257292", "fhir_id_v3": "-982745970", "app_id": "2", "app_name": "local postman"},
-    {"app_id": "2", "app_name": "local postman", "auth_crosswalk_action": "C", "auth_require_demographic_scopes": "True", "fhir_id_v2": "-10000010257292", "fhir_id_v3": "-982745970", "path": "/v3/o/authorize/b4733b07-0a7d-41a7-99f2-2f6c1b3a942e/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": "2", "app_name": "local postman", "auth_crosswalk_action": "C", "auth_require_demographic_scopes": "True", "fhir_id_v2": "-10000010257292", "fhir_id_v3": "-982745970", "path": "/mymedicare/sls-callback", "request_method": "GET", "response_code": 302, "type": "request_response_middleware", "auth_path": "/v3/o/authorize/b4733b07-0a7d-41a7-99f2-2f6c1b3a942e/"},
-    {"auth_require_demographic_scopes": "True", "fhir_id_v2": "-10000010257292", "fhir_id_v3": "-982745970", "type": "mymedicare_cb:get_and_update_user_initial_auth", "app_id": "2", "app_name": "local postman"},
-    {"auth_crosswalk_action": "C", "auth_require_demographic_scopes": "True", "path": "v3/mymedicare/sls-callback", "type": "Authentication:success", "fhir_id_v2": "-10000010257292", "fhir_id_v3": "-982745970", "app_id": "2", "app_name": "local postman"},
-    {"auth_require_demographic_scopes": "True", "fhir_id_v2": "-10000010257292", "fhir_id_v3": "-982745970", "type": "mymedicare_cb:create_beneficiary_record", "app_id": "2", "app_name": "local postman"},
-    {"auth_require_demographic_scopes": "True", "fhir_id_v2": "-982745970", "type": "fhir.server.authentication.match_fhir_id", "app_id": "2", "app_name": "local postman"},
-    {"auth_require_demographic_scopes": "True", "path": "patient search", "type": "fhir_auth_pre_fetch", "app_id": "2", "app_name": "local postman"},
-    {"auth_require_demographic_scopes": "True", "fhir_id_v2": "-10000010257292", "type": "fhir.server.authentication.match_fhir_id", "app_id": "2", "app_name": "local postman"},
-    {"auth_require_demographic_scopes": "True", "path": "patient search", "type": "fhir_auth_pre_fetch", "app_id": "2", "app_name": "local postman"},
-    {"auth_require_demographic_scopes": "True", "path": "v3/mymedicare/sls-callback", "sls_userinfo_status_code": 200, "type": "Authentication:start", "app_id": "2", "app_name": "local postman"},
-    {"auth_require_demographic_scopes": "True", "path": "/v1/users/0854b464-30c3-44a9-8404-b605926be2af", "type": "SLSx_userinfo", "response_code": 403, "app_id": "2", "app_name": "local postman"},
-    {"auth_require_demographic_scopes": "True", "path": "/v1/users/0854b464-30c3-44a9-8404-b605926be2af", "type": "SLSx_userinfo", "response_code": 200, "app_id": "2", "app_name": "local postman"},
-    {"auth_require_demographic_scopes": "True", "path": "/sso/session", "type": "SLSx_token", "response_code": 200, "app_id": "2", "app_name": "local postman"},
-    {"app_id": "2", "app_name": "local postman", "auth_require_demographic_scopes": "True", "path": "/mymedicare/login", "request_method": "GET", "response_code": 302, "type": "request_response_middleware"},
-    {"app_id": "2", "app_name": "local postman", "auth_require_demographic_scopes": "True", "path": "/v3/o/authorize/", "request_method": "GET", "response_code": 302, "type": "request_response_middleware"},
-    {"app_id": "", "app_name": "", "path": "/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": "", "app_name": "", "path": "/admin/logout/", "request_method": "POST", "response_code": 302, "type": "request_response_middleware"},
-    {"app_id": "", "app_name": "", "path": "/admin/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": "", "app_name": "", "path": "/admin/jsi18n/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": "", "app_name": "", "path": "/admin/auth/user/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": "", "app_name": "", "path": "/admin/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": "", "app_name": "", "path": "/admin/jsi18n/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": "", "app_name": "", "path": "/admin/axes/accessfailurelog/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": "", "app_name": "", "path": "/admin/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": "", "app_name": "", "path": "/admin/login/", "request_method": "POST", "response_code": 302, "type": "request_response_middleware"},
-    {"app_id": "", "app_name": "", "path": "/favicon.ico", "request_method": "GET", "response_code": 404, "type": "request_response_middleware"},
-    {"app_id": "", "app_name": "", "path": "/admin/login/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": "", "app_name": "", "path": "/admin/", "request_method": "GET", "response_code": 302, "type": "request_response_middleware"},
-    {"app_id": "", "app_name": "", "path": "/admin", "request_method": "GET", "response_code": 301, "type": "request_response_middleware"},
-    {"app_id": 1, "app_name": "TestApp", "fhir_id_v2": "-10000010256951", "fhir_id_v3": "-35180292", "path": "/v3/connect/userinfo", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": 1, "app_name": "TestApp", "fhir_id_v2": "-10000010256951", "fhir_id_v3": "-35180292", "path": "/v3/fhir/Coverage/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": 1, "app_name": "TestApp", "fhir_id_v2": "-10000010256951", "fhir_id_v3": "-35180292", "path": "/v3/fhir/Patient/-35180292", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": 1, "app_name": "TestApp", "fhir_id_v2": "-10000010256951", "fhir_id_v3": "-35180292", "path": "/v3/fhir/ExplanationOfBenefit/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": 1, "app_name": "TestApp", "fhir_id_v2": "-10000010256951", "fhir_id_v3": "-35180292", "path": "/v3/connect/userinfo", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": "", "app_name": "", "path": "/v3/o/token", "request_method": "POST", "response_code": 200, "type": "request_response_middleware", "auth_grant_type": "authorization_code"},
-    {"action": "authorized", "auth_crosswalk_action": "C", "auth_grant_type": "authorization_code", "auth_require_demographic_scopes": "True", "path": "/v3/o/token", "type": "AccessToken", "fhir_id_v2": "-10000010256951", "app_id": "1", "app_name": "TestApp"},
-    {"app_id": "1", "app_name": "TestApp", "auth_crosswalk_action": "C", "auth_require_demographic_scopes": "True", "fhir_id_v2": "-10000010256951", "fhir_id_v3": "-35180292", "path": "/v3/o/authorize/3a491c4b-3e32-4d68-a406-a6332692336a/", "request_method": "POST", "response_code": 302, "type": "request_response_middleware"},
-    {"allow": "True", "auth_crosswalk_action": "C", "auth_require_demographic_scopes": "True", "auth_status": "OK", "path": "/v3/o/authorize/3a491c4b-3e32-4d68-a406-a6332692336a/", "share_demographic_scopes": "True", "type": "Authorization", "fhir_id_v2": "-10000010256951", "fhir_id_v3": "-35180292", "app_id": "1", "app_name": "TestApp"},
-    {"app_id": "1", "app_name": "TestApp", "auth_crosswalk_action": "C", "auth_require_demographic_scopes": "True", "fhir_id_v2": "-10000010256951", "fhir_id_v3": "-35180292", "path": "/v3/o/authorize/3a491c4b-3e32-4d68-a406-a6332692336a/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": "1", "app_name": "TestApp", "auth_crosswalk_action": "C", "auth_require_demographic_scopes": "True", "fhir_id_v2": "-10000010256951", "fhir_id_v3": "-35180292", "path": "/mymedicare/sls-callback", "request_method": "GET", "response_code": 302, "type": "request_response_middleware", "auth_path": "/v3/o/authorize/3a491c4b-3e32-4d68-a406-a6332692336a/"},
-    {"auth_crosswalk_action": "C", "auth_require_demographic_scopes": "True", "path": "v3/mymedicare/sls-callback", "type": "Authentication:success", "fhir_id_v2": "-10000010256951", "fhir_id_v3": "-35180292", "app_id": "1", "app_name": "TestApp"},
-    {"auth_require_demographic_scopes": "True", "fhir_id_v2": "-10000010256951", "fhir_id_v3": "-35180292", "type": "mymedicare_cb:get_and_update_user_initial_auth", "app_id": "1", "app_name": "TestApp"},
-    {"auth_require_demographic_scopes": "True", "fhir_id_v2": "-10000010256951", "fhir_id_v3": "-35180292", "type": "mymedicare_cb:create_beneficiary_record", "app_id": "1", "app_name": "TestApp"},
-    {"auth_require_demographic_scopes": "True", "fhir_id_v2": "-35180292", "type": "fhir.server.authentication.match_fhir_id", "app_id": "1", "app_name": "TestApp"},
-    {"auth_require_demographic_scopes": "True", "path": "patient search", "type": "fhir_auth_pre_fetch", "app_id": "1", "app_name": "TestApp"},
-    {"auth_require_demographic_scopes": "True", "fhir_id_v2": "-10000010256951", "type": "fhir.server.authentication.match_fhir_id", "app_id": "1", "app_name": "TestApp"},
-    {"auth_require_demographic_scopes": "True", "path": "patient search", "type": "fhir_auth_pre_fetch", "app_id": "1", "app_name": "TestApp"},
-    {"auth_require_demographic_scopes": "True", "path": "v3/mymedicare/sls-callback", "sls_userinfo_status_code": 200, "type": "Authentication:start", "app_id": "1", "app_name": "TestApp"},
-    {"auth_require_demographic_scopes": "True", "path": "/v1/users/0854b461-03d8-4911-ba71-1bff75735457", "type": "SLSx_userinfo", "response_code": 403, "app_id": "1", "app_name": "TestApp"},
-    {"auth_require_demographic_scopes": "True", "path": "/v1/users/0854b461-03d8-4911-ba71-1bff75735457", "type": "SLSx_userinfo", "response_code": 200, "app_id": "1", "app_name": "TestApp"},
-    {"auth_require_demographic_scopes": "True", "path": "/sso/session", "type": "SLSx_token", "response_code": 200, "app_id": "1", "app_name": "TestApp"},
-    {"app_id": "1", "app_name": "TestApp", "auth_require_demographic_scopes": "True", "path": "/mymedicare/login", "request_method": "GET", "response_code": 302, "type": "request_response_middleware"},
-    {"app_id": "1", "app_name": "TestApp", "auth_require_demographic_scopes": "True", "path": "/v3/o/authorize/", "request_method": "GET", "response_code": 302, "type": "request_response_middleware"},
-    {"app_id": 1, "app_name": "TestApp", "fhir_id_v2": "-10000010256645", "fhir_id_v3": "-591611569", "path": "/v2/connect/userinfo", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": 1, "app_name": "TestApp", "fhir_id_v2": "-10000010256645", "fhir_id_v3": "-591611569", "path": "/v2/fhir/Coverage/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": 1, "app_name": "TestApp", "fhir_id_v2": "-10000010256645", "fhir_id_v3": "-591611569", "path": "/v2/fhir/Patient/-10000010256645", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": 1, "app_name": "TestApp", "fhir_id_v2": "-10000010256645", "fhir_id_v3": "-591611569", "path": "/v2/fhir/ExplanationOfBenefit/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": 1, "app_name": "TestApp", "fhir_id_v2": "-10000010256645", "fhir_id_v3": "-591611569", "path": "/v2/connect/userinfo", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": "", "app_name": "", "path": "/v2/o/token", "request_method": "POST", "response_code": 200, "type": "request_response_middleware", "auth_grant_type": "authorization_code"},
-    {"action": "authorized", "auth_crosswalk_action": "C", "auth_grant_type": "authorization_code", "auth_require_demographic_scopes": "True", "path": "/v2/o/token", "type": "AccessToken", "fhir_id_v2": "-10000010256645", "app_id": "1", "app_name": "TestApp"},
-    {"app_id": "1", "app_name": "TestApp", "auth_crosswalk_action": "C", "auth_require_demographic_scopes": "True", "fhir_id_v2": "-10000010256645", "fhir_id_v3": "-591611569", "path": "/v2/o/authorize/3792648d-46e7-4705-9cb0-9ba18f0208fc/", "request_method": "POST", "response_code": 302, "type": "request_response_middleware"},
-    {"allow": "True", "auth_crosswalk_action": "C", "auth_require_demographic_scopes": "True", "auth_status": "OK", "path": "/v2/o/authorize/3792648d-46e7-4705-9cb0-9ba18f0208fc/", "share_demographic_scopes": "True", "type": "Authorization", "fhir_id_v2": "-10000010256645", "fhir_id_v3": "-591611569", "app_id": "1", "app_name": "TestApp"},
-    {"app_id": "1", "app_name": "TestApp", "auth_crosswalk_action": "C", "auth_require_demographic_scopes": "True", "fhir_id_v2": "-10000010256645", "fhir_id_v3": "-591611569", "path": "/v2/o/authorize/3792648d-46e7-4705-9cb0-9ba18f0208fc/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"},
-    {"app_id": "1", "app_name": "TestApp", "auth_crosswalk_action": "C", "auth_require_demographic_scopes": "True", "fhir_id_v2": "-10000010256645", "fhir_id_v3": "-591611569", "path": "/mymedicare/sls-callback", "request_method": "GET", "response_code": 302, "type": "request_response_middleware", "auth_path": "/v2/o/authorize/3792648d-46e7-4705-9cb0-9ba18f0208fc/"},
-    {"auth_crosswalk_action": "C", "auth_require_demographic_scopes": "True", "path": "v2/mymedicare/sls-callback", "type": "Authentication:success", "fhir_id_v2": "-10000010256645", "fhir_id_v3": "-591611569", "app_id": "1", "app_name": "TestApp"},
-    {"auth_require_demographic_scopes": "True", "fhir_id_v2": "-10000010256645", "fhir_id_v3": "-591611569", "type": "mymedicare_cb:get_and_update_user_initial_auth", "app_id": "1", "app_name": "TestApp"},
-    {"auth_require_demographic_scopes": "True", "fhir_id_v2": "-10000010256645", "fhir_id_v3": "-591611569", "type": "mymedicare_cb:create_beneficiary_record", "app_id": "1", "app_name": "TestApp"},
-    {"auth_require_demographic_scopes": "True", "fhir_id_v2": "-591611569", "type": "fhir.server.authentication.match_fhir_id", "app_id": "1", "app_name": "TestApp"},
-    {"auth_require_demographic_scopes": "True", "path": "patient search", "type": "fhir_auth_pre_fetch", "app_id": "1", "app_name": "TestApp"},
-    {"auth_require_demographic_scopes": "True", "fhir_id_v2": "-10000010256645", "type": "fhir.server.authentication.match_fhir_id", "app_id": "1", "app_name": "TestApp"},
-    {"auth_require_demographic_scopes": "True", "path": "patient search", "type": "fhir_auth_pre_fetch", "app_id": "1", "app_name": "TestApp"},
-    {"auth_require_demographic_scopes": "True", "path": "v2/mymedicare/sls-callback", "sls_userinfo_status_code": 200, "type": "Authentication:start", "app_id": "1", "app_name": "TestApp"},
-    {"auth_require_demographic_scopes": "True", "path": "/v1/users/0854b45e-ddb1-4195-8347-57c8c872fb42", "type": "SLSx_userinfo", "response_code": 403, "app_id": "1", "app_name": "TestApp"},
-    {"auth_require_demographic_scopes": "True", "path": "/v1/users/0854b45e-ddb1-4195-8347-57c8c872fb42", "type": "SLSx_userinfo", "response_code": 200, "app_id": "1", "app_name": "TestApp"},
-    {"auth_require_demographic_scopes": "True", "path": "/sso/session", "type": "SLSx_token", "response_code": 200, "app_id": "1", "app_name": "TestApp"},
-    {"app_id": "1", "app_name": "TestApp", "auth_require_demographic_scopes": "True", "path": "/mymedicare/login", "request_method": "GET", "response_code": 302, "type": "request_response_middleware"},
-    {"app_id": "1", "app_name": "TestApp", "auth_require_demographic_scopes": "True", "path": "/v2/o/authorize/", "request_method": "GET", "response_code": 302, "type": "request_response_middleware"},
-    {"app_id": "", "app_name": "", "path": "/", "request_method": "GET", "response_code": 200, "type": "request_response_middleware"}
-]
-
-# We do not want to track metrics for the following app names
-APP_NAMES_TO_IGNORE = ['TestApp', 'BlueButton Client (Test - Internal Use Only)', 'MyMedicare PROD', 'new-relic']
-
 REQUEST_RESPONSE_MIDDLEWARE_TYPE = 'request_response_middleware'
 
 AUDIT_EVENT_TYPES = [
@@ -233,7 +13,7 @@ OK_STATUS_CODE = 200
 
 # Various helper functions
 def to_int(value):
-    if value == None:
+    if value == None or value == "":
         return None
     return int(value)
 
@@ -290,6 +70,24 @@ def path_matches_authorize_full(path):
             return True
     return False
 
+def tag_source_parameter_shared_systems_check(qparam_source, qparam_tag):
+    """
+    Starlark equivalent of:
+        LOWER(qparam_source) LIKE '%fiss%' OR ... OR
+        qparam_tag LIKE '%https://bluebutton.cms.gov/fhir/CodeSystem/System-Type|SharedSystem%'
+    """
+    source_lower = qparam_source.lower() if qparam_source != None else ""
+    tag = qparam_tag if qparam_tag != None else ""
+
+    return (
+        "fiss" in source_lower or
+        "mcs" in source_lower or
+        "vms" in source_lower or
+        "map" in source_lower or
+        "cwf" in source_lower or
+        "https://bluebutton.cms.gov/fhir/CodeSystem/System-Type|SharedSystem" in tag
+    )
+
 def evaluate_request_response_metrics(tags):
     # Specifically analyze logs with type = 'request_response_middleware'
     matched = []
@@ -302,6 +100,9 @@ def evaluate_request_response_metrics(tags):
     lastupdated = tags.get("req_qparam_lastupdated") or ""
     auth_grant_type = tags.get("auth_grant_type") or ""
     sdk_header = tags.get("req_header_bluebutton_sdk") or ""
+    qparam_source = tags.get("req_qparam__source") or ""
+    qparam_tag = tags.get("req_qparam__tag") or ""
+    patient_match_found = tags.get("patient_match_found") or ""
 
     # FHIR Resource call stats tracking
     # Top level conditional used in each real call, then check if real beneficiary or not, then check path
@@ -351,6 +152,9 @@ def evaluate_request_response_metrics(tags):
 
             if path.startswith("/v3/fhir/ExplanationOfBenefit"):
                 matched.append("app_fhir_v3_eob_call_real_count")
+
+            if path.startswith("/v3/fhir/ExplanationOfBenefit") and tag_source_parameter_shared_systems_check(qparam_source, qparam_tag):
+                matched.append("app_fhir_v3_eob_shared_systems_call_real_count")
 
             if path.startswith("/v3/fhir/Coverage"):
                 matched.append("app_fhir_v3_coverage_call_real_count")
@@ -413,6 +217,9 @@ def evaluate_request_response_metrics(tags):
             if path.startswith("/v3/fhir/ExplanationOfBenefit"):
                 matched.append("app_fhir_v3_eob_call_synthetic_count")
 
+            if path.startswith("/v3/fhir/ExplanationOfBenefit") and tag_source_parameter_shared_systems_check(qparam_source, qparam_tag):
+                matched.append("app_fhir_v3_eob_shared_systems_call_synthetic_count")
+
             if path.startswith("/v3/fhir/Coverage"):
                 matched.append("app_fhir_v3_coverage_call_synthetic_count")
 
@@ -453,6 +260,17 @@ def evaluate_request_response_metrics(tags):
             matched.append("app_token_authorization_code_4xx_count")
         elif response_code_gte(response_code, 500):
             matched.append("app_token_authorization_code_5xx_count")
+
+    if request_method == "POST" and path_matches_versioned_token(path) and auth_grant_type == "client_credentials":
+        if response_code_range(response_code, OK_STATUS_CODE, 300):
+            matched.append("app_successful_client_credentials_call")
+        else:
+            matched.append("app_unsuccessful_client_credentials_call")
+ 
+    if path_matches_versioned_token(path) and patient_match_found == True:
+        matched.append("app_successful_patient_match_call")
+    if path_matches_versioned_token(path) and patient_match_found == False:
+        matched.append("app_unsuccessful_patient_match_call")
 
     # Auth flow stats
     if path_matches_authorize_prefix(path):
@@ -512,6 +330,7 @@ def evaluate_audit_metrics(tags):
     auth_require_demographic_scopes = tags.get("auth_require_demographic_scopes") or ""
     share_demographic_scopes = tags.get("share_demographic_scopes") or ""
     sls_status = tags.get("sls_userinfo_status_code")
+    auth_share_samhsa_data = tags.get("auth_share_samhsa_data") or ""
     path = tags.get("path") or ""
 
     # For Authorization/Authentication:success events
@@ -568,6 +387,24 @@ def evaluate_audit_metrics(tags):
 
         if is_real(crosswalk_fhir_id, crosswalk_fhir_id_v3) and path.startswith('/v3/o/authorize'):
             matched.append("app_auth_v3_user_clicks_connect_bene_count")
+
+        if auth_status == "OK" and (allow == "True" or allow == True) and (auth_share_samhsa_data == "True" or auth_share_samhsa_data == True):
+            if is_real(crosswalk_fhir_id, crosswalk_fhir_id_v3):
+                matched.append("app_auth_samhsa_presented_sharing_real_bene_count")
+            else:
+                matched.append("app_auth_samhsa_presented_sharing_synthetic_bene_count")
+
+        if auth_status == "OK" and (allow == "True" or allow == True) and (auth_share_samhsa_data == "False" or auth_share_samhsa_data == False):
+            if is_real(crosswalk_fhir_id, crosswalk_fhir_id_v3):
+                matched.append("app_auth_samhsa_presented_not_sharing_real_bene_count")
+            else:
+                matched.append("app_auth_samhsa_presented_not_sharing_synthetic_bene_count")
+
+        if auth_status == "OK" and (allow == "True" or allow == True) and auth_share_samhsa_data == "":
+            if is_real(crosswalk_fhir_id, crosswalk_fhir_id_v3):
+                matched.append("app_auth_samhsa_not_presented_real_bene_count")
+            else:               
+                matched.append("app_auth_samhsa_not_presented_synthetic_bene_count")
 
     if event_type == "AccessToken":
 
@@ -626,7 +463,7 @@ def summarize():
     events = query('events', 'SELECT * FROM itslog_events')
 
     for event in events:
-    # for event in EVENTS:
+    # for event_dict in EVENTS:
         event_dict = json.decode(event.get('value'))
 
         app_name = event_dict.get('app_name')
