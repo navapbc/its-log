@@ -10,6 +10,7 @@ import (
 var GolangETLMap = map[string]func(*types.RunEtlParams) error{
 	"count-all-combinations": CountAllCombinations,
 	"db-to-csv":              SqliteToCSV,
+	"bb-db-to-csv":           BBSqliteToCSV,
 	"consolidate":            Consolidate,
 	"hash-summaries":         HashSummaries,
 	"backup":                 Backup,
