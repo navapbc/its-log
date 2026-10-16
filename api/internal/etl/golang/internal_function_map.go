@@ -11,5 +11,4 @@ var GolangETLMap = map[string]func(*etl.RunEtlParams) error{
 	"db-to-csv":      SqliteToCSV,
 	"consolidate":    Consolidate,
 	"hash-summaries": HashSummaries,
-	"backup":         Backup,
 }

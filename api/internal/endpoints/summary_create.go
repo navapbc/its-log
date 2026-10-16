@@ -63,7 +63,7 @@ func SummaryCreate(c *gin.Context) {
 	sort.Strings(body.Tags)
 	theTags := strings.Join(body.Tags, ".")
 
-	_, err = s.Exec(storage.Endpoint, "insert_etl", storage.EmbedParamMap{
+	_, err = s.Exec(storage.Endpoint, "insert_full_summary", storage.EmbedParamMap{
 		"key_id":    keyId,
 		"date":      body.Date,
 		"operation": body.Operation,
@@ -73,7 +73,7 @@ func SummaryCreate(c *gin.Context) {
 	})
 
 	if err != nil {
-		zap.L().Error("etl save error", zap.Error(err))
+		zap.L().Error("summary save error", zap.Error(err))
 
 		c.JSON(http.StatusNotImplemented, gin.H{
 			"status":    "error",

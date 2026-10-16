@@ -4,19 +4,28 @@
 
 `its-log` is a lightweight event logger and ETL environment for resource-constrained, compliance-burdened environments.
 
-On a Mac M4, `its-log` can sustain logging 30K events/second to a local SQLite database.
+On a Mac M4, `its-log` can sustain logging 8K events/second to a local DuckDB database.
 
-## development
+## requirements
 
-We recommend using VSCode. A `launch.json` is provided that configures the debugger for building and testing the API. F5 launches `its-log` under the debugger, Shift-F5 brings `its-log` down.
+For local development:
+
+* VSCode
+* Golang extensions
+* Docker
+* `make` and other related tools
 
 ## testing
 
-`make test` will build and run `its-log` locally, and then launch a Python script that runs a complete suite of E2E tests. 
+`make e2e`
+
+This will stand up two Docker containers; one that builds and runs `its-log`, and a second that runs an E2E suite against that container.
+
+After running, the test container should report `SUCCESS`, and both containers will exit.
 
 ## debugging its-log
 
-A VS Code debugging bundle is prepared and part of this repository, with all of the envrionment variables required to run. Press `F5` to launch `its-log` under the debugger, and `COMMAND-F5` to halt the debugger (on a Mac).
+A VS Code debugging bundle is prepared and part of this repository, with all of the envrionment variables required to run. Press `F5` to launch `its-log` under the debugger, and `SHIFT-F5` to halt the debugger (on a Mac).
 
 ## testing with Postman
 
@@ -26,19 +35,9 @@ A Postman bundle is included under the `docs` directory. It includes a set of sc
 
 `its-log` can be compiled for multiple architectures.
 
-To run on a ARM processors (Mac):
+`make build`
 
-```
-make itslog-arm
-```
-
-To run on Intel:
-
-```
-make itslog-amd
-```
-
-In either case, you will need to make sure a suite of environment variables are present to run `its-log` natively.
+This will build the API locally. It is possible to then run the E2E suite locally (after venv creation and requirements installation).
 
 ## model
 
@@ -74,12 +73,12 @@ The logging endpoints are rooted at `/v1`. So, `/log/create` should be read as `
 
 The ETL and analysis endpoints are
 
-| HTTP | Endpoint                  | Permissions | Desc                                                                  |
-| ---- | ------------------------- | ----------- | --------------------------------------------------------------------- |
-| POST | /etl/create               | admin       | Create an ETL action                                                  |
-| POST | /etl/run/:date/:name      | admin       | Run an ETL action. Takes optional params in the JSON body.            |
-| POST | /sequence/create          | admin       | Create an ETL sequence                                                |
-| POST | /sequence/run/:date/:name | admin       | Run a sequence for a given date. Takes optional params like /etl/run. |
+| HTTP | Endpoint         | Permissions | Desc                                                                  |
+| ---- | ---------------- | ----------- | --------------------------------------------------------------------- |
+| POST | /etl/create      | admin       | Create an ETL action                                                  |
+| POST | /etl/run         | admin       | Run an ETL action. Takes optional params in the JSON body.            |
+| POST | /sequence/create | admin       | Create an ETL sequence                                                |
+| POST | /sequence/run    | admin       | Run a sequence for a given date. Takes optional params like /etl/run. |
 
 For working with the summary table directly
 
@@ -100,6 +99,39 @@ Administrative endpoints include
 ## extending its-log
 
 See [DEVELOPMENT.md](docs/DEVELOMENT.md) in `docs`. 
+
+## performance
+
+Performance stress-testing can be run with
+
+`make k6`
+
+This runs K6 in one container, and `its-log` in another.
+
+On an M4 Mac against local NVMe storage, 8K/sec, 4K/sec between containers (HTTP overheads). Cloud performance is likely somewhere in-between.
+
+Containerized performance (2026-10-11)
+
+```
+ TOTAL RESULTS 
+HTTP
+http_req_duration..............: avg=105.4µs min=48.04µs med=98.79µs max=3.99ms p(90)=129.83µs p(95)=147.91µs
+  { expected_response:true }...: avg=105.4µs min=48.04µs med=98.79µs max=3.99ms p(90)=129.83µs p(95)=147.91µs
+http_req_failed................: 0.00%  0 out of 15600
+http_reqs......................: 15600  3970.227365/s
+
+EXECUTION
+iteration_duration.............: avg=3.92s   min=3.92s   med=3.92s   max=3.92s  p(90)=3.92s    p(95)=3.92s   
+iterations.....................: 1      0.254502/s
+vus............................: 1      min=1          max=1
+vus_max........................: 1      min=1          max=1
+
+NETWORK
+data_received..................: 2.2 MB 548 kB/s
+data_sent......................: 3.6 MB 916 kB/s
+```
+
+
 
 ## Star History
 

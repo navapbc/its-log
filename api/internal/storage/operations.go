@@ -30,6 +30,29 @@ const SQL_NAMED_PARAM_SYMBOL = "$"
 
 var activeStorageConnections StorageMap = make(StorageMap, 0)
 
+func (s *Storage) DoesDBExist() bool {
+	dbPath := path.Join(path.Join(s.Path...))
+
+	_, err := os.Stat(dbPath)
+	// If we don't get an error, the file exists.
+	if err == nil {
+		return true
+	}
+	// If there is an error, we'll log and return.
+	if errors.Is(err, os.ErrNotExist) {
+		zap.L().Error("file does not exist",
+			zap.String("filename", dbPath))
+		return false
+	}
+
+	// Other errors could have occurred; for example,
+	// there could be a disk error. Instead of handling everything,
+	// we'll log the error, and indicate we cannot find the file.
+	zap.L().Error("unknown error; file effectively does not exist",
+		zap.Error(err))
+	return false
+}
+
 func ReuseStorage(appId string, date string) (*Storage, error) {
 	// Did we store it in the map?
 	// If so, return it. We want these to be persistent for the session
@@ -42,6 +65,16 @@ func ReuseStorage(appId string, date string) (*Storage, error) {
 		zap.L().Debug("ReuseStorage",
 			zap.String("app_id", appId),
 			zap.String("formatted_date", date))
+		// Before returning, let's make sure that the
+		// database file is still there. DuckDB can have some
+		// confusing tmp behaviors in situations where the connection
+		// is open but the file "disappears." This should not be possible
+		// in production; we can force it locally in a containerized env.
+		// We're going to panic if it happens.
+		// https://stackoverflow.com/questions/78586256/how-to-force-duckdb-to-reconnect-to-a-file-and-prevent-it-from-remembering-conte
+		if !s.DoesDBExist() {
+			panic("database file does not exist!")
+		}
 		return s, nil
 	}
 

@@ -1,18 +1,6 @@
+include:
+  - path: ./docker-compose.yaml
 services:
-  itslog:
-    image: itslog-app
-    command: /app/entrypoint.bash
-    ports:
-      - "8888:8888"
-    volumes:
-      - ${HOME}/.its-log/data:/data
-      # - ./itslog/scripts/internal/entrypoint.bash:/app/entrypoint.bash
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://itslog:8888/v1/health"]
-      interval: 300s
-      retries: 1
-      start_period: 5s
-      timeout: 3s
 
   e2e:
     image: itslog-e2e

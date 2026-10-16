@@ -176,7 +176,7 @@ func etlRunStarlark(etlP *etl.RunEtlParams, row storage.EtlRow, tx *sql.Tx) erro
 			case "value":
 				v, found, _ := elem.(*starlark.Dict).Get(k)
 				if found {
-					srjs.Tags, _ = starlark.AsString(v)
+					srjs.Value, _ = starlark.AsString(v)
 				}
 			case "count":
 				v, found, _ := elem.(*starlark.Dict).Get(k)

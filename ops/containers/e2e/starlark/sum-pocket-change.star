@@ -24,7 +24,7 @@ def summarize():
     total = sums["pennies"] + (sums["nickels"] * 5) + (sums["dimes"] * 10) + (sums["quarters"] * 25)
     result = [
         {"operation": "total.pocketchange", "count": total},
-        {"operation": "total.pocketchange.json", "tags": json.encode(sums), "count": 0}
+        {"operation": "total.pocketchange.json", "value": json.encode(sums), "count": 0}
     ]
     print(result)
     return result
