@@ -15,15 +15,6 @@ import (
 )
 
 func DBToCSV(etlP *etl.RunEtlParams) error {
-	// var DBToCsvPrefix string = "db_to_csv"
-	// var DBToCsvExpectedKeys = []string{
-	// 	DBToCsvPrefix + "-source", DBToCsvPrefix + "-destination",
-	// }
-
-	// err := hasExpectedKeys(etlP, DBToCsvExpectedKeys)
-	// if err != nil {
-	// 	return err
-	// }
 
 	for _, table := range constants.ITSLOG_TABLES {
 		// 1. Execute the query
